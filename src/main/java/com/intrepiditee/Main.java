@@ -64,7 +64,7 @@ public class Main {
 //                System.out.println(next.females.size());
 
                 for (int i = 0; i < Configs.numGenerations; i++) {
-                    next = next.evolveOneGeneration();
+                    next = next.evolveOneGenerationThenDestroy();
 
                     Generation toWrite = null;
                     String filename = null;
