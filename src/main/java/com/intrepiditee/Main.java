@@ -57,14 +57,14 @@ public class Main {
                 MapReader.initialize(Configs.geneticMapName).parse();
 
                 Generation next = Generation.makeAncestors(0);
-                System.out.println("Ancestor generation created");
+                System.out.println("\nAncestor generation created");
 
 //                System.out.println(next.size());
 //                System.out.println(next.males.size());
 //                System.out.println(next.females.size());
 
                 for (int i = 0; i < Configs.numGenerations; i++) {
-                    next = next.evolveOneGenerationThenDestroy();
+                    next = next.evolveOneGeneration();
 
                     Generation toWrite = null;
                     String filename = null;
