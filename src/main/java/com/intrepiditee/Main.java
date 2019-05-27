@@ -1,5 +1,7 @@
 package com.intrepiditee;
 
+import edu.rice.hj.api.SuspendableException;
+
 import java.io.*;
 import java.util.Arrays;
 
@@ -24,10 +26,10 @@ public class Main {
         if (args.length == 1) {
             if (args[0].equals("--test")) {
                 Individual.genomeLength = 10000;
-                Individual.randBound = 202;
+                Individual.randBound = 1150;
                 Configs.numThreads = 3;
                 Configs.geneticMapName = "test";
-                Configs.numGenerations = 50;
+                Configs.numGenerations = 10;
 
             } else if (args[0].equals("--parse")) {
                 GenomeParser.main(Arrays.copyOfRange(args, 1, args.length));
