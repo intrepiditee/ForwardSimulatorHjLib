@@ -37,24 +37,18 @@ public class GenomeParser {
                         int id = i.readInt();
 
                         BitSet paternalGenome = (BitSet) (i.readObject());
+                        BitSet maternalGenome = (BitSet) (i.readObject());
                         if (prevGenome != null) {
                             BitSet prevGenomeFinal = prevGenome;
                             Module1.forallChunked(0, Individual.genomeLength - 1, (j) -> {
-                                if (prevGenomeFinal.get(j) != paternalGenome.get(j)) {
+                                boolean paternalBase = paternalGenome.get(j);
+                                if (prevGenomeFinal.get(j) != paternalBase) {
+                                    isDifferent[j] = true;
+                                } else if (paternalBase != maternalGenome.get(j)) {
                                     isDifferent[j] = true;
                                 }
                             });
                         }
-
-                        prevGenome = paternalGenome;
-                        BitSet maternalGenome = (BitSet) (i.readObject());
-
-                        BitSet prevGenomeFinal = prevGenome;
-                        Module1.forallChunked(0, Individual.genomeLength - 1, (j) -> {
-                            if (prevGenomeFinal.get(j) != maternalGenome.get(j)) {
-                                isDifferent[j] = true;
-                            }
-                        });
 
                         prevGenome = maternalGenome;
 
