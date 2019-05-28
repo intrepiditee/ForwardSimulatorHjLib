@@ -59,7 +59,7 @@ public class Main {
                 MapReader.initialize(Configs.geneticMapName).parse();
 
                 Generation next = Generation.makeAncestors(0);
-                System.out.println("\nAncestor generation created");
+                System.out.print("\nAncestor generation created");
 
 //                System.out.println(next.size());
 //                System.out.println(next.males.size());
@@ -99,7 +99,7 @@ public class Main {
                         w.close();
                     }
 
-                    System.out.println("Generation " + i + " finished");
+                    System.out.print("\nGeneration " + i + " finished");
 
 //                    System.out.println(next.size());
 //                    System.out.println(next.males.size());

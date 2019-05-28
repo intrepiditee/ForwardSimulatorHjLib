@@ -28,8 +28,8 @@ public class GenomeParser {
                 ObjectInputStream i = Utils.getObjectInputStream(filename);
 
                 BitSet prevGenome = null;
-                while (true) {
-                    try {
+                try {
+                    while (true) {
                         int id = i.readInt();
 
                         BitSet paternalGenome = (BitSet) (i.readObject());
@@ -54,12 +54,19 @@ public class GenomeParser {
 
                         prevGenome = maternalGenome;
 
-                    } catch (EOFException e) {
-                        break;
-                    } catch (IOException | ClassNotFoundException e) {
-                        e.printStackTrace();
-                        System.exit(-1);
                     }
+                } catch (EOFException e) {
+                    System.out.println(filename + " parsed");
+                } catch (IOException | ClassNotFoundException e) {
+                    e.printStackTrace();
+                    System.exit(-1);
+                }
+
+                try {
+                    i.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    System.exit(-1);
                 }
             });
         });
