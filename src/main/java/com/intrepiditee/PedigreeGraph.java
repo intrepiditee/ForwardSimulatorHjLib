@@ -115,7 +115,6 @@ public class PedigreeGraph {
                     if (!distances.containsKey(nbr)) {
                         int distance = distances.get(current) + 1;
                         shortedPathLengths.put(pair, distance);
-                        shortedPathLengths.put(reversePair, distance);
 
                         if (distance <= maxDistance) {
                             distances.put(nbr, distance);
@@ -131,7 +130,6 @@ public class PedigreeGraph {
         }
 
         shortedPathLengths.put(pair, -1);
-        shortedPathLengths.put(reversePair, -1);
         return -1;
     }
 

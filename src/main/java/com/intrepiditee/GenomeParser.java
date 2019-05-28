@@ -22,6 +22,8 @@ public class GenomeParser {
 
         launchHabaneroApp(() -> {
 
+            System.out.println();
+
             // Read in all sequences
             for (int n = 0; n < numGenerations; n++) {
 
@@ -70,7 +72,6 @@ public class GenomeParser {
                     System.exit(-1);
                 }
             }
-
 
             AtomicInteger numDifferentIndices = new AtomicInteger();
             Module1.forallChunked(0, Individual.genomeLength - 1, (i) -> {
