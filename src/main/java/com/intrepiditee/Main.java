@@ -57,11 +57,14 @@ public class Main {
                 GeneticMap.initialize(Configs.geneticMapName);
                 GeneticMap.parse();
 
-                Generation next = Generation.makeRandomGeneration();
-                System.out.print("\nAncestor generation created");
+                Generation next = null;
 
                 for (int i = 0; i < Configs.numGenerations; i++) {
-                    next = next.evolveOneGenerationThenDestroy();
+                    if (next == null) {
+                        next = Generation.makeRandomGeneration();
+                    } else {
+                        next = next.evolveOneGenerationThenDestroy();
+                    }
 
                     Generation toWrite = null;
                     String filename = null;
