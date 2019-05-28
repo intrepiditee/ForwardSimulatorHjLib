@@ -26,6 +26,7 @@ public class GenomeParser {
 
             // Read in all sequences
             for (int n = 0; n < numGenerations; n++) {
+                int count = 0;
 
                 String filename = "Generation" + n;
                 ObjectInputStream i = Utils.getObjectInputStream(filename);
@@ -57,6 +58,11 @@ public class GenomeParser {
 
                         prevGenome = maternalGenome;
 
+                        count += 2;
+                        if (count % 1000 == 0) {
+                            System.out.println("Generation" + n + ": " + count / 1000 + "k processed");
+                        }
+
                     }
                 } catch (EOFException e) {
                     System.out.println(filename + " parsed");
@@ -73,7 +79,7 @@ public class GenomeParser {
                 }
             }
 
-            AtomicInteger numDifferentIndices = new AtomicInteger();
+            AtomicInteger numDifferentIndices = new AtomicInteger(0);
             Module1.forallChunked(0, Individual.genomeLength - 1, (i) -> {
                 if (isDifferent[i]) {
                     numDifferentIndices.incrementAndGet();
