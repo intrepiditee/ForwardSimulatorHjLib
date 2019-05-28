@@ -25,7 +25,7 @@ public class Individual {
     static int genomeLength = 51304566;
     static double mutationRate = 1.1 * 10e-8;
 
-    static int randBound = 60;
+    static int randBound = 45 * 2;
 
     static byte MALE = 1;
     static byte FEMALE = 0;
