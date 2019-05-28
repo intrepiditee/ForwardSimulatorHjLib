@@ -23,7 +23,7 @@ public class Individual {
 
     static AtomicInteger nextID = new AtomicInteger(0);
 
-    static int genomeLength = 10000;
+    static int genomeLength = 51304566;
     static double mutationRate = 1.1 * 10e-8;
 
     static int randBound = (int) (45 * 1.2);
