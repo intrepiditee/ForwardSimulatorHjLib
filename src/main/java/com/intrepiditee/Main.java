@@ -61,10 +61,6 @@ public class Main {
                 Generation next = Generation.makeAncestors(0);
                 System.out.print("\nAncestor generation created");
 
-//                System.out.println(next.size());
-//                System.out.println(next.males.size());
-//                System.out.println(next.females.size());
-
                 for (int i = 0; i < Configs.numGenerations; i++) {
                     next = next.evolveOneGenerationThenDestroy();
 
@@ -100,10 +96,6 @@ public class Main {
                     }
 
                     System.out.print("\nGeneration " + i + " finished");
-
-//                    System.out.println(next.size());
-//                    System.out.println(next.males.size());
-//                    System.out.println(next.females.size());
                 }
 
             } catch (Exception e) {

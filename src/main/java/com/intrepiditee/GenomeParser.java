@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static edu.rice.hj.Module0.launchHabaneroApp;
 
@@ -17,12 +18,12 @@ public class GenomeParser {
     public static void main(String[] args) {
         int numGenerations = 4;
 
-        Set<Integer> indicesSet = Collections.newSetFromMap(new ConcurrentHashMap<>());
+        boolean[] isDifferent = new boolean[Individual.genomeLength];
 
         launchHabaneroApp(() -> {
 
             // Read in all sequences
-            Module1.forallChunked(0, numGenerations - 1, (n) -> {
+            for (int n = 0; n < numGenerations; n++) {
 
                 String filename = "Generation" + n;
                 ObjectInputStream i = Utils.getObjectInputStream(filename);
@@ -37,7 +38,7 @@ public class GenomeParser {
                             BitSet prevGenomeFinal = prevGenome;
                             Module1.forallChunked(0, Individual.genomeLength - 1, (j) -> {
                                 if (prevGenomeFinal.get(j) != paternalGenome.get(j)) {
-                                    indicesSet.add(j);
+                                    isDifferent[j] = true;
                                 }
                             });
                         }
@@ -48,7 +49,7 @@ public class GenomeParser {
                         BitSet prevGenomeFinal = prevGenome;
                         Module1.forallChunked(0, Individual.genomeLength - 1, (j) -> {
                             if (prevGenomeFinal.get(j) != maternalGenome.get(j)) {
-                                indicesSet.add(j);
+                                isDifferent[j] = true;
                             }
                         });
 
@@ -68,12 +69,22 @@ public class GenomeParser {
                     e.printStackTrace();
                     System.exit(-1);
                 }
+            }
+
+
+            AtomicInteger numDifferentIndices = new AtomicInteger();
+            Module1.forallChunked(0, Individual.genomeLength - 1, (i) -> {
+                if (isDifferent[i]) {
+                    numDifferentIndices.incrementAndGet();
+                }
             });
+
+            System.out.println(numDifferentIndices.get());
         });
 
-        int numDifferentIndices = indicesSet.size();
 
-        System.out.println(numDifferentIndices);
+
+
 
     }
 }
