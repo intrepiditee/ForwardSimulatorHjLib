@@ -5,10 +5,11 @@ import edu.rice.hj.api.HjSuspendable;
 import edu.rice.hj.api.SuspendableException;
 
 import java.util.BitSet;
+import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static com.intrepiditee.MapReader.geneticMap;
-import static com.intrepiditee.Utils.rand;
+import static com.intrepiditee.Utils.singletonRand;
+
 
 public class Individual {
     int id;
@@ -22,10 +23,10 @@ public class Individual {
 
     static AtomicInteger nextID = new AtomicInteger(0);
 
-    static int genomeLength = 51304566;
+    static int genomeLength = 10000;
     static double mutationRate = 1.1 * 10e-8;
 
-    static int randBound = 45 * 2;
+    static int randBound = (int) (45 * 1.2);
 
     static byte MALE = 1;
     static byte FEMALE = 0;
@@ -53,28 +54,32 @@ public class Individual {
 
 
     public Individual recombineGenomes(Individual father, Individual mother) throws SuspendableException {
+
         HjSuspendable paternalRunnable = () -> {
             boolean paternalIsRecombining = false;
             double paternalProb = 0.0;
             int paternalIndex = 0;
-            int paternalPosition = geneticMap.indices.get(paternalIndex);
-            int paternalRand = rand.nextInt(randBound);
+            int paternalPosition = GeneticMap.indices.get(paternalIndex);
+            int paternalRand = singletonRand.nextInt(randBound);
+
+//            int c = 0;
 
             for (int i = 0; i < genomeLength; i++) {
                 if (i == paternalPosition) {
-                    paternalProb += geneticMap.probabilities.get(paternalIndex);
-
+                    paternalProb += GeneticMap.probabilities.get(paternalIndex);
                     paternalIndex++;
-                    if (paternalIndex < geneticMap.indices.size()) {
-                        paternalPosition = geneticMap.indices.get(paternalIndex);
+
+                    if (paternalIndex < GeneticMap.indices.size()) {
+                        paternalPosition = GeneticMap.indices.get(paternalIndex);
                     }
 
                     if (paternalRand < paternalProb) {
+//                        c++;
                         paternalIsRecombining = !paternalIsRecombining;
-                        if (paternalIndex < geneticMap.indices.size()) {
-                            paternalProb = geneticMap.probabilities.get(paternalIndex);
+                        if (paternalIndex < GeneticMap.indices.size()) {
+                            paternalProb = GeneticMap.probabilities.get(paternalIndex);
                         }
-                        paternalRand = rand.nextInt(randBound);
+                        paternalRand = singletonRand.nextInt(randBound);
                     }
                 }
 
@@ -84,30 +89,34 @@ public class Individual {
                     paternalGenome.set(i, father.paternalGenome.get(i));
                 }
             }
+
+//            System.out.println(c);
         };
+
+
 
         HjSuspendable maternalRunnable = () -> {
             boolean maternalIsRecombining = false;
             double maternalProb = 0.0;
             int maternalIndex = 0;
-            int maternalPosition = geneticMap.indices.get(maternalIndex);
-            int maternalRand = rand.nextInt(randBound);
+            int maternalPosition = GeneticMap.indices.get(maternalIndex);
+            int maternalRand = singletonRand.nextInt(randBound);
 
             for (int i = 0; i < genomeLength; i++) {
                 if (i == maternalPosition) {
-                    maternalProb += geneticMap.probabilities.get(maternalIndex);
+                    maternalProb += GeneticMap.probabilities.get(maternalIndex);
 
                     maternalIndex++;
-                    if (maternalIndex < geneticMap.indices.size()) {
-                        maternalPosition = geneticMap.indices.get(maternalIndex);
+                    if (maternalIndex < GeneticMap.indices.size()) {
+                        maternalPosition = GeneticMap.indices.get(maternalIndex);
                     }
 
                     if (maternalRand < maternalProb) {
                         maternalIsRecombining = !maternalIsRecombining;
-                        if (maternalIndex < geneticMap.indices.size()) {
-                            maternalProb = geneticMap.probabilities.get(maternalIndex);
+                        if (maternalIndex < GeneticMap.indices.size()) {
+                            maternalProb = GeneticMap.probabilities.get(maternalIndex);
                         }
-                        maternalRand = rand.nextInt(randBound);
+                        maternalRand = singletonRand.nextInt(randBound);
                     }
                 }
 
@@ -124,16 +133,31 @@ public class Individual {
             maternalRunnable.run();
         });
 
-        double r = genomeLength * mutationRate;
+        double expectedNumMutations = genomeLength * mutationRate;
 
-        if (Math.random() < r) {
-            int paternalMutatingPosition = rand.nextInt(paternalGenome.size());
-            paternalGenome.flip(paternalMutatingPosition);
-        }
+        if (expectedNumMutations > 1) {
+            int numMutations = singletonRand.nextInt((int) (2 * expectedNumMutations));
+            for (int i = 0; i < numMutations; i++) {
+                int paternalMutatingPosition = singletonRand.nextInt(paternalGenome.size());
+                paternalGenome.flip(paternalMutatingPosition);
+            }
 
-        if (Math.random() < r) {
-            int maternalMutatingPosition = rand.nextInt(maternalGenome.size());
-            maternalGenome.flip(maternalMutatingPosition);
+            numMutations = singletonRand.nextInt((int) (2 * expectedNumMutations));
+            for (int i = 0; i < numMutations; i++) {
+                int maternalMutatingPosition = singletonRand.nextInt(maternalGenome.size());
+                maternalGenome.flip(maternalMutatingPosition);
+            }
+
+        } else {
+            if (singletonRand.nextDouble() < expectedNumMutations) {
+                int paternalMutatingPosition = singletonRand.nextInt(paternalGenome.size());
+                paternalGenome.flip(paternalMutatingPosition);
+            }
+
+            if (singletonRand.nextDouble() < expectedNumMutations) {
+                int maternalMutatingPosition = singletonRand.nextInt(maternalGenome.size());
+                maternalGenome.flip(maternalMutatingPosition);
+            }
         }
 
         return this;

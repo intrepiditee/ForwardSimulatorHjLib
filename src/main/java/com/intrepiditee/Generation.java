@@ -8,7 +8,6 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.intrepiditee.Configs.numThreads;
-import static com.intrepiditee.Utils.rand;
 
 
 public class Generation {
@@ -20,11 +19,12 @@ public class Generation {
         return new Generation();
     }
 
-    static Generation makeAncestors(int seed) throws SuspendableException {
+    static Generation makeRandomGeneration() throws SuspendableException {
         Generation ancestors = makeEmpty();
 
-        rand.setSeed(seed);
-        BitSet sequence = Utils.generateSameSequence(Individual.genomeLength, seed);
+        Random rand = new Random();
+
+        BitSet sequence = Utils.generateRandomSequence(Individual.genomeLength);
 
         int desiredNumMales = Configs.sizeOfPopulation / 2;
 
@@ -94,6 +94,8 @@ public class Generation {
 
         Module1.finish(() -> {
             for (int n = 0; n < numThreads; n++) {
+                Random rand = new Random();
+
                 int start = n * numCouplesPerThread;
                 int end = n == numThreads - 1 ?
                     numCouples :
@@ -122,7 +124,7 @@ public class Generation {
                             father = males.get(i);
                             mother = females.get(i);
 
-                            if (Math.random() > 0.8) {
+                            if (rand.nextDouble() > 0.8) {
                                 father = males.get(rand.nextInt(males.size()));
                             }
 
@@ -142,7 +144,7 @@ public class Generation {
                                     break;
                                 }
 
-                                if (Math.random() > 0.8) {
+                                if (rand.nextDouble() > 0.8) {
                                     father = males.get(rand.nextInt(males.size()));
                                 }
                                 child = Individual.makeFromParents(father, mother);

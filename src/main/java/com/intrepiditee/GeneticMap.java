@@ -2,26 +2,19 @@ package com.intrepiditee;
 
 import java.util.*;
 
-public class MapReader {
-    Scanner sc;
+public class GeneticMap {
+    static Scanner sc;
 
-    List<Double> probabilities;
-    List<Integer> indices;
+    static List<Double> probabilities;
+    static List<Integer> indices;
 
-    static MapReader geneticMap;
-
-    static MapReader initialize(String filename) {
-        geneticMap = new MapReader(filename);
-        return geneticMap;
-    }
-
-    private MapReader(String filename) {
+    public static void initialize(String filename) {
         sc = Utils.getScanner(filename);
         probabilities = new ArrayList<>();
         indices = new ArrayList<>();
     }
 
-    public MapReader parse() {
+    public static void parse() {
         sc.nextLine();
         Double prevGeneticDistance = 0.0;
         Double geneticDistance;
@@ -39,6 +32,5 @@ public class MapReader {
             prevGeneticDistance = geneticDistance;
         }
 
-        return this;
     }
 }

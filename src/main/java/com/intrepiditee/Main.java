@@ -1,7 +1,5 @@
 package com.intrepiditee;
 
-import edu.rice.hj.api.SuspendableException;
-
 import java.io.*;
 import java.util.Arrays;
 
@@ -26,10 +24,10 @@ public class Main {
         if (args.length == 1) {
             if (args[0].equals("--test")) {
                 Individual.genomeLength = 10000;
-                Individual.randBound = 1150;
+                Individual.randBound = 120;
                 Configs.numThreads = 3;
                 Configs.geneticMapName = "test";
-                Configs.numGenerations = 10;
+                Configs.numGenerations = 50;
 
             } else if (args[0].equals("--parse")) {
                 GenomeParser.main(Arrays.copyOfRange(args, 1, args.length));
@@ -56,9 +54,10 @@ public class Main {
 
         launchHabaneroApp(() -> {
             try {
-                MapReader.initialize(Configs.geneticMapName).parse();
+                GeneticMap.initialize(Configs.geneticMapName);
+                GeneticMap.parse();
 
-                Generation next = Generation.makeAncestors(0);
+                Generation next = Generation.makeRandomGeneration();
                 System.out.print("\nAncestor generation created");
 
                 for (int i = 0; i < Configs.numGenerations; i++) {

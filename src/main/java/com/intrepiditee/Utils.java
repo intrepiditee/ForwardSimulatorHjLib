@@ -10,12 +10,10 @@ import java.util.stream.IntStream;
 
 public class Utils {
 
-    static Random rand = new Random();
+    static Random singletonRand = new Random();
 
-
-    public static BitSet generateSameSequence(int genomeLength, int seed) {
+    public static BitSet generateRandomSequence(int genomeLength) {
         Random sequenceRandom = new Random();
-        sequenceRandom.setSeed(seed);
         BitSet sequence = new BitSet();
         for (int i = 0; i < genomeLength; i++) {
             sequence.set(i, sequenceRandom.nextBoolean());
@@ -101,10 +99,14 @@ public class Utils {
     }
 
     public static BufferedWriter getBufferedWriter(String filename) {
+        return getBufferedWriter(filename, 8192);
+    }
+
+    public static BufferedWriter getBufferedWriter(String filename, int bufferSize) {
         File f = Utils.createEmptyFile(filename);
         BufferedWriter w = null;
         try {
-            w = new BufferedWriter(new FileWriter(f));
+            w = new BufferedWriter(new FileWriter(f), bufferSize);
         } catch (IOException e) {
             e.printStackTrace();
             System.exit(-1);
@@ -112,4 +114,5 @@ public class Utils {
 
         return w;
     }
+
 }
