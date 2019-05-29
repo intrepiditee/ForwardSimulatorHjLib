@@ -20,8 +20,6 @@ public class GenomeParser {
     static int[] variantSiteCounts;
     static List<Integer> variantSiteIndices;
 
-    static Map<Pair<Integer, Integer>, String> idIndexPairToBases = new ConcurrentHashMap<>();
-
     public static void main(String[] args) {
         if (args.length < 6 || (!args[0].equals("--parse"))) {
             System.err.println(
@@ -46,8 +44,6 @@ public class GenomeParser {
     }
 
     private static void writeVCF() throws SuspendableException {
-        System.out.println();
-
         Collections.sort(variantSiteIndices);
 
         int numSites = variantSiteIndices.size();
@@ -68,6 +64,8 @@ public class GenomeParser {
 //            System.out.println(end);
 
             // Store all base pairs at variant sites
+
+            Map<Pair<Integer, Integer>, String> idIndexPairToBases = new HashMap<>(numSites);
 
             for (int n = 0; n < numGenerations; n++) {
                 String filename = "Generation" + n;

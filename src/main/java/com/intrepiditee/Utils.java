@@ -115,4 +115,14 @@ public class Utils {
         return w;
     }
 
+    public static void printUsage() {
+        System.err.println(
+            "Usage:\n" +
+                "1) Simulation: bash run.sh numberOfGenerations " +
+                   "numberOfGenerationsToStore generationSize numberOfThreads\n" +
+                "2) VCF: bash run.sh --parse numberOfGenerations " +
+                   "numberOfGenerationsToStore generationSize numberOfThreads\n" +
+                "3) Pedigree: bash run.sh --pedigree pedigreeFilename\n"
+        );
+    }
 }

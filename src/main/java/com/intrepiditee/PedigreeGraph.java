@@ -7,39 +7,74 @@ import java.io.IOException;
 import java.util.*;
 
 public class PedigreeGraph {
+    static int minID = Integer.MAX_VALUE;
+    static int maxID = Integer.MIN_VALUE;
 
-    Map<Integer, Set<Integer>> adjacencyList;
+    static Map<Integer, Set<Integer>> adjacencyList = new HashMap<>();
 
-    Map<Pair<Integer, Integer>, Integer> shortedPathLengths;
+    static Map<Pair<Integer, Integer>, Integer> shortedPathLengths = new HashMap<>();
 
-    public static PedigreeGraph makeFromFile(String filename) {
-        PedigreeGraph g = new PedigreeGraph();
+    static Map<Integer, Integer> individualToGeneration = new HashMap<>();
 
-        Scanner sc = Utils.getScanner(filename);
+    public static void main(String[] args) {
+        Configs.numGenerations = Integer.valueOf(args[1]);
+        String pedigreeFilename = args[2];
+        Configs.numThreads = Integer.valueOf(args[3]);
+
+        int numIndividuals = maxID - minID + 1;
+        int generationSize = numIndividuals / Configs.numGenerations;
+
+        Scanner sc = Utils.getScanner(pedigreeFilename);
+
+        // Add all ancestors but discard their parents
+        for (int i = 0; i < generationSize; i++) {
+            int id = sc.nextInt();
+            minID = Math.min(minID, id);
+
+
+
+            // Discard parents
+            sc.nextInt();
+            sc.nextInt();
+
+
+
+        }
 
         // Add edges from children to parents.
         while (sc.hasNextInt()) {
             int id = sc.nextInt();
+            maxID = Math.max(maxID, id);
+
             int fatherID = sc.nextInt();
             int motherID = sc.nextInt();
 
-            Set<Integer> nbrs = g.adjacencyList.getOrDefault(id, new HashSet<>());
+            Set<Integer> nbrs = adjacencyList.getOrDefault(id, new HashSet<>());
             nbrs.add(fatherID);
             nbrs.add(motherID);
-            g.adjacencyList.put(id, nbrs);
+            adjacencyList.put(id, nbrs);
         }
 
+
+
+        // Map individuals to their generations
+        int generation = 0;
+        for (int i = minID; i < maxID; i++) {
+            individualToGeneration.put(i, i / generationSize);
+        }
+
+        System.out.println(individualToGeneration);
+
         // Add edges between siblings.
-        for (Integer id1 : g.adjacencyList.keySet()) {
-            for (Integer id2 : g.adjacencyList.keySet()) {
+        for (Integer id1 : adjacencyList.keySet()) {
+            for (Integer id2 : adjacencyList.keySet()) {
 
                 if (id1.compareTo(id2) < 0) {
-                    Set<Integer> parents1 = g.adjacencyList.get(id1);
-                    Set<Integer> parents2 = g.adjacencyList.get(id2);
+                    Set<Integer> parents1 = adjacencyList.get(id1);
+                    Set<Integer> parents2 = adjacencyList.get(id2);
 
-                    if (parents1.equals(parents2)) {
+                    if ((!parents1.isEmpty()) && (!parents2.isEmpty()) && parents1.equals(parents2)) {
                         parents1.add(id2);
-                        parents2.add(id1);
                     }
                 }
 
@@ -47,12 +82,12 @@ public class PedigreeGraph {
         }
 
         // Complete undirected edges.
-        for (Integer id1 : g.adjacencyList.keySet()) {
-            for (Integer id2 : g.adjacencyList.keySet()) {
+        for (Integer id1 : adjacencyList.keySet()) {
+            for (Integer id2 : adjacencyList.keySet()) {
 
                 if (id1.compareTo(id2) < 0) {
-                    Set<Integer> nbrs1 = g.adjacencyList.get(id1);
-                    Set<Integer> nbrs2 = g.adjacencyList.get(id2);
+                    Set<Integer> nbrs1 = adjacencyList.get(id1);
+                    Set<Integer> nbrs2 = adjacencyList.get(id2);
 
                     if (nbrs1.contains(id2) || nbrs2.contains(id1)) {
                         nbrs1.add(id2);
@@ -67,11 +102,11 @@ public class PedigreeGraph {
             BufferedWriter w = Utils.getBufferedWriter("degrees.txt");
 
             // Compute pairwise degree
-            for (Integer id1 : g.adjacencyList.keySet()) {
-                for (Integer id2 : g.adjacencyList.keySet()) {
+            for (Integer id1 : adjacencyList.keySet()) {
+                for (Integer id2 : adjacencyList.keySet()) {
 
                     if (id1.compareTo(id2) < 0) {
-                        int distance = g.BFS(id1, id2, 3);
+                        int distance = BFS(id1, id2, 3);
                         if (distance != -1) {
                             w.write(String.format("%s %s %s\n", id1, id2, distance));
                         }
@@ -86,11 +121,10 @@ public class PedigreeGraph {
             System.exit(-1);
         }
 
-        return g;
     }
 
 
-    public int BFS(Integer start, Integer end, int maxDistance) {
+    public static int BFS(Integer start, Integer end, int maxDistance) {
         Pair<Integer, Integer> pair = new Pair<>(start, end);
         if (shortedPathLengths.containsKey(pair)) {
             return shortedPathLengths.get(pair);
@@ -133,8 +167,4 @@ public class PedigreeGraph {
         return -1;
     }
 
-    public PedigreeGraph() {
-        adjacencyList = adjacencyList = new HashMap<>();
-        shortedPathLengths = new HashMap<>();
-    }
 }

@@ -20,12 +20,11 @@ public class Main {
     */
     public static void main(String[] args) {
 
-        if (args.length == 0 || args.length > 6) {
-            System.err.println(
-                "Usage: bash run.sh numberOfGenerations " +
-                    "numberOfGenerationsToStore generationSize numberOfThreads"
-            );
-            System.exit(-1);
+        if (args.length == 0 || args.length > 6 ||
+            args[0].equals("-h") || args[0].equals("--help")) {
+
+           Utils.printUsage();
+           return;
         }
 
         if (args[0].equals("--test")) {
@@ -39,7 +38,7 @@ public class Main {
             GenomeParser.main(args);
             return;
         } else if (args[0].equals("--pedigree")) {
-            PedigreeGraph.makeFromFile("Generation3Pedigree.txt");
+            PedigreeGraph.main(args);
             return;
 
 
@@ -111,6 +110,5 @@ public class Main {
 
 
     }
-
 
 }
