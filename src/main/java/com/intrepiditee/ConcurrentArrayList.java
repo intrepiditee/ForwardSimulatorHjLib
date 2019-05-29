@@ -8,6 +8,12 @@ public class ConcurrentArrayList<E> extends ArrayList<E> {
 
     private ReadWriteLock lock;
 
+
+    public ConcurrentArrayList() {
+        super();
+        lock = new ReentrantReadWriteLock();
+    }
+
     public ConcurrentArrayList(int capacity) {
         super(capacity);
         lock = new ReentrantReadWriteLock();

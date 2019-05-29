@@ -26,12 +26,12 @@ public class Generation {
 
         BitSet sequence = Utils.generateRandomSequence(Configs.genomeLength);
 
-        int desiredNumMales = Configs.sizeOfPopulation / 2;
+        int desiredNumMales = Configs.generationSize / 2;
 
         AtomicInteger numMales = new AtomicInteger(0);
 
 
-        Module1.forallChunked(1, Configs.sizeOfPopulation, (i) -> {
+        Module1.forallChunked(1, Configs.generationSize, (i) -> {
 
             BitSet paternalSequence = (BitSet) sequence.clone();
             BitSet maternalSequence = (BitSet) sequence.clone();
@@ -53,8 +53,8 @@ public class Generation {
     }
 
     private Generation() {
-        males = new ConcurrentArrayList<>(Configs.sizeOfPopulation / 2);
-        females = new ConcurrentArrayList<>(Configs.sizeOfPopulation / 2);
+        males = new ConcurrentArrayList<>(Configs.generationSize / 2);
+        females = new ConcurrentArrayList<>(Configs.generationSize / 2);
     }
 
     public Generation add(Individual ind) {
@@ -76,7 +76,7 @@ public class Generation {
 
 
     /*
-    There are sizeOfPopulation / 2 couples. Starting from the first couple,
+    There are generationSize / 2 couples. Starting from the first couple,
     they will have a child. There is 0.8 chance that the wife will have the child
     with her husband. There is 0.2 chance that the wife will have the child with another
     random man. The chance of having one more child after having one child is 0.5 of
@@ -86,9 +86,9 @@ public class Generation {
     public Generation evolveOneGeneration() throws SuspendableException {
         Generation next = makeEmpty();
 
-        int numChildrenPerThread = Configs.sizeOfPopulation / numThreads;
+        int numChildrenPerThread = Configs.generationSize / numThreads;
         int numMalesPerThread = numChildrenPerThread / 2;
-        int numCouples = Configs.sizeOfPopulation / 2;
+        int numCouples = Configs.generationSize / 2;
         int numMales = numCouples;
         int numCouplesPerThread = numCouples / numThreads;
 
@@ -102,7 +102,7 @@ public class Generation {
                     start + numCouplesPerThread;
 
                 int numChildrenPerThreadFinal = n == numThreads - 1 ?
-                    Configs.sizeOfPopulation - n * numChildrenPerThread :
+                    Configs.generationSize - n * numChildrenPerThread :
                     numChildrenPerThread;
                 int numMalesPerThreadFinal = n == numThreads - 1 ?
                     numMales - n * numMalesPerThread :

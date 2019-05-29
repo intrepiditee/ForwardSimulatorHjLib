@@ -20,10 +20,10 @@ public class Main {
     */
     public static void main(String[] args) {
 
-        if (args.length == 0 || args.length > 5) {
+        if (args.length == 0 || args.length > 6) {
             System.err.println(
                 "Usage: bash run.sh numberOfGenerations " +
-                    "numberOfGenerationsToStore populationSizePerGeneration numberOfThreads"
+                    "numberOfGenerationsToStore generationSize numberOfThreads"
             );
             System.exit(-1);
         }
@@ -45,7 +45,7 @@ public class Main {
 
         } else if (args.length == 4) {
             Configs.numGenerations = Integer.valueOf(args[1]);
-            Configs.sizeOfPopulation = Integer.valueOf(args[2]);
+            Configs.generationSize = Integer.valueOf(args[2]);
             Configs.numThreads = Integer.valueOf(args[3]);
 
         } else {
