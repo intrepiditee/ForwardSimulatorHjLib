@@ -5,7 +5,6 @@ import edu.rice.hj.api.HjSuspendable;
 import edu.rice.hj.api.SuspendableException;
 
 import java.util.BitSet;
-import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.intrepiditee.Utils.singletonRand;
@@ -23,7 +22,6 @@ public class Individual {
 
     static AtomicInteger nextID = new AtomicInteger(0);
 
-    static int genomeLength = 51304566;
     static double mutationRate = 1.1 * 10e-8;
 
     static int randBound = (int) (45 * 1.2);
@@ -48,8 +46,8 @@ public class Individual {
 
     private Individual() {
         id = nextID.getAndIncrement();
-        paternalGenome = new BitSet(genomeLength);
-        maternalGenome = new BitSet(genomeLength);
+        paternalGenome = new BitSet(Configs.genomeLength);
+        maternalGenome = new BitSet(Configs.genomeLength);
     }
 
 
@@ -64,7 +62,7 @@ public class Individual {
 
 //            int c = 0;
 
-            for (int i = 0; i < genomeLength; i++) {
+            for (int i = 0; i < Configs.genomeLength; i++) {
                 if (i == paternalPosition) {
                     paternalProb += GeneticMap.probabilities.get(paternalIndex);
                     paternalIndex++;
@@ -102,7 +100,7 @@ public class Individual {
             int maternalPosition = GeneticMap.indices.get(maternalIndex);
             int maternalRand = singletonRand.nextInt(randBound);
 
-            for (int i = 0; i < genomeLength; i++) {
+            for (int i = 0; i < Configs.genomeLength; i++) {
                 if (i == maternalPosition) {
                     maternalProb += GeneticMap.probabilities.get(maternalIndex);
 
@@ -133,7 +131,7 @@ public class Individual {
             maternalRunnable.run();
         });
 
-        double expectedNumMutations = genomeLength * mutationRate;
+        double expectedNumMutations = Configs.genomeLength * mutationRate;
 
         if (expectedNumMutations > 1) {
             int numMutations = singletonRand.nextInt((int) (2 * expectedNumMutations));

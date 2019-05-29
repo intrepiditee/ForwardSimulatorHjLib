@@ -24,7 +24,7 @@ public class Generation {
 
         Random rand = new Random();
 
-        BitSet sequence = Utils.generateRandomSequence(Individual.genomeLength);
+        BitSet sequence = Utils.generateRandomSequence(Configs.genomeLength);
 
         int desiredNumMales = Configs.sizeOfPopulation / 2;
 

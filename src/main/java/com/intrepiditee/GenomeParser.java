@@ -2,7 +2,7 @@ package com.intrepiditee;
 
 import edu.rice.hj.api.SuspendableException;
 import edu.rice.hj.runtime.config.HjSystemProperty;
-import javafx.util.Pair;
+import edu.rice.hj.runtime.util.Pair;
 
 import java.io.*;
 import java.util.*;
@@ -23,8 +23,15 @@ public class GenomeParser {
     static Map<Byte, String> genotypeEncoding = new HashMap<>();
 
     public static void main(String[] args) {
-        int numGenerations = 4;
-        Individual.genomeLength = 10000;
+        if (args.length < 3 || (!args[0].equals("--parse"))) {
+            System.err.println(
+                "Usage: bash run.sh --parse genomeLength numberOfGenerations"
+            );
+            System.exit(-1);
+        }
+
+        Configs.genomeLength = Integer.parseInt(args[1]);
+        Configs.numGenerations = Integer.parseInt(args[2]);
 
         genotypeEncoding.put((byte) 0, "0/0");
         genotypeEncoding.put((byte) 1, "0/1");
@@ -32,8 +39,8 @@ public class GenomeParser {
         genotypeEncoding.put((byte) 3, "1/1");
 
         launchHabaneroApp(() -> {
-            System.out.println(getNumVariantSites(numGenerations));
-            writeVCF(numGenerations);
+            System.out.println(getNumVariantSites(Configs.numGenerations));
+            writeVCF(Configs.numGenerations);
         });
 
 
@@ -153,11 +160,11 @@ public class GenomeParser {
         final BitSet[] prevGenome = new BitSet[1];
         final BitSet[] genome = new BitSet[1];
 
-        int numBasesPerThread = Individual.genomeLength / nThreads;
+        int numBasesPerThread = Configs.genomeLength / nThreads;
 
         forallPhased(0, nThreads - 1, (i) -> {
             int start = numBasesPerThread * i;
-            int end = i == nThreads - 1 ? Individual.genomeLength : start + numBasesPerThread;
+            int end = i == nThreads - 1 ? Configs.genomeLength : start + numBasesPerThread;
 
             for (int n = 0; n < numGenerations; n++) {
                 String filename = "Generation" + n;
