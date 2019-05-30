@@ -44,9 +44,12 @@ public class Utils {
         return pwd;
     }
 
+    public static File getFile(String filename) {
+        return new File(getPWD() + filename);
+    }
 
     public static ObjectInputStream getObjectInputStream(String filename) {
-        File f = new File(getPWD() + filename);
+        File f = getFile(filename);
         ObjectInputStream i = null;
         try {
             i = new ObjectInputStream(new FileInputStream(f));
@@ -73,7 +76,7 @@ public class Utils {
     }
 
     public static File createEmptyFile(String filename) {
-        File f = new File(getPWD() + filename);
+        File f = getFile(filename);
         f.delete();
         try {
             f.createNewFile();
@@ -86,7 +89,7 @@ public class Utils {
     }
 
     public static Scanner getScanner(String filename) {
-        File f = new File(getPWD() + filename);
+        File f = getFile(filename);
         Scanner sc = null;
         try {
             sc = new Scanner(f);
