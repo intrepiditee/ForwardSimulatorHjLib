@@ -33,22 +33,26 @@ public class GenomeParser {
         int lowerBound = Integer.parseInt(args[4]);
         Configs.numThreads = Integer.parseInt(args[5]);
 
-        launchHabaneroApp(() -> {
-            File f = Utils.getFile("variantSiteIndices");
-            if (f.exists()) {
-                try {
-                    System.out.println("\nvariantSiteIndices file exists");
-                    System.out.println();
-                    ObjectInputStream in = Utils.getObjectInputStream("variantSiteIndices");
-                    minID = in.readInt();
-                    maxID = in.readInt();
-                    variantSiteIndices = (Integer[]) in.readObject();
+        File f = Utils.getFile("variantSiteIndices");
+        if (f.exists()) {
+            try {
+                System.out.println("\nvariantSiteIndices file exists");
+                ObjectInputStream in = Utils.getObjectInputStream("variantSiteIndices");
+                minID = in.readInt();
+                maxID = in.readInt();
+                variantSiteIndices = (Integer[]) in.readObject();
+                in.close();
+                System.out.println("variantSiteIndices file read");
+                System.out.println();
 
-                } catch (IOException | ClassNotFoundException e) {
-                    e.printStackTrace();
-                    System.exit(-1);
-                }
-            } else {
+            } catch (IOException | ClassNotFoundException e) {
+                e.printStackTrace();
+                System.exit(-1);
+            }
+        }
+
+        launchHabaneroApp(() -> {
+            if (!f.exists()) {
                 System.out.println("\nvariantSiteIndices file does not exist");
                 System.out.println();
                 getVariantSitesMoreThan(lowerBound);
