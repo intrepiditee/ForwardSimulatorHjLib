@@ -3,10 +3,13 @@ package com.intrepiditee;
 import java.io.*;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.BitSet;
 import java.util.Random;
 import java.util.Scanner;
 import java.util.stream.IntStream;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 public class Utils {
 
@@ -52,13 +55,39 @@ public class Utils {
     }
 
 
-    public static ObjectInputStream getBufferedObjectInputStream(String filename) {
+    public static GZIPOutputStream getGZIPOutputStream(String filename) {
+        File f = createEmptyFile(filename);
+        GZIPOutputStream o = null;
+        try {
+            o = new GZIPOutputStream(new FileOutputStream(f));
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.exit(-1);
+        }
+
+        return o;
+    }
+
+
+    public static GZIPInputStream getGZIPInputStream(String filename) {
         File f = getFile(filename);
+        GZIPInputStream in = null;
+        try {
+            in = new GZIPInputStream(new FileInputStream(f));
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.exit(-1);
+        }
+
+        return in;
+    }
+
+
+    public static ObjectInputStream getBufferedObjectInputStream(String filename) {
+        GZIPInputStream zip = getGZIPInputStream(filename);
         ObjectInputStream oi = null;
         try {
-            InputStream i = new BufferedInputStream(new FileInputStream(f));
-            oi = new ObjectInputStream(i);
-
+            oi = new ObjectInputStream(new BufferedInputStream(zip, bufferSize));
         } catch (IOException e) {
             e.printStackTrace();
             System.exit(-1);
@@ -68,13 +97,10 @@ public class Utils {
     }
 
     public static ObjectOutputStream getBufferedObjectOutputStream(String filename) {
-        File f = createEmptyFile(filename);
-
+        GZIPOutputStream zip = getGZIPOutputStream(filename);
         ObjectOutputStream oo = null;
         try {
-            OutputStream o = new BufferedOutputStream(new FileOutputStream(f));
-            oo = new ObjectOutputStream(o);
-
+            oo = new ObjectOutputStream(new BufferedOutputStream(zip, bufferSize));
         } catch (IOException e) {
             e.printStackTrace();
             System.exit(-1);
@@ -99,9 +125,7 @@ public class Utils {
 
     public static Scanner getScanner(String filename) {
         BufferedReader r = getBufferedReader(filename);
-        Scanner sc = null;
-        sc = new Scanner(r);
-
+        Scanner sc = new Scanner(r);
         return sc;
     }
 
@@ -117,29 +141,15 @@ public class Utils {
 
 
     public static BufferedWriter getBufferedWriter(String filename, int bufferSize) {
-        File f = Utils.createEmptyFile(filename);
-        BufferedWriter w = null;
-        try {
-            w = new BufferedWriter(new FileWriter(f), bufferSize);
-        } catch (IOException e) {
-            e.printStackTrace();
-            System.exit(-1);
-        }
-
+        GZIPOutputStream zip = getGZIPOutputStream(filename);
+        BufferedWriter w = new BufferedWriter(new OutputStreamWriter(zip, StandardCharsets.UTF_8), bufferSize);
         return w;
     }
 
 
     public static BufferedReader getBufferedReader(String filename, int bufferSize) {
-        File f = getFile(filename);
-        BufferedReader r = null;
-        try {
-            r = new BufferedReader(new FileReader(f), bufferSize);
-        } catch (IOException e) {
-            e.printStackTrace();
-            System.exit(-1);
-        }
-
+        GZIPInputStream zip = getGZIPInputStream(filename);
+        BufferedReader r = new BufferedReader(new InputStreamReader(zip, StandardCharsets.UTF_8), bufferSize);
         return r;
     }
 
@@ -149,8 +159,8 @@ public class Utils {
             "Usage:\n" +
                 "1) Simulation: bash run.sh numberOfGenerations " +
                    "numberOfGenerationsToStore generationSize numberOfThreads\n" +
-                "2) VCF: bash run.sh --parse numberOfGenerations " +
-                   "numberOfGenerationsToStore generationSize numberOfThreads\n" +
+                "2) VCF: bash run.sh --parse genomeLength generationSize " +
+                   "numberOfGenerationsStored exclusiveLowerBound numberOfThreads\n" +
                 "3) Pedigree: bash run.sh --pedigree pedigreeFilename\n"
         );
     }

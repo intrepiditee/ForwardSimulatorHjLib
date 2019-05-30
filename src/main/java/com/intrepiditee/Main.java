@@ -7,10 +7,6 @@ import static edu.rice.hj.Module0.launchHabaneroApp;
 public class Main {
 
     /*
-    Usage may be:
-    1) ./ForwardSimulator.jar geneticMapName numberOfGenerations numberOfGenerationsToStore
-       populationSizePerGeneration numberOfThreads
-    2)
     Outputs may be:
     1) Generation_: Each block consists of an serialized integer representing an individual's id
        and two serialized BitSets representing their paternal and maternal genomes.
@@ -31,7 +27,7 @@ public class Main {
             Configs.genomeLength = 10000;
             Individual.randBound = (int) (100 * 1.2);
             Configs.numThreads = 4;
-            Configs.geneticMapName = "test";
+            Configs.geneticMapName = "testGeneticMap.gz";
             Configs.numGenerations = 50;
 
         } else if (args[0].equals("--parse")) {
@@ -41,14 +37,15 @@ public class Main {
             PedigreeGraph.main(args);
             return;
 
-
         } else if (args.length == 4) {
-            Configs.numGenerations = Integer.valueOf(args[1]);
-            Configs.generationSize = Integer.valueOf(args[2]);
-            Configs.numThreads = Integer.valueOf(args[3]);
+            Configs.numGenerations = Integer.parseInt(args[0]);
+            Configs.numGenerationsStore = Integer.parseInt(args[1]);
+            Configs.generationSize = Integer.parseInt(args[2]);
+            Configs.numThreads = Integer.parseInt(args[3]);
 
         } else {
-
+            Utils.printUsage();
+            return;
         }
 
 
@@ -76,8 +73,8 @@ public class Main {
                     }
 
                     if (toWrite != null) {
-                        BufferedWriter w = Utils.getBufferedWriter(filename + "Pedigree.txt");
-                        ObjectOutputStream o = Utils.getBufferedObjectOutputStream(filename);
+                        BufferedWriter w = Utils.getBufferedWriter(filename + "Pedigree.txt.gz");
+                        ObjectOutputStream o = Utils.getBufferedObjectOutputStream(filename + ".gz");
 
                         for (Individual ind : toWrite.males) {
                             o.writeInt(ind.id);

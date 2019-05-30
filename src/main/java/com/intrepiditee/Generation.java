@@ -22,14 +22,11 @@ public class Generation {
     static Generation makeRandomGeneration() throws SuspendableException {
         Generation ancestors = makeEmpty();
 
-        Random rand = new Random();
-
         BitSet sequence = Utils.generateRandomSequence(Configs.genomeLength);
 
         int desiredNumMales = Configs.generationSize / 2;
 
         AtomicInteger numMales = new AtomicInteger(0);
-
 
         Module1.forallChunked(1, Configs.generationSize, (i) -> {
 

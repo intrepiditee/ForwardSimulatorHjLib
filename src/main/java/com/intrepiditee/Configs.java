@@ -7,6 +7,6 @@ public class Configs {
     static int numGenerations = 50;
     static int numGenerationsStore = 4;
     static int generationSize = 10000;
-    static String geneticMapName = "male.gmap.cumulative.chr22";
+    static String geneticMapName = "male.gmap.cumulative.chr22.gz";
 
 }

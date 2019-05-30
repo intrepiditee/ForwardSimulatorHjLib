@@ -11,7 +11,6 @@ import static com.intrepiditee.Utils.singletonRand;
 
 
 public class Individual {
-    static int genomeLength = 10000;
     int id;
     byte sex;
 
