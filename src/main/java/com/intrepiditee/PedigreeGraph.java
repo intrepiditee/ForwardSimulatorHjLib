@@ -21,29 +21,12 @@ public class PedigreeGraph {
         String pedigreeFilename = args[2];
         Configs.numThreads = Integer.valueOf(args[3]);
 
-        int numIndividuals = maxID - minID + 1;
-        int generationSize = numIndividuals / Configs.numGenerations;
-
         Scanner sc = Utils.getScanner(pedigreeFilename);
-
-        // Add all ancestors but discard their parents
-        for (int i = 0; i < generationSize; i++) {
-            int id = sc.nextInt();
-            minID = Math.min(minID, id);
-
-
-
-            // Discard parents
-            sc.nextInt();
-            sc.nextInt();
-
-
-
-        }
 
         // Add edges from children to parents.
         while (sc.hasNextInt()) {
             int id = sc.nextInt();
+            minID = Math.min(minID, id);
             maxID = Math.max(maxID, id);
 
             int fatherID = sc.nextInt();
@@ -55,15 +38,22 @@ public class PedigreeGraph {
             adjacencyList.put(id, nbrs);
         }
 
+        int numIndividuals = maxID - minID + 1;
+        int generationSize = numIndividuals / Configs.numGenerations;
 
+        int ancestorMaxID = minID + generationSize - 1;
+        for (int i = minID; i <= maxID; i++) {
+            // Discard parents of ancestors
+            if (i <= ancestorMaxID) {
+                adjacencyList.put(i, new HashSet<>());
+            }
 
-        // Map individuals to their generations
-        int generation = 0;
-        for (int i = minID; i < maxID; i++) {
+            // Map individuals to their generations
             individualToGeneration.put(i, i / generationSize);
         }
 
-        System.out.println(individualToGeneration);
+//        System.out.println(adjacencyList);
+//        System.out.println(individualToGeneration);
 
         // Add edges between siblings.
         for (Integer id1 : adjacencyList.keySet()) {
@@ -74,7 +64,7 @@ public class PedigreeGraph {
                     Set<Integer> parents2 = adjacencyList.get(id2);
 
                     if ((!parents1.isEmpty()) && (!parents2.isEmpty()) && parents1.equals(parents2)) {
-                        parents1.add(id2);
+                        parents2.add(id1);
                     }
                 }
 

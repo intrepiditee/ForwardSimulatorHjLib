@@ -23,7 +23,7 @@ public class GenomeParser {
     public static void main(String[] args) {
         if (args.length < 6 || (!args[0].equals("--parse"))) {
             System.err.println(
-                "Usage: bash run.sh --parse genomeLength generationSize numberOfGenerations" +
+                "Usage: bash run.sh --parse genomeLength generationSize numberOfGenerationsStored" +
                     " exclusiveLowerBound numThreads"
             );
             System.exit(-1);
@@ -82,6 +82,8 @@ public class GenomeParser {
                             id[0] = in.readInt();
                             minID = Math.min(minID, id[0]);
                             maxID = Math.max(maxID, id[0]);
+
+                            System.out.println(id[0]);
 
                             paternalGenome[0] = (BitSet) in.readObject();
                             maternalGenome[0] = (BitSet) in.readObject();
