@@ -77,19 +77,19 @@ public class Main {
 
                     if (toWrite != null) {
                         BufferedWriter w = Utils.getBufferedWriter(filename + "Pedigree.txt");
-                        ObjectOutputStream o = Utils.getObjectOutputStream(filename);
+                        ObjectOutputStream o = Utils.getBufferedObjectOutputStream(filename);
 
                         for (Individual ind : toWrite.males) {
                             o.writeInt(ind.id);
-                            o.writeObject(ind.paternalGenome);
-                            o.writeObject(ind.maternalGenome);
+                            o.writeUnshared(ind.paternalGenome);
+                            o.writeUnshared(ind.maternalGenome);
                             w.write(String.format("%s %s %s\n", ind.id, ind.fatherID, ind.motherID));
                         }
 
                         for (Individual ind : toWrite.females) {
                             o.writeInt(ind.id);
-                            o.writeObject(ind.paternalGenome);
-                            o.writeObject(ind.maternalGenome);
+                            o.writeUnshared(ind.paternalGenome);
+                            o.writeUnshared(ind.maternalGenome);
                             w.write(String.format("%s %s %s\n", ind.id, ind.fatherID, ind.motherID));
                         }
 

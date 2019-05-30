@@ -37,10 +37,10 @@ public class GenomeParser {
         if (f.exists()) {
             try {
                 System.out.println("\nvariantSiteIndices file exists");
-                ObjectInputStream in = Utils.getObjectInputStream("variantSiteIndices");
+                ObjectInputStream in = Utils.getBufferedObjectInputStream("variantSiteIndices");
                 minID = in.readInt();
                 maxID = in.readInt();
-                variantSiteIndices = (Integer[]) in.readObject();
+                variantSiteIndices = (Integer[]) in.readUnshared();
                 in.close();
                 System.out.println("variantSiteIndices file read");
                 System.out.println();
@@ -90,8 +90,9 @@ public class GenomeParser {
             for (int n = 0; n < numGenerations; n++) {
                 String filename = i == 0 ? "Generation" + n : null;
                 ObjectInputStream in = i == 0 ?
-                    Utils.getObjectInputStream(filename) :
+                    Utils.getBufferedObjectInputStream(filename) :
                     null;
+
 
                 int numProcessed = 0;
 
@@ -105,8 +106,8 @@ public class GenomeParser {
 
                             System.out.println(id[0]);
 
-                            paternalGenome[0] = (BitSet) in.readObject();
-                            maternalGenome[0] = (BitSet) in.readObject();
+                            paternalGenome[0] = (BitSet) in.readUnshared();
+                            maternalGenome[0] = (BitSet) in.readUnshared();
 
                         } catch (EOFException e) {
                             id[0] = -1;
@@ -254,7 +255,7 @@ public class GenomeParser {
 
             for (int n = 0; n < numGenerations; n++) {
                 String filename = "Generation" + n;
-                ObjectInputStream in = i == 0 ? Utils.getObjectInputStream(filename) : null;
+                ObjectInputStream in = i == 0 ? Utils.getBufferedObjectInputStream(filename) : null;
 
                 int count = 0;
 
@@ -270,7 +271,7 @@ public class GenomeParser {
                             }
                             isInt = !isInt;
 
-                            genome[0] = (BitSet) in.readObject();
+                            genome[0] = (BitSet) in.readUnshared();
 
                         } catch (EOFException e) {
                             genome[0] = null;
@@ -337,17 +338,16 @@ public class GenomeParser {
         System.out.println("Number of variant sites: " + variantSiteIndicesArray.size());
 
         System.out.println("Writing variantSiteIndices to file");
-        ObjectOutputStream o = Utils.getObjectOutputStream("variantSiteIndices");
+        ObjectOutputStream o = Utils.getBufferedObjectOutputStream("variantSiteIndices");
         try {
             o.writeInt(minID);
             o.writeInt(maxID);
-            o.writeObject(variantSiteIndices);
+            o.writeUnshared(variantSiteIndices);
         } catch (IOException e) {
             e.printStackTrace();
             System.exit(-1);
         }
         System.out.println("variantSiteIndices written to file\n");
-
-
     }
+
 }

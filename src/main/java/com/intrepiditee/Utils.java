@@ -10,6 +10,9 @@ import java.util.stream.IntStream;
 
 public class Utils {
 
+    // 100 MB
+    static int bufferSize = 100000000;
+
     static Random singletonRand = new Random();
 
     public static BitSet generateRandomSequence(int genomeLength) {
@@ -48,32 +51,38 @@ public class Utils {
         return new File(getPWD() + filename);
     }
 
-    public static ObjectInputStream getObjectInputStream(String filename) {
+
+    public static ObjectInputStream getBufferedObjectInputStream(String filename) {
         File f = getFile(filename);
-        ObjectInputStream i = null;
+        ObjectInputStream oi = null;
         try {
-            i = new ObjectInputStream(new FileInputStream(f));
+            InputStream i = new BufferedInputStream(new FileInputStream(f));
+            oi = new ObjectInputStream(i);
+
         } catch (IOException e) {
             e.printStackTrace();
             System.exit(-1);
         }
 
-        return i;
+        return oi;
     }
 
-    public static ObjectOutputStream getObjectOutputStream(String filename) {
+    public static ObjectOutputStream getBufferedObjectOutputStream(String filename) {
         File f = createEmptyFile(filename);
 
-        ObjectOutputStream o = null;
+        ObjectOutputStream oo = null;
         try {
-            o = new ObjectOutputStream(new FileOutputStream(f));
+            OutputStream o = new BufferedOutputStream(new FileOutputStream(f));
+            oo = new ObjectOutputStream(o);
+
         } catch (IOException e) {
             e.printStackTrace();
             System.exit(-1);
         }
 
-        return o;
+        return oo;
     }
+
 
     public static File createEmptyFile(String filename) {
         File f = getFile(filename);
@@ -89,21 +98,23 @@ public class Utils {
     }
 
     public static Scanner getScanner(String filename) {
-        File f = getFile(filename);
+        BufferedReader r = getBufferedReader(filename);
         Scanner sc = null;
-        try {
-            sc = new Scanner(f);
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-            System.exit(-1);
-        }
+        sc = new Scanner(r);
 
         return sc;
     }
 
-    public static BufferedWriter getBufferedWriter(String filename) {
-        return getBufferedWriter(filename, 8192);
+
+    public static BufferedReader getBufferedReader(String filename) {
+        return getBufferedReader(filename, bufferSize);
     }
+
+
+    public static BufferedWriter getBufferedWriter(String filename) {
+        return getBufferedWriter(filename, bufferSize);
+    }
+
 
     public static BufferedWriter getBufferedWriter(String filename, int bufferSize) {
         File f = Utils.createEmptyFile(filename);
@@ -117,6 +128,21 @@ public class Utils {
 
         return w;
     }
+
+
+    public static BufferedReader getBufferedReader(String filename, int bufferSize) {
+        File f = getFile(filename);
+        BufferedReader r = null;
+        try {
+            r = new BufferedReader(new FileReader(f), bufferSize);
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.exit(-1);
+        }
+
+        return r;
+    }
+
 
     public static void printUsage() {
         System.err.println(
