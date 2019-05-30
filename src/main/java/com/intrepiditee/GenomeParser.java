@@ -204,13 +204,12 @@ public class GenomeParser {
 
         // Write all the rows sequentially
 
-        int bufferSize = 200000;
         PrintWriter out = null;
         try {
             GZIPOutputStream zip = new GZIPOutputStream(
                 new FileOutputStream(Utils.createEmptyFile("out.vcf.zip")));
             BufferedWriter writer = new BufferedWriter(
-                new OutputStreamWriter(zip, StandardCharsets.UTF_8), bufferSize);
+                new OutputStreamWriter(zip, StandardCharsets.UTF_8), Utils.bufferSize);
 
             out = new PrintWriter(writer);
 
@@ -226,8 +225,9 @@ public class GenomeParser {
         out.print("\n");
 
         int count = 0;
-        for (StringBuilder s : records) {
-            out.println(s.toString());
+        for (int i = 0; i < records.length; i++) {
+            out.println(records[i].toString());
+            records[i] = null;
 
             count += 1;
             if (count % 1000 == 0) {
@@ -343,6 +343,7 @@ public class GenomeParser {
             o.writeInt(minID);
             o.writeInt(maxID);
             o.writeUnshared(variantSiteIndices);
+            o.close();
         } catch (IOException e) {
             e.printStackTrace();
             System.exit(-1);

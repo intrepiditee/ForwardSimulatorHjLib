@@ -32,5 +32,7 @@ public class GeneticMap {
             prevGeneticDistance = geneticDistance;
         }
 
+        sc.close();
     }
+
 }
