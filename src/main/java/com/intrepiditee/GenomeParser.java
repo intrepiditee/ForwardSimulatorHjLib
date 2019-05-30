@@ -37,7 +37,7 @@ public class GenomeParser {
             File f = Utils.getFile("variantSiteIndices");
             if (f.exists()) {
                 try {
-                    System.out.println("variantSiteIndices file exists");
+                    System.out.println("\nvariantSiteIndices file exists");
                     System.out.println();
                     ObjectInputStream in = Utils.getObjectInputStream("variantSiteIndices");
                     minID = in.readInt();
@@ -49,7 +49,7 @@ public class GenomeParser {
                     System.exit(-1);
                 }
             } else {
-                System.out.println("variantSiteIndices file does not exist");
+                System.out.println("\nvariantSiteIndices file does not exist");
                 System.out.println();
                 getVariantSitesMoreThan(lowerBound);
             }
@@ -99,7 +99,7 @@ public class GenomeParser {
                             minID = Math.min(minID, id[0]);
                             maxID = Math.max(maxID, id[0]);
 
-//                            System.out.println(id[0]);
+                            System.out.println(id[0]);
 
                             paternalGenome[0] = (BitSet) in.readObject();
                             maternalGenome[0] = (BitSet) in.readObject();

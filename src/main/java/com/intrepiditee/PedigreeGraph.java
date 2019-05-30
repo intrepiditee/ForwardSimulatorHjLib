@@ -12,8 +12,6 @@ public class PedigreeGraph {
 
     static Map<Integer, Set<Integer>> adjacencyList = new HashMap<>();
 
-    static Map<Pair<Integer, Integer>, Integer> shortedPathLengths = new HashMap<>();
-
     static Map<Integer, Integer> individualToGeneration = new HashMap<>();
 
     public static void main(String[] args) {
@@ -52,8 +50,8 @@ public class PedigreeGraph {
             individualToGeneration.put(i, i / generationSize);
         }
 
-//        System.out.println(adjacencyList);
-//        System.out.println(individualToGeneration);
+        System.out.println(adjacencyList);
+        System.out.println(individualToGeneration);
 
         // Add edges between siblings.
         for (Integer id1 : adjacencyList.keySet()) {
@@ -116,19 +114,18 @@ public class PedigreeGraph {
 
     public static int BFS(Integer start, Integer end, int maxDistance) {
         Pair<Integer, Integer> pair = new Pair<>(start, end);
-        if (shortedPathLengths.containsKey(pair)) {
-            return shortedPathLengths.get(pair);
-        }
-        Pair<Integer, Integer> reversePair = new Pair<>(end, start);
-        if (shortedPathLengths.containsKey(reversePair)) {
-            return shortedPathLengths.get(reversePair);
-        }
+
+        // If can go up, can go down as well. If cannot go up, can go down.
+        Map<Integer, Boolean> individualToCanGoUp = new HashMap<>();
+        individualToCanGoUp.put(start, true);
 
         Deque<Integer> q = new ArrayDeque<>();
         Map<Integer, Integer> distances = new HashMap<>();
 
         q.addLast(start);
         distances.put(start, 0);
+
+        int startGeneration = individualToGeneration.get(start);
 
         while (!q.isEmpty()) {
             Integer current = q.removeFirst();
@@ -137,8 +134,18 @@ public class PedigreeGraph {
             if (nbrs != null) {
                 for (Integer nbr : nbrs) {
                     if (!distances.containsKey(nbr)) {
+
+                        boolean canGoUp = individualToCanGoUp.get(current);
+                        int nbrGeneration = individualToGeneration.get(nbr);
+                        if (canGoUp && nbrGeneration <= startGeneration) {
+                            individualToCanGoUp.put(nbr, true);
+                        } else if (!canGoUp) {
+                            individualToCanGoUp.put(nbr, false);
+                        } else {
+                            continue;
+                        }
+
                         int distance = distances.get(current) + 1;
-                        shortedPathLengths.put(pair, distance);
 
                         if (distance <= maxDistance) {
                             distances.put(nbr, distance);
@@ -153,7 +160,6 @@ public class PedigreeGraph {
             }
         }
 
-        shortedPathLengths.put(pair, -1);
         return -1;
     }
 
