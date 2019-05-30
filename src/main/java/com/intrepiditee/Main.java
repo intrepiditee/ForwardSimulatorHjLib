@@ -30,7 +30,7 @@ public class Main {
         if (args[0].equals("--test")) {
             Configs.genomeLength = 10000;
             Individual.randBound = (int) (100 * 1.2);
-            Configs.numThreads = 3;
+            Configs.numThreads = 4;
             Configs.geneticMapName = "test";
             Configs.numGenerations = 50;
 

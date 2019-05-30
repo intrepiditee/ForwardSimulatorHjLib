@@ -6,7 +6,6 @@ import edu.rice.hj.runtime.util.Pair;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.zip.GZIPOutputStream;
 
 import static com.intrepiditee.Configs.numGenerations;
@@ -44,9 +43,10 @@ public class GenomeParser {
     }
 
     private static void writeVCF() throws SuspendableException {
-        Collections.sort(variantSiteIndices);
+        final Integer[] indices = variantSiteIndices.toArray(new Integer[0]);
+        Arrays.sort(indices);
 
-        int numSites = variantSiteIndices.size();
+        int numSites = indices.length;
         int numSitesPerThread = numSites / Configs.numThreads;
 
         final int[] id = new int[1];
@@ -55,6 +55,7 @@ public class GenomeParser {
 
         final StringBuilder[] records = new StringBuilder[numSites];
 
+        final String[][] idIndexToBases = new String[maxID - minID + 1][numSites];
 
         forallPhased(0, Configs.numThreads - 1, (i) -> {
             int start = numSitesPerThread * i;
@@ -65,10 +66,8 @@ public class GenomeParser {
 
             // Store all base pairs at variant sites
 
-            Map<Pair<Integer, Integer>, String> idIndexPairToBases = new HashMap<>(numSites);
-
             for (int n = 0; n < numGenerations; n++) {
-                String filename = "Generation" + n;
+                String filename = i == 0 ? "Generation" + n : null;
                 ObjectInputStream in = i == 0 ?
                     Utils.getObjectInputStream(filename) :
                     null;
@@ -83,7 +82,7 @@ public class GenomeParser {
                             minID = Math.min(minID, id[0]);
                             maxID = Math.max(maxID, id[0]);
 
-                            System.out.println(id[0]);
+//                            System.out.println(id[0]);
 
                             paternalGenome[0] = (BitSet) in.readObject();
                             maternalGenome[0] = (BitSet) in.readObject();
@@ -104,24 +103,23 @@ public class GenomeParser {
                     }
 
                     for (int j = start; j < end; j++) {
-                        int variantSiteIndex = variantSiteIndices.get(j);
+                        int variantSiteIndex = indices[j];
 
-                        boolean paternalBase = paternalGenome[0].get(variantSiteIndex);
-                        boolean maternalBase = maternalGenome[0].get(variantSiteIndex);
+                        boolean paternalBase = paternalGenome[0].get(j);
+                        boolean maternalBase = maternalGenome[0].get(j);
 
-                        Pair<Integer, Integer> idIndexPair = new Pair<>(id[0], variantSiteIndex);
-
+                        int idIndex = id[0] - minID;
                         if (!paternalBase) {
                             if (!maternalBase) {
-                                idIndexPairToBases.put(idIndexPair, "0|0");
+                                idIndexToBases[idIndex][j] = "0|0";
                             } else {
-                                idIndexPairToBases.put(idIndexPair, "0|1");
+                                idIndexToBases[idIndex][j] = "0|1";
                             }
                         } else {
                             if (!maternalBase) {
-                                idIndexPairToBases.put(idIndexPair, "1|0");
+                                idIndexToBases[idIndex][j] = "1|0";
                             } else {
-                                idIndexPairToBases.put(idIndexPair, "1|1");
+                                idIndexToBases[idIndex][j] = "1|1";
                             }
                         }
                     }
@@ -135,7 +133,6 @@ public class GenomeParser {
                         }
                     }
 
-
                 } // end of while
 
 
@@ -148,19 +145,14 @@ public class GenomeParser {
                     }
                 }
 
-            } // end of for generation
+            } // end of all generations
 
-            next();
-
-            if (i == 0) {
-                System.out.println(idIndexPairToBases.size());
-            }
 
             // Generate all the rows
 
             int numRecordsGenerated = 0;
             for (int j = start; j < end; j++) {
-                int variantSiteIndex = variantSiteIndices.get(j);
+                int variantSiteIndex = indices[j];
 
                 records[j] = new StringBuilder();
                 records[j].append("22\t");
@@ -170,7 +162,8 @@ public class GenomeParser {
                 records[j].append("\tA\tC\t.\tPASS\t.\tGT");
 
                 for (int ID = minID; ID <= maxID; ID++) {
-                    String bases = idIndexPairToBases.get(new Pair<>(ID, variantSiteIndex));
+                    int idIndex = ID - minID;
+                    String bases = idIndexToBases[idIndex][j];
 
                     records[j].append("\t");
                     records[j].append(bases);
