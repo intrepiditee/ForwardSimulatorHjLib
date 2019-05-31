@@ -83,11 +83,36 @@ public class Utils {
     }
 
 
+    public static BufferedInputStream getBufferedInputStream(String filename) {
+        File f = getFile(filename);
+        BufferedInputStream bi = null;
+        try {
+            bi = new BufferedInputStream(new FileInputStream(f), bufferSize);
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.exit(-1);
+        }
+        return bi;
+    }
+
+
+    public static BufferedOutputStream getBufferedOutputStream(String filename) {
+        File f = createEmptyFile(filename);
+        BufferedOutputStream bo = null;
+        try {
+            bo = new BufferedOutputStream(new FileOutputStream(f), bufferSize);
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.exit(-1);
+        }
+        return bo;
+    }
+
+
     public static ObjectInputStream getBufferedObjectInputStream(String filename) {
-        GZIPInputStream zip = getGZIPInputStream(filename);
         ObjectInputStream oi = null;
         try {
-            oi = new ObjectInputStream(new BufferedInputStream(zip, bufferSize));
+            oi = new ObjectInputStream(getBufferedInputStream(filename));
         } catch (IOException e) {
             e.printStackTrace();
             System.exit(-1);
@@ -97,10 +122,9 @@ public class Utils {
     }
 
     public static ObjectOutputStream getBufferedObjectOutputStream(String filename) {
-        GZIPOutputStream zip = getGZIPOutputStream(filename);
         ObjectOutputStream oo = null;
         try {
-            oo = new ObjectOutputStream(new BufferedOutputStream(zip, bufferSize));
+            oo = new ObjectOutputStream(getBufferedOutputStream(filename));
         } catch (IOException e) {
             e.printStackTrace();
             System.exit(-1);

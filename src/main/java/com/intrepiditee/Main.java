@@ -74,7 +74,7 @@ public class Main {
 
                     if (toWrite != null) {
                         BufferedWriter w = Utils.getBufferedWriter(filename + "Pedigree.txt.gz");
-                        ObjectOutputStream o = Utils.getBufferedObjectOutputStream(filename + ".gz");
+                        ObjectOutputStream o = Utils.getBufferedObjectOutputStream(filename);
 
                         for (Individual ind : toWrite.males) {
                             o.writeInt(ind.id);

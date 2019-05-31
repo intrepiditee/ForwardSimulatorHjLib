@@ -88,7 +88,7 @@ public class GenomeParser {
             for (int n = 0; n < Configs.numGenerationsStore; n++) {
                 String filename = i == 0 ? "Generation" + n : null;
                 ObjectInputStream in = i == 0 ?
-                    Utils.getBufferedObjectInputStream(filename + ".gz") :
+                    Utils.getBufferedObjectInputStream(filename) :
                     null;
 
 
@@ -240,7 +240,7 @@ public class GenomeParser {
 //            System.out.println(end);
 
             for (int n = 0; n < Configs.numGenerationsStore; n++) {
-                String filename = "Generation" + n + ".gz";
+                String filename = "Generation" + n;
                 ObjectInputStream in = i == 0 ? Utils.getBufferedObjectInputStream(filename) : null;
 
                 int count = 0;
