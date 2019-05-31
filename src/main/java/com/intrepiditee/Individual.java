@@ -66,18 +66,18 @@ public class Individual {
         List<Segment> mergedSegments = new ArrayList<>(segments.size());
 
         int i = 0;
-        int numPaternalSegments = paternalGenome.size();
-        while (i < numPaternalSegments) {
-            Segment mergedSegment = paternalGenome.get(i);
-            if (i != numPaternalSegments - 1) {
-                Segment nextSegment = paternalGenome.get(++i);
+        int numSegments = segments.size();
+        while (i < numSegments) {
+            Segment mergedSegment = segments.get(i);
+            if (i != numSegments - 1) {
+                Segment nextSegment = segments.get(++i);
                 while (intersect(mergedSegment, nextSegment)) {
                     mergedSegment = merge(mergedSegment, nextSegment);
                     i++;
-                    if (i == numPaternalSegments) {
+                    if (i == numSegments) {
                         break;
                     } else {
-                        nextSegment = paternalGenome.get(i);
+                        nextSegment = segments.get(i);
                     }
                 }
             }
