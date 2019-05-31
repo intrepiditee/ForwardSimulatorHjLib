@@ -208,7 +208,7 @@ public class GenomeParser {
 
             out.println(s.toString());
 
-            numRecordsWritten += Configs.numThreads;
+            numRecordsWritten += 1;
             if (numRecordsWritten % 1000 == 0) {
                 System.out.println("Records: " + numRecordsWritten / 1000 + "k written");
             }
