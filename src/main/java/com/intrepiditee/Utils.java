@@ -185,7 +185,8 @@ public class Utils {
                    "numberOfGenerationsToStore generationSize numberOfThreads\n" +
                 "2) VCF: bash run.sh --parse genomeLength generationSize " +
                    "numberOfGenerationsStored exclusiveLowerBound numberOfThreads\n" +
-                "3) Pedigree: bash run.sh --pedigree pedigreeFilename\n"
+                "3) Pedigree: bash run.sh --pedigree numberOfGenerationsStored " +
+                   "exclusiveUpperBound numberOfThreads\n"
         );
     }
 }

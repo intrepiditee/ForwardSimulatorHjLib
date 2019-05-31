@@ -50,7 +50,6 @@ public class PedigreeGraph {
 //        System.out.println(individualToGeneration);
 
 
-
     }
 
     public static void addGenerationToGraph(int generation) {
