@@ -58,9 +58,9 @@ public class Main {
 
                 for (int i = 0; i < Configs.numGenerations; i++) {
                     if (next == null) {
-                        next = Generation.makeRandomGeneration();
+                        next = Generation.makeAncestors();
                     } else {
-                        next = next.evolveOneGenerationThenDestroy();
+                        next = next.evolveOneGeneration();
                     }
 
                     Generation toWrite = null;

@@ -41,7 +41,7 @@ public class Segment {
     }
 
     public static boolean intersect(Segment seg1, Segment seg2) {
-        if (Math.max(seg1.start, seg2.start) > Math.min(seg1.end, seg2.end)) {
+        if (Math.max(seg1.start, seg2.start) >= Math.min(seg1.end, seg2.end)) {
             return false;
         }
         return true;
@@ -54,8 +54,28 @@ public class Segment {
             splited.add(make(prevEnd, i));
             prevEnd = i + 1;
         }
+        // If last i is end - 1, prevEnd is end
         splited.add(make(prevEnd, end));
 
         return splited;
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        if (!(other instanceof Segment)) {
+            return false;
+        }
+
+        Segment o = (Segment) other;
+        if (o.start == start && o.end == end) {
+            return true;
+        }
+
+        return false;
+    }
+
+    @Override
+    public String toString() {
+        return "[" + start + ", " + end + "]";
     }
 }

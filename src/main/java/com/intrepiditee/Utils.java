@@ -18,7 +18,7 @@ public class Utils {
 
     static Random singletonRand = new Random();
 
-    public static BitSet generateRandomSequence(int genomeLength) {
+    private static BitSet generateRandomSequence(int genomeLength) {
         Random sequenceRandom = new Random();
         BitSet sequence = new BitSet();
         for (int i = 0; i < genomeLength; i++) {

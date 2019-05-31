@@ -31,14 +31,14 @@ public class Individual {
     static byte MALE = 1;
     static byte FEMALE = 0;
 
-    static Individual makeEmpty() {
+    static Individual make() {
         Individual ind = new Individual();
         return ind;
     }
 
 
     static Individual makeFromParents(Individual father, Individual mother) throws SuspendableException {
-        Individual ind = makeEmpty();
+        Individual ind = make();
         ind.fatherID = father.id;
         ind.motherID = mother.id;
         ind.recombineGenomes(father, mother);
@@ -51,6 +51,8 @@ public class Individual {
         id = nextID.getAndIncrement();
         paternalGenome = new ArrayList<>();
         maternalGenome = new ArrayList<>();
+        paternalGenome.add(Segment.make(0, Configs.genomeLength));
+        maternalGenome.add(Segment.make(0, Configs.genomeLength));
     }
 
     private Individual mergeGenomes() {
@@ -87,16 +89,28 @@ public class Individual {
 
 
     private Individual mutateGenomes() {
-
+        mutateOneGenome(paternalGenome);
+        mutateOneGenome(maternalGenome);
+        return this;
     }
 
     private List<Segment> mutateOneGenome(List<Segment> segments) {
         double expectedNumMutations = Configs.genomeLength * mutationRate;
-        int numMutations = singletonRand.nextInt((int) (2 * expectedNumMutations));
+        int numMutations = 0;
+        if (expectedNumMutations > 1.0) {
+            numMutations = singletonRand.nextInt((int) (2 * expectedNumMutations));
+        } else {
+            if (singletonRand.nextDouble() < expectedNumMutations) {
+                numMutations = 1;
+            }
+        }
 
         List<Integer> mutationIndices = new ArrayList<>(numMutations);
         for (int i = 0; i < numMutations; i++) {
-            mutationIndices.add(singletonRand.nextInt(Configs.genomeLength));
+            Integer index = singletonRand.nextInt(Configs.genomeLength);
+            if (!mutationIndices.contains(index)) {
+                mutationIndices.add(index);
+            }
         }
         Collections.sort(mutationIndices);
 
@@ -104,45 +118,29 @@ public class Individual {
 
         int i = 0;
         int mutationIndex = mutationIndices.get(i);
+
         for (Segment segment : segments) {
             List<Integer> excludingIndicies = null;
-            if (segment.contains(mutationIndex)) {
+            while (segment.contains(mutationIndex) &&
+                   mutationIndex != segment.start &&
+                   mutationIndex != segment.end - 1) {
+
                 if (excludingIndicies == null) {
                     excludingIndicies = new ArrayList<>();
                 }
                 excludingIndicies.add(mutationIndex);
+                i++;
+                mutationIndex = i >= numMutations ? -1 : mutationIndices.get(i);
+            }
+
+            if (excludingIndicies != null) {
                 mutatedGenome.addAll(segment.split(excludingIndicies));
-                mutationIndex = mutationIndices.get(++i);
             } else {
                 mutatedGenome.add(segment);
             }
         }
 
-        if (expectedNumMutations > 1.0) {
-            int numMutations = singletonRand.nextInt((int) (2 * expectedNumMutations));
-            for (int i = 0; i < numMutations; i++) {
-                int paternalMutatingPosition = singletonRand.nextInt(paternalGenome.size());
-                paternalGenome.flip(paternalMutatingPosition);
-            }
-
-            numMutations = singletonRand.nextInt((int) (2 * expectedNumMutations));
-            for (int i = 0; i < numMutations; i++) {
-                int maternalMutatingPosition = singletonRand.nextInt(maternalGenome.size());
-                maternalGenome.flip(maternalMutatingPosition);
-            }
-
-        } else {
-            if (singletonRand.nextDouble() < expectedNumMutations) {
-                int paternalMutatingPosition = singletonRand.nextInt(paternalGenome.size());
-                paternalGenome.flip(paternalMutatingPosition);
-            }
-
-            if (singletonRand.nextDouble() < expectedNumMutations) {
-                int maternalMutatingPosition = singletonRand.nextInt(maternalGenome.size());
-                maternalGenome.flip(maternalMutatingPosition);
-            }
-        }
-
+        return mutatedGenome;
     }
 
     private List<Segment> recombineOneGenome(List<Segment> oneSegmentList, List<Segment> anotherSegmentList) {
@@ -216,9 +214,7 @@ public class Individual {
     private Individual recombineGenomes(Individual father, Individual mother) throws SuspendableException {
         paternalGenome = recombineOneGenome(father.paternalGenome, father.maternalGenome);
         maternalGenome = recombineOneGenome(mother.paternalGenome, mother.maternalGenome);
-
         mergeGenomes();
-
         mutateGenomes();
 
         return this;

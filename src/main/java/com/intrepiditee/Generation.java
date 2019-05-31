@@ -5,7 +5,6 @@ import edu.rice.hj.api.HjSuspendable;
 import edu.rice.hj.api.SuspendableException;
 
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.intrepiditee.Configs.numThreads;
 
@@ -19,34 +18,24 @@ public class Generation {
         return new Generation();
     }
 
-    static Generation makeRandomGeneration() throws SuspendableException {
-        Generation ancestors = makeEmpty();
-
-        BitSet sequence = Utils.generateRandomSequence(Configs.genomeLength);
+    static Generation makeAncestors() {
+        Generation gen = makeEmpty();
 
         int desiredNumMales = Configs.generationSize / 2;
+        int numMales = 0;
 
-        AtomicInteger numMales = new AtomicInteger(0);
-
-        Module1.forallChunked(1, Configs.generationSize, (i) -> {
-
-            BitSet paternalSequence = (BitSet) sequence.clone();
-            BitSet maternalSequence = (BitSet) sequence.clone();
-
-            Individual ind = Individual.makeEmpty();
-            ind.paternalGenome = paternalSequence;
-            ind.maternalGenome = maternalSequence;
-
-            if (numMales.getAndIncrement() < desiredNumMales) {
+        for (int i = 0; i < Configs.generationSize; i++) {
+            Individual ind = Individual.make();
+            if (numMales < desiredNumMales) {
                 ind.sex = Individual.MALE;
+                numMales++;
             } else {
                 ind.sex = Individual.FEMALE;
             }
+            gen.add(ind);
+        }
 
-            ancestors.add(ind);
-        });
-
-        return ancestors;
+        return gen;
     }
 
     private Generation() {
@@ -66,7 +55,7 @@ public class Generation {
     public Generation evolve(int numGenerations) throws SuspendableException {
         Generation next = this;
         for (int i = 0; i < numGenerations; i++) {
-            next = next.evolveOneGenerationThenDestroy();
+            next = next.evolveOneGeneration();
         }
         return next;
     }
@@ -170,31 +159,8 @@ public class Generation {
     }
 
 
-    public Generation evolveOneGenerationThenDestroy() throws SuspendableException {
-        Generation next = evolveOneGeneration();
-        destroy();
-        return next;
-    }
-
-
     public int size() {
         return males.size() + females.size();
     }
 
-
-    public void destroy() {
-        for (Individual ind : males) {
-            ind.paternalGenome = null;
-            ind.maternalGenome = null;
-        }
-        males.clear();
-        males = null;
-
-        for (Individual ind : females) {
-            ind.paternalGenome = null;
-            ind.maternalGenome = null;
-        }
-        females.clear();
-        females = null;
-    }
 }
