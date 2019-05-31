@@ -40,9 +40,7 @@ public class PedigreeGraph {
         launchHabaneroApp(() -> {
             connectSiblings();
             System.out.println("Siblings connected");
-        });
 
-        launchHabaneroApp(() -> {
             computePairwiseDegreeLessThanThenWrite(upperBound);
             System.out.println("Degrees written");
         });
@@ -82,7 +80,7 @@ public class PedigreeGraph {
 
 
     public static void connectSiblings() throws SuspendableException {
-        forseq(1, Configs.numGenerationsStore - 1, (i) -> {
+        forall(1, Configs.numGenerationsStore - 1, (i) -> {
             int generationStartID = minID + Configs.generationSize * i;
             int generationEndID = generationStartID + Configs.generationSize;
 
@@ -106,7 +104,7 @@ public class PedigreeGraph {
         int numIndividuals = Configs.generationSize * Configs.numGenerationsStore;
         byte[][] degrees = new byte[numIndividuals][numIndividuals];
 
-        forallChunked(0, Configs.numThreads - 1, (i) -> {
+        forall(0, Configs.numThreads - 1, (i) -> {
             int count = 0;
 
             int startID = minID + i * Configs.generationSize;
@@ -116,7 +114,7 @@ public class PedigreeGraph {
                 for (int id2 = id1 + 1; id2 < endID; id2++) {
                     int degree = BFSLessThan(id2, id1, upperBound);
                     if (degree != -1) {
-                        degrees[id1 - minID][id2 - minID] = (byte) degree;
+                        degrees[id2 - minID][id1 - minID] = (byte) degree;
                     }
                 }
 
@@ -126,7 +124,7 @@ public class PedigreeGraph {
                         StringBuilder s = new StringBuilder();
                         s.append(count / 1000);
                         s.append("k of out ");
-                        s.append(4 * Configs.generationSize * 4 * Configs.generationSize / 2 / 1000);
+                        s.append(Configs.generationSize / 2 / 1000);
                         s.append("k pairs computed");
 
                         System.out.println(s.toString());
@@ -136,11 +134,16 @@ public class PedigreeGraph {
         });
 
         // Write sequentially
+        int count = 0;
         BufferedWriter w = Utils.getBufferedWriter("degrees.txt.gz");
         for (int id1 = minID; id1 <= maxID; id1++) {
             for (int id2 = id1 + 1; id2 <= maxID; id2++) {
                 try {
-                    w.write(String.format("%s %s %s\n", id1, id2, degrees[id1 - minID][id2 - minID]));
+                    w.write(String.format("%s %s %s\n", id1, id2, degrees[id2 - minID][id1 - minID]));
+                    count++;
+                    if (count % 1000 == 0) {
+                        System.out.println(count / 1000 + "k pairs written");
+                    }
                 } catch (IOException e) {
                     e.printStackTrace();
                     System.exit(-1);
