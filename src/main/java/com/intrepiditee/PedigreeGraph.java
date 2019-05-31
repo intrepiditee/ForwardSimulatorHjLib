@@ -102,9 +102,9 @@ public class PedigreeGraph {
     public static void computePairwiseDegreeLessThanAndWrite(int upperBound) throws SuspendableException {
         BufferedWriter w = Utils.getBufferedWriter("degrees.txt");
 
-        AtomicInteger pairCount = new AtomicInteger(0);
-
         forall(0, Configs.numThreads - 1, (i) -> {
+            int count = 0;
+
             int startID = minID + i * Configs.generationSize;
             int endID = startID + Configs.generationSize;
 
@@ -121,11 +121,11 @@ public class PedigreeGraph {
                     }
                 }
 
-                int c = pairCount.incrementAndGet();
                 if (i == 0) {
-                    if (c % 1000 == 0) {
+                    count += Configs.numThreads;
+                    if (count % 1000 == 0) {
                         StringBuilder s = new StringBuilder();
-                        s.append(c / 1000);
+                        s.append(count / 1000);
                         s.append("k of out ");
                         s.append(4 * Configs.generationSize * 4 * Configs.generationSize / 2 / 1000);
                         s.append("k pairs finished");
