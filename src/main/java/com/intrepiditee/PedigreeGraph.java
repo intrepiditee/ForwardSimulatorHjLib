@@ -116,18 +116,18 @@ public class PedigreeGraph {
                     if (degree != -1) {
                         degrees[id2 - minID][id1 - minID] = (byte) degree;
                     }
-                }
 
-                if (i == 0) {
-                    count += Configs.numThreads;
-                    if (count % 1000 == 0) {
-                        StringBuilder s = new StringBuilder();
-                        s.append(count / 1000);
-                        s.append("k out of");
-                        s.append(numIndividuals * numIndividuals / 2 / 1000);
-                        s.append("k pairs computed");
+                    if (i == 0) {
+                        count += Configs.numThreads;
+                        if (count % 1000 == 0) {
+                            StringBuilder s = new StringBuilder();
+                            s.append(count / 1000);
+                            s.append("k out of ");
+                            s.append(numIndividuals * numIndividuals / 2 / 1000);
+                            s.append("k pairs computed");
 
-                        System.out.println(s.toString());
+                            System.out.println(s.toString());
+                        }
                     }
                 }
             }
