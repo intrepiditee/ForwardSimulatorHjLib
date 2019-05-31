@@ -30,7 +30,7 @@ public class GenomeParser {
         int lowerBound = Integer.parseInt(args[4]);
         Configs.numThreads = Integer.parseInt(args[5]);
 
-        String filename = "variantSiteIndices.gz";
+        String filename = "variantSiteIndices";
         File f = Utils.getFile(filename);
         if (f.exists()) {
             try {
@@ -324,7 +324,7 @@ public class GenomeParser {
         System.out.println("Number of variant sites: " + variantSiteIndicesArray.size());
 
         System.out.println("Writing variantSiteIndices to file");
-        ObjectOutputStream o = Utils.getBufferedObjectOutputStream("variantSiteIndices.gz");
+        ObjectOutputStream o = Utils.getBufferedObjectOutputStream("variantSiteIndices");
         try {
             o.writeInt(minID);
             o.writeInt(maxID);

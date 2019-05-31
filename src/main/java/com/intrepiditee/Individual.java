@@ -1,12 +1,13 @@
 package com.intrepiditee;
 
-import edu.rice.hj.Module1;
-import edu.rice.hj.api.HjSuspendable;
 import edu.rice.hj.api.SuspendableException;
 
-import java.util.BitSet;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static com.intrepiditee.Segment.intersect;
+import static com.intrepiditee.Segment.merge;
 import static com.intrepiditee.Utils.singletonRand;
 
 
@@ -17,8 +18,8 @@ public class Individual {
     int fatherID;
     int motherID;
 
-    BitSet paternalGenome;
-    BitSet maternalGenome;
+    List<Segment> paternalGenome;
+    List<Segment> maternalGenome;
 
     static AtomicInteger nextID = new AtomicInteger(0);
 
@@ -34,6 +35,7 @@ public class Individual {
         return ind;
     }
 
+
     static Individual makeFromParents(Individual father, Individual mother) throws SuspendableException {
         Individual ind = makeEmpty();
         ind.fatherID = father.id;
@@ -46,90 +48,92 @@ public class Individual {
 
     private Individual() {
         id = nextID.getAndIncrement();
-        paternalGenome = new BitSet(Configs.genomeLength);
-        maternalGenome = new BitSet(Configs.genomeLength);
+        paternalGenome = new ArrayList<>();
+        maternalGenome = new ArrayList<>();
+    }
+
+    public Individual mergeSegments() {
+        paternalGenome = mergeOneSegment(paternalGenome);
+        maternalGenome = mergeOneSegment(maternalGenome);
+
+        return this;
+    }
+
+    public List<Segment> mergeOneSegment(List<Segment> segments) {
+        List<Segment> mergedSegments = new ArrayList<>(segments.size());
+
+        int i = 0;
+        int numPaternalSegments = paternalGenome.size();
+        while (i < numPaternalSegments) {
+            Segment mergedSegment = paternalGenome.get(i);
+            if (i != numPaternalSegments - 1) {
+                Segment nextSegment = paternalGenome.get(++i);
+                while (intersect(mergedSegment, nextSegment)) {
+                    mergedSegment = merge(mergedSegment, nextSegment);
+                    i++;
+                    if (i == numPaternalSegments) {
+                        break;
+                    } else {
+                        nextSegment = paternalGenome.get(i);
+                    }
+                }
+            }
+            mergedSegments.add(mergedSegment);
+        }
+
+        return mergedSegments;
     }
 
 
+
     public Individual recombineGenomes(Individual father, Individual mother) throws SuspendableException {
+        List<Integer> indices = GeneticMap.getRecombinationIndices();
 
-        HjSuspendable paternalRunnable = () -> {
-            boolean paternalIsRecombining = false;
-            double paternalProb = 0.0;
-            int paternalIndex = 0;
-            int paternalPosition = GeneticMap.indices.get(paternalIndex);
-            int paternalRand = singletonRand.nextInt(randBound);
+        List<Segment> one = father.paternalGenome;
+        List<Segment> another = father.maternalGenome;
+        if (singletonRand.nextBoolean()) {
+            one = father.maternalGenome;
+            another = father.paternalGenome;
+        }
 
-//            int c = 0;
+        int i = 0;
+        int recombinationIndex = indices.get(i);
+        int oneIndex = 0;
+        int anotherIndex = 0;
+        boolean isRecombining = false;
+        List<Segment> combinedGenome = new ArrayList<>(one.size());
+        Segment oneSegment = one.get(oneIndex);
+        Segment anotherSegment = another.get(anotherIndex);
 
-            for (int i = 0; i < Configs.genomeLength; i++) {
-                if (i == paternalPosition) {
-                    paternalProb += GeneticMap.probabilities.get(paternalIndex);
-                    paternalIndex++;
-
-                    if (paternalIndex < GeneticMap.indices.size()) {
-                        paternalPosition = GeneticMap.indices.get(paternalIndex);
+        while (oneIndex < one.size() || anotherIndex < another.size()) {
+            if (!isRecombining) {
+                if (!oneSegment.contains(recombinationIndex)) {
+                    combinedGenome.add(oneSegment);
+                    oneIndex++;
+                } else {
+                    if (oneSegment.start != recombinationIndex) {
+                        combinedGenome.add(Segment.make(oneSegment.start, recombinationIndex));
                     }
-
-                    if (paternalRand < paternalProb) {
-//                        c++;
-                        paternalIsRecombining = !paternalIsRecombining;
-                        if (paternalIndex < GeneticMap.indices.size()) {
-                            paternalProb = GeneticMap.probabilities.get(paternalIndex);
-                        }
-                        paternalRand = singletonRand.nextInt(randBound);
+                    isRecombining = true;
+                    while (!anotherSegment.contains(recombinationIndex)) {
+                        anotherSegment = another.get(++anotherIndex);
                     }
                 }
-
-                if (paternalIsRecombining) {
-                    paternalGenome.set(i, father.maternalGenome.get(i));
+            } else {
+                if (!anotherSegment.contains(recombinationIndex)) {
+                    combinedGenome.add(anotherSegment);
+                    anotherIndex++;
                 } else {
-                    paternalGenome.set(i, father.paternalGenome.get(i));
+
                 }
             }
 
-//            System.out.println(c);
-        };
 
+        }
+        for (int j = 0; j < paternalGenome.size(); j++) {
+            if ()
+        }
 
-
-        HjSuspendable maternalRunnable = () -> {
-            boolean maternalIsRecombining = false;
-            double maternalProb = 0.0;
-            int maternalIndex = 0;
-            int maternalPosition = GeneticMap.indices.get(maternalIndex);
-            int maternalRand = singletonRand.nextInt(randBound);
-
-            for (int i = 0; i < Configs.genomeLength; i++) {
-                if (i == maternalPosition) {
-                    maternalProb += GeneticMap.probabilities.get(maternalIndex);
-
-                    maternalIndex++;
-                    if (maternalIndex < GeneticMap.indices.size()) {
-                        maternalPosition = GeneticMap.indices.get(maternalIndex);
-                    }
-
-                    if (maternalRand < maternalProb) {
-                        maternalIsRecombining = !maternalIsRecombining;
-                        if (maternalIndex < GeneticMap.indices.size()) {
-                            maternalProb = GeneticMap.probabilities.get(maternalIndex);
-                        }
-                        maternalRand = singletonRand.nextInt(randBound);
-                    }
-                }
-
-                if (maternalIsRecombining) {
-                    maternalGenome.set(i, mother.maternalGenome.get(i));
-                } else {
-                    maternalGenome.set(i, mother.paternalGenome.get(i));
-                }
-            }
-        };
-
-        Module1.finish(() -> {
-            Module1.async(paternalRunnable);
-            maternalRunnable.run();
-        });
 
         double expectedNumMutations = Configs.genomeLength * mutationRate;
 
