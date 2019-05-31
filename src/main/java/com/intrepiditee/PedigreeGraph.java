@@ -119,12 +119,12 @@ public class PedigreeGraph {
 
                     if (i == 0) {
                         count += Configs.numThreads;
-                        if (count % 1000 == 0) {
+                        if (count % 1000000 == 0) {
                             StringBuilder s = new StringBuilder();
-                            s.append(count / 1000);
-                            s.append("k out of ");
-                            s.append(numIndividuals * numIndividuals / 2 / 1000);
-                            s.append("k pairs computed");
+                            s.append(count / 1000000);
+                            s.append("M out of ");
+                            s.append(numIndividuals * numIndividuals / 2 / 1000000);
+                            s.append("M pairs computed");
 
                             System.out.println(s.toString());
                         }
