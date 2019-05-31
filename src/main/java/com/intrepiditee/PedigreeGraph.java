@@ -79,7 +79,7 @@ public class PedigreeGraph {
 
 
     public static void connectSiblings() throws SuspendableException {
-        forall(1, Configs.numGenerationsStore - 1, (i) -> {
+        forallChunked(1, Configs.numGenerationsStore - 1, (i) -> {
             int generationStartID = minID + Configs.generationSize * i;
             int generationEndID = generationStartID + Configs.generationSize;
 
@@ -103,7 +103,7 @@ public class PedigreeGraph {
         int numIndividuals = Configs.generationSize * Configs.numGenerationsStore;
         byte[][] degrees = new byte[numIndividuals][numIndividuals];
 
-        forall(0, Configs.numThreads - 1, (i) -> {
+        forallChunked(0, Configs.numThreads - 1, (i) -> {
             int count = 0;
 
             int startID = minID + i * Configs.generationSize;
