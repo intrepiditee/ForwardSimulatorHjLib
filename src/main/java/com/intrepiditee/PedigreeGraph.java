@@ -100,7 +100,8 @@ public class PedigreeGraph {
 
 
     public static void computePairwiseDegreeLessThanAndWrite(int upperBound) throws SuspendableException {
-        BufferedWriter w = Utils.getBufferedWriter("degrees.txt");
+        int numIndividuals = Configs.generationSize * Configs.numGenerationsStore;
+        byte[][] degrees = new byte[numIndividuals][numIndividuals];
 
         forall(0, Configs.numThreads - 1, (i) -> {
             int count = 0;
@@ -112,12 +113,7 @@ public class PedigreeGraph {
                 for (int id2 = id1 + 1; id2 < endID; id2++) {
                     int degree = BFSLessThan(id2, id1, upperBound);
                     if (degree != -1) {
-                        try {
-                            w.write(String.format("%s %s %s\n", id1, id2, degree));
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                            System.exit(-1);
-                        }
+                        degrees[id1 - minID][id2 - minID] = (byte) degree;
                     }
                 }
 
@@ -128,13 +124,26 @@ public class PedigreeGraph {
                         s.append(count / 1000);
                         s.append("k of out ");
                         s.append(4 * Configs.generationSize * 4 * Configs.generationSize / 2 / 1000);
-                        s.append("k pairs finished");
+                        s.append("k pairs computed");
 
                         System.out.println(s.toString());
                     }
                 }
             }
         });
+
+        // Write sequentially
+        BufferedWriter w = Utils.getBufferedWriter("degrees.txt.gz");
+        for (int id1 = minID; id1 <= maxID; id1++) {
+            for (int id2 = id1 + 1; id2 <= maxID; id2++) {
+                try {
+                    w.write(String.format("%s %s %s\n", id1, id2, degrees[id1 - minID][id2 - minID]));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    System.exit(-1);
+                }
+            }
+        }
 
         try {
             w.close();
