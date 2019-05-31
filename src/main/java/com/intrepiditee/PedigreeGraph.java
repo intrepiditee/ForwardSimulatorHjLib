@@ -27,8 +27,6 @@ public class PedigreeGraph {
         int upperBound = Integer.parseInt(args[2]);
         Configs.numThreads = Integer.parseInt(args[3]);
 
-        HjSystemProperty.setSystemProperty(HjSystemProperty.numWorkers, Configs.numThreads);
-
         for (int i = 0; i < Configs.numGenerationsStore; i++) {
             addGenerationToGraph(i);
             System.out.println("Generation " + i + " added to graph");
@@ -81,7 +79,7 @@ public class PedigreeGraph {
 
 
     public static void connectSiblings() throws SuspendableException {
-        forallChunked(1, Configs.numGenerationsStore - 1, (i) -> {
+        forall(1, Configs.numGenerationsStore - 1, (i) -> {
             int generationStartID = minID + Configs.generationSize * i;
             int generationEndID = generationStartID + Configs.generationSize;
 
