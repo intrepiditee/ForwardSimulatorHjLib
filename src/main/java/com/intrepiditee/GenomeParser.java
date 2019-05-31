@@ -80,8 +80,6 @@ public class GenomeParser {
         final BitSet[] paternalGenome = new BitSet[1];
         final BitSet[] maternalGenome = new BitSet[1];
 
-        final StringBuilder[] records = new StringBuilder[numSites];
-
         final byte[][] idIndexToBases = new byte[maxID - minID + 1][numSites];
 
         forallPhased(0, Configs.numThreads - 1, (i) -> {
@@ -175,40 +173,10 @@ public class GenomeParser {
 
             } // end of all generations
 
-
-            // Generate all the rows
-
-            int numRecordsGenerated = 0;
-            for (int j = start; j < end; j++) {
-                int variantSiteIndex = variantSiteIndices[j];
-
-                records[j] = new StringBuilder();
-                records[j].append("22\t");
-                records[j].append(variantSiteIndex + 1);
-                records[j].append("\trs");
-                records[j].append(variantSiteIndex + 1);
-                records[j].append("\tA\tC\t.\tPASS\t.\tGT");
-
-                for (int ID = minID; ID <= maxID; ID++) {
-                    int idIndex = ID - minID;
-                    String bases = encoding.get(idIndexToBases[idIndex][j]);
-
-                    records[j].append("\t");
-                    records[j].append(bases);
-                }
-
-                if (i == 0) {
-                    numRecordsGenerated += Configs.numThreads;
-                    if (numRecordsGenerated % 1000 == 0) {
-                        System.out.println("Records: " + numRecordsGenerated / 1000 + " k generated");
-                    }
-                }
-            }
-
         }); // end of parallel part
 
 
-        // Write all the rows sequentially
+        // Generate and write out all the rows sequentially
 
         PrintWriter out = new PrintWriter(Utils.getBufferedWriter("out.vcf.gz"));
 
@@ -218,19 +186,37 @@ public class GenomeParser {
         }
         out.print("\n");
 
-        int count = 0;
-        for (int i = 0; i < records.length; i++) {
-            out.println(records[i].toString());
-            records[i] = null;
 
-            count += 1;
-            if (count % 1000 == 0) {
-                System.out.println("Records: " + count / 1000 + " k written");
+        int numRecordsWritten = 0;
+        for (int i = 0; i < numSites; i++) {
+            int variantSiteIndex = variantSiteIndices[i];
+
+            StringBuilder s = new StringBuilder();
+            s.append("22\t");
+            s.append(variantSiteIndex + 1);
+            s.append("\trs");
+            s.append(variantSiteIndex + 1);
+            s.append("\tA\tC\t.\tPASS\t.\tGT");
+
+            for (int ID = minID; ID <= maxID; ID++) {
+                int idIndex = ID - minID;
+                String bases = encoding.get(idIndexToBases[idIndex][i]);
+
+                s.append("\t");
+                s.append(bases);
+            }
+
+            out.println(s.toString());
+
+            numRecordsWritten += Configs.numThreads;
+            if (numRecordsWritten % 1000 == 0) {
+                System.out.println("Records: " + numRecordsWritten / 1000 + "k written");
             }
         }
 
         out.close();
     }
+
 
     private static void getVariantSitesMoreThan(int lowerBound) throws SuspendableException {
         final BitSet[] genome = new BitSet[1];
