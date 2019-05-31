@@ -121,6 +121,7 @@ public class PedigreeGraph {
                         count += Configs.numThreads;
                         if (count % 1000000 == 0) {
                             StringBuilder s = new StringBuilder();
+                            s.append("\n");
                             s.append(count / 1000000);
                             s.append("M out of ");
                             s.append(numIndividuals * numIndividuals / 2 / 1000000);
@@ -141,8 +142,8 @@ public class PedigreeGraph {
                 try {
                     w.write(String.format("%s %s %s\n", id1, id2, degrees[id2 - minID][id1 - minID]));
                     count++;
-                    if (count % 1000 == 0) {
-                        System.out.println(count / 1000 + "k pairs written");
+                    if (count % 1000000 == 0) {
+                        System.out.println("\n" + count / 1000000 + "M pairs written");
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
