@@ -2,7 +2,7 @@ package com.intrepiditee;
 
 public class Configs {
 
-    static int numThreads = 4;
+    static int numThreads = 20;
     static int genomeLength = 51304566;
     static int numGenerations = 50;
     static int numGenerationsStore = 4;
