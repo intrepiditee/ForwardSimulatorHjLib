@@ -119,7 +119,7 @@ public class PedigreeGraph {
                     }
 
                     if (i == 0) {
-                        count += Configs.numThreads;
+                        count += 1;
                         if (count % 1000000 == 0) {
                             StringBuilder s = new StringBuilder();
                             s.append(count / 1000000);
@@ -175,15 +175,27 @@ public class PedigreeGraph {
 
         while (!q.isEmpty()) {
             Integer current = q.removeFirst();
-            int currentGeneration = individualToGeneration.get(current);
+            Integer currentGeneration = individualToGeneration.get(current);
+            if (currentGeneration == null) {
+                System.err.println("currentGeneration: current is " + current);
+                System.exit(-1);
+            }
             Set<Integer> nbrs = adjacencyList.get(current);
 
             if (nbrs != null) {
                 for (Integer nbr : nbrs) {
                     if (!distances.containsKey(nbr)) {
 
-                        boolean canGoUp = individualToCanGoUp.get(current);
-                        int nbrGeneration = individualToGeneration.get(nbr);
+                        Boolean canGoUp = individualToCanGoUp.get(current);
+                        if (canGoUp == null) {
+                            System.err.println("canGoUp: current is " + current);
+                            System.exit(-1);
+                        }
+                        Integer nbrGeneration = individualToGeneration.get(nbr);
+                        if (nbrGeneration == null) {
+                            System.err.println("nbrGeneration: nbr is " + nbr);
+                            System.exit(-1);
+                        }
                         if (canGoUp) {
                             if (nbrGeneration <= currentGeneration) {
                                 // Can still go up after going up
@@ -201,7 +213,11 @@ public class PedigreeGraph {
                             individualToCanGoUp.put(nbr, false);
                         }
 
-                        int distance = distances.get(current) + 1;
+                        Integer distance = distances.get(current) + 1;
+                        if (distance == null) {
+                            System.err.println("distance: current and nbr are " + current + " " + nbr);
+                            System.exit(-1);
+                        }
                         if (distance <= upperBound) {
                             distances.put(nbr, distance);
                             if (nbr.equals(end)) {
