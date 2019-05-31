@@ -10,6 +10,7 @@ public class Segment {
 
 
     public static Segment make(int start, int end) {
+        assert start < end;
         return new Segment(start, end);
     }
 
@@ -40,10 +41,21 @@ public class Segment {
     }
 
     public static boolean intersect(Segment seg1, Segment seg2) {
-        if (seg1.start < seg2.end -1 || seg2.start < seg1.end - 1) {
+        if (Math.max(seg1.start, seg2.start) > Math.min(seg1.end, seg2.end)) {
             return false;
         }
         return true;
     }
 
+    public List<Segment> split(List<Integer> excludingIndices) {
+        int prevEnd = start;
+        List<Segment> splited = new ArrayList<>(excludingIndices.size() + 1);
+        for (int i : excludingIndices) {
+            splited.add(make(prevEnd, i));
+            prevEnd = i + 1;
+        }
+        splited.add(make(prevEnd, end));
+
+        return splited;
+    }
 }
