@@ -97,42 +97,63 @@ public class Individual {
         }
 
         int i = 0;
-        int recombinationIndex = indices.get(i);
+        int recombinationIndex;
+        int prevRecombinationIndex = -1;
         int oneIndex = 0;
         int anotherIndex = 0;
-        boolean isRecombining = false;
         List<Segment> combinedGenome = new ArrayList<>(one.size());
-        Segment oneSegment = one.get(oneIndex);
-        Segment anotherSegment = another.get(anotherIndex);
 
-        while (oneIndex < one.size() || anotherIndex < another.size()) {
-            if (!isRecombining) {
-                if (!oneSegment.contains(recombinationIndex)) {
-                    combinedGenome.add(oneSegment);
-                    oneIndex++;
-                } else {
-                    if (oneSegment.start != recombinationIndex) {
-                        combinedGenome.add(Segment.make(oneSegment.start, recombinationIndex));
-                    }
-                    isRecombining = true;
-                    while (!anotherSegment.contains(recombinationIndex)) {
-                        anotherSegment = another.get(++anotherIndex);
-                    }
+        boolean exhausted = false;
+
+        while (true) {
+            Segment oneSegment = one.get(oneIndex);
+            Segment anotherSegment = another.get(anotherIndex);
+
+            recombinationIndex = exhausted ? -1 : indices.get(i);
+
+            if (!oneSegment.contains(recombinationIndex)) {
+                combinedGenome.add(Segment.make(oneSegment.start, oneSegment.end));
+                oneIndex++;
+                if (oneIndex == one.size()) {
+                    break;
                 }
             } else {
-                if (!anotherSegment.contains(recombinationIndex)) {
-                    combinedGenome.add(anotherSegment);
-                    anotherIndex++;
-                } else {
-
+                // Need to add the upper part
+                if (oneSegment.start != recombinationIndex) {
+                    // Start is the earlier of prevRecombinationIndex and oneSegment.start
+                    int start = prevRecombinationIndex > oneSegment.start ?
+                        prevRecombinationIndex : oneSegment.start;
+                    // End is the later of recombinationIndex and oneSegment.end
+                    int end = recombinationIndex < oneSegment.end ?
+                        recombinationIndex : oneSegment.end;
+                    combinedGenome.add(Segment.make(start, end));
+                    if (end == oneSegment.end) {
+                        recombinationIndex = indices.get(++i);
+                        oneIndex++;
+                        continue;
+                    }
                 }
+                while (!anotherSegment.contains(recombinationIndex)) {
+                    anotherSegment = another.get(++anotherIndex);
+                }
+
+                prevRecombinationIndex = recombinationIndex;
+                i++;
+                if (i == indices.size()) {
+                    exhausted = true;
+                }
+
+                int tempIndex = oneIndex;
+                oneIndex = anotherIndex;
+                anotherIndex = tempIndex;
+
+                List<Segment> tempList = one;
+                one = another;
+                another = tempList;
             }
+        }
 
 
-        }
-        for (int j = 0; j < paternalGenome.size(); j++) {
-            if ()
-        }
 
 
         double expectedNumMutations = Configs.genomeLength * mutationRate;
