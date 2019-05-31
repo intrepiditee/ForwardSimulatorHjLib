@@ -123,8 +123,8 @@ public class PedigreeGraph {
                     if (count % 1000 == 0) {
                         StringBuilder s = new StringBuilder();
                         s.append(count / 1000);
-                        s.append("k of out ");
-                        s.append(Configs.generationSize / 2 / 1000);
+                        s.append("k out of");
+                        s.append(numIndividuals * numIndividuals / 2 / 1000);
                         s.append("k pairs computed");
 
                         System.out.println(s.toString());
