@@ -299,7 +299,7 @@ public class GenomeParser {
 
             }
 
-            int numGenomes = Configs.numGenerations * Configs.generationSize * 2;
+            int numGenomes = Configs.numGenerationsStore * Configs.generationSize * 2;
 
             for (int j = start; j < end; j++) {
 
