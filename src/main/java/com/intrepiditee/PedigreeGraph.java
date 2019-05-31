@@ -28,6 +28,7 @@ public class PedigreeGraph {
         int upperBound = Integer.parseInt(args[2]);
         Configs.numThreads = Integer.parseInt(args[3]);
 
+        System.out.println();
         for (int i = 0; i < Configs.numGenerationsStore; i++) {
             addGenerationToGraph(i);
             System.out.println("Generation " + i + " added to graph");
@@ -121,7 +122,6 @@ public class PedigreeGraph {
                         count += Configs.numThreads;
                         if (count % 1000000 == 0) {
                             StringBuilder s = new StringBuilder();
-                            s.append("\n");
                             s.append(count / 1000000);
                             s.append("M out of ");
                             s.append(numIndividuals * numIndividuals / 2 / 1000000);
@@ -143,7 +143,7 @@ public class PedigreeGraph {
                     w.write(String.format("%s %s %s\n", id1, id2, degrees[id2 - minID][id1 - minID]));
                     count++;
                     if (count % 1000000 == 0) {
-                        System.out.println("\n" + count / 1000000 + "M pairs written");
+                        System.out.println(count / 1000000 + "M pairs written");
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
