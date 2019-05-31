@@ -13,6 +13,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static edu.rice.hj.Module0.launchHabaneroApp;
 import static edu.rice.hj.Module1.forall;
 import static edu.rice.hj.Module1.forallChunked;
+import static edu.rice.hj.Module1.forseq;
 
 public class PedigreeGraph {
     static int minID = Integer.MAX_VALUE;
@@ -39,8 +40,10 @@ public class PedigreeGraph {
         launchHabaneroApp(() -> {
             connectSiblings();
             System.out.println("Siblings connected");
+        });
 
-            computePairwiseDegreeLessThanAndWrite(upperBound);
+        launchHabaneroApp(() -> {
+            computePairwiseDegreeLessThanThenWrite(upperBound);
             System.out.println("Degrees written");
         });
 
@@ -79,7 +82,7 @@ public class PedigreeGraph {
 
 
     public static void connectSiblings() throws SuspendableException {
-        forallChunked(1, Configs.numGenerationsStore - 1, (i) -> {
+        forseq(1, Configs.numGenerationsStore - 1, (i) -> {
             int generationStartID = minID + Configs.generationSize * i;
             int generationEndID = generationStartID + Configs.generationSize;
 
@@ -99,7 +102,7 @@ public class PedigreeGraph {
     }
 
 
-    public static void computePairwiseDegreeLessThanAndWrite(int upperBound) throws SuspendableException {
+    public static void computePairwiseDegreeLessThanThenWrite(int upperBound) throws SuspendableException {
         int numIndividuals = Configs.generationSize * Configs.numGenerationsStore;
         byte[][] degrees = new byte[numIndividuals][numIndividuals];
 
