@@ -14,6 +14,8 @@ public class GenomeParser {
 
     static Integer[] variantSiteIndices;
 
+    static Map<Byte, String> encoding;
+
     @SuppressWarnings("unchecked")
     public static void main(String[] args) {
         if (args.length < 6 || (!args[0].equals("--parse"))) {
@@ -30,7 +32,13 @@ public class GenomeParser {
         int lowerBound = Integer.parseInt(args[4]);
         Configs.numThreads = Integer.parseInt(args[5]);
 
-        String filename = "variantSiteIndices.gz";
+        encoding = new HashMap<>();
+        encoding.put((byte) 0, "0|0");
+        encoding.put((byte) 1, "0|1");
+        encoding.put((byte) 2, "1|0");
+        encoding.put((byte) 3, "1|1");
+
+        String filename = "variantSiteIndices";
         File f = Utils.getFile(filename);
         if (f.exists()) {
             try {
@@ -74,7 +82,7 @@ public class GenomeParser {
 
         final StringBuilder[] records = new StringBuilder[numSites];
 
-        final String[][] idIndexToBases = new String[maxID - minID + 1][numSites];
+        final byte[][] idIndexToBases = new byte[maxID - minID + 1][numSites];
 
         forallPhased(0, Configs.numThreads - 1, (i) -> {
             int start = numSitesPerThread * i;
@@ -131,15 +139,15 @@ public class GenomeParser {
                         int idIndex = id[0] - minID;
                         if (!paternalBase) {
                             if (!maternalBase) {
-                                idIndexToBases[idIndex][j] = "0|0";
+                                idIndexToBases[idIndex][j] = (byte) 0;
                             } else {
-                                idIndexToBases[idIndex][j] = "0|1";
+                                idIndexToBases[idIndex][j] = (byte) 1;
                             }
                         } else {
                             if (!maternalBase) {
-                                idIndexToBases[idIndex][j] = "1|0";
+                                idIndexToBases[idIndex][j] = (byte) 2;
                             } else {
-                                idIndexToBases[idIndex][j] = "1|1";
+                                idIndexToBases[idIndex][j] = (byte) 3;
                             }
                         }
                     }
@@ -183,7 +191,7 @@ public class GenomeParser {
 
                 for (int ID = minID; ID <= maxID; ID++) {
                     int idIndex = ID - minID;
-                    String bases = idIndexToBases[idIndex][j];
+                    String bases = encoding.get(idIndexToBases[idIndex][j]);
 
                     records[j].append("\t");
                     records[j].append(bases);
@@ -324,7 +332,7 @@ public class GenomeParser {
         System.out.println("Number of variant sites: " + variantSiteIndicesArray.size());
 
         System.out.println("Writing variantSiteIndices to file");
-        ObjectOutputStream o = Utils.getBufferedObjectOutputStream("variantSiteIndices.gz");
+        ObjectOutputStream o = Utils.getBufferedObjectOutputStream("variantSiteIndices");
         try {
             o.writeInt(minID);
             o.writeInt(maxID);
