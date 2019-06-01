@@ -105,9 +105,9 @@ public class PedigreeGraph {
         int numIndividuals = Configs.generationSize * Configs.numGenerationsStore;
         byte[][] degrees = new byte[numIndividuals][numIndividuals];
 
-        forall(0, Configs.numThreads - 1, (i) -> {
-            int count = 0;
+        int[] counts = new int[Configs.numThreads];
 
+        forall(0, Configs.numThreads - 1, (i) -> {
             int startID = minID + i * Configs.generationSize;
             int endID = startID + Configs.generationSize;
 
@@ -118,8 +118,13 @@ public class PedigreeGraph {
                         degrees[id2 - minID][id1 - minID] = (byte) degree;
                     }
 
+                    counts[i]++;
+
                     if (i == 0) {
-                        count += 1;
+                        int count = 0;
+                        for (int c : counts) {
+                            count += c;
+                        }
                         if (count % 1000000 == 0) {
                             StringBuilder s = new StringBuilder();
                             s.append(count / 1000000);
