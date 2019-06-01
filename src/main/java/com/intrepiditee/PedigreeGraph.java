@@ -112,10 +112,8 @@ public class PedigreeGraph {
             int startID = minID + i * numIndividualsPerThread;
             int endID = i == Configs.numThreads - 1 ? maxID + 1 : startID + numIndividualsPerThread;
 
-            System.out.println(startID);
-            System.out.println(endID);
             for (int id1 = startID; id1 < endID; id1++) {
-                for (int id2 = id1 + 1; id2 < endID; id2++) {
+                for (int id2 = id1 + 1; id2 <= maxID; id2++) {
                     int degree = BFSLessThan(id2, id1, upperBound);
                     if (degree != -1) {
                         degrees[id2 - minID][id1 - minID] = (byte) degree;
@@ -185,10 +183,6 @@ public class PedigreeGraph {
         while (!q.isEmpty()) {
             Integer current = q.removeFirst();
             Integer currentGeneration = individualToGeneration.get(current);
-            if (currentGeneration == null) {
-                System.err.println("currentGeneration: current is " + current);
-                System.exit(-1);
-            }
             Set<Integer> nbrs = adjacencyList.get(current);
 
             if (nbrs != null) {
@@ -196,15 +190,7 @@ public class PedigreeGraph {
                     if (!distances.containsKey(nbr)) {
 
                         Boolean canGoUp = individualToCanGoUp.get(current);
-                        if (canGoUp == null) {
-                            System.err.println("canGoUp: current is " + current);
-                            System.exit(-1);
-                        }
                         Integer nbrGeneration = individualToGeneration.get(nbr);
-                        if (nbrGeneration == null) {
-                            System.err.println("nbrGeneration: nbr is " + nbr);
-                            System.exit(-1);
-                        }
                         if (canGoUp) {
                             if (nbrGeneration <= currentGeneration) {
                                 // Can still go up after going up
@@ -222,11 +208,7 @@ public class PedigreeGraph {
                             individualToCanGoUp.put(nbr, false);
                         }
 
-                        Integer distance = distances.get(current) + 1;
-                        if (distance == null) {
-                            System.err.println("distance: current and nbr are " + current + " " + nbr);
-                            System.exit(-1);
-                        }
+                        int distance = distances.get(current) + 1;
                         if (distance <= upperBound) {
                             distances.put(nbr, distance);
                             if (nbr.equals(end)) {
