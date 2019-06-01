@@ -136,6 +136,8 @@ public class PedigreeGraph {
             }
         });
 
+        System.out.println(numIndividuals * numIndividuals / 2 / 1000000 + "M pairs computed\n");
+
         // Write sequentially
         int numPairsWritten = 0;
         BufferedWriter w = Utils.getBufferedWriter("degrees.txt.gz");
@@ -165,6 +167,8 @@ public class PedigreeGraph {
             e.printStackTrace();
             System.exit(-1);
         }
+
+        System.out.println(numIndividuals * numIndividuals / 2 / 1000000 + "M pairs written\n");
 
     }
 
