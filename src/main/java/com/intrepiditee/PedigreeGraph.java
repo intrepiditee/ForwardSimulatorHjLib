@@ -104,12 +104,13 @@ public class PedigreeGraph {
     public static void computePairwiseDegreeLessThanThenWrite(int upperBound) throws SuspendableException {
         int numIndividuals = Configs.generationSize * Configs.numGenerationsStore;
         byte[][] degrees = new byte[numIndividuals][numIndividuals];
+        int numIndividualsPerThread = numIndividuals / Configs.numThreads;
 
-        int[] counts = new int[Configs.numThreads];
+        AtomicInteger count = new AtomicInteger(0);
 
         forall(0, Configs.numThreads - 1, (i) -> {
-            int startID = minID + i * Configs.generationSize;
-            int endID = startID + Configs.generationSize;
+            int startID = minID + i * numIndividualsPerThread;
+            int endID = i == Configs.numThreads - 1 ? maxID + 1 : startID + numIndividualsPerThread;
 
             for (int id1 = startID; id1 < endID; id1++) {
                 for (int id2 = id1 + 1; id2 < endID; id2++) {
@@ -118,16 +119,12 @@ public class PedigreeGraph {
                         degrees[id2 - minID][id1 - minID] = (byte) degree;
                     }
 
-                    counts[i]++;
+                    int c = count.incrementAndGet();
 
                     if (i == 0) {
-                        int count = 0;
-                        for (int c : counts) {
-                            count += c;
-                        }
-                        if (count % 1000000 == 0) {
+                        if (c % 1000000 == 0) {
                             StringBuilder s = new StringBuilder();
-                            s.append(count / 1000000);
+                            s.append(c / 1000000);
                             s.append("M out of ");
                             s.append(numIndividuals * numIndividuals / 2 / 1000000);
                             s.append("M pairs computed");
@@ -140,15 +137,15 @@ public class PedigreeGraph {
         });
 
         // Write sequentially
-        int count = 0;
+        int numPairsWritten = 0;
         BufferedWriter w = Utils.getBufferedWriter("degrees.txt.gz");
         for (int id1 = minID; id1 <= maxID; id1++) {
             for (int id2 = id1 + 1; id2 <= maxID; id2++) {
                 try {
                     w.write(String.format("%s %s %s\n", id1, id2, degrees[id2 - minID][id1 - minID]));
-                    count++;
-                    if (count % 1000000 == 0) {
-                        System.out.println(count / 1000000 + "M pairs written");
+                    numPairsWritten++;
+                    if (numPairsWritten % 1000000 == 0) {
+                        System.out.println(numPairsWritten / 1000000 + "M pairs written");
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
