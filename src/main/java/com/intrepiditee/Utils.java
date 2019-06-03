@@ -4,9 +4,7 @@ import java.io.*;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.util.BitSet;
-import java.util.Random;
-import java.util.Scanner;
+import java.util.*;
 import java.util.stream.IntStream;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
@@ -178,7 +176,7 @@ public class Utils {
     }
 
 
-    public static void printUsage() {
+    static void printUsage() {
         System.err.println(
             "Usage:\n" +
                 "1) Simulation: bash run.sh numberOfGenerations " +
@@ -189,4 +187,5 @@ public class Utils {
                    "exclusiveUpperBound numberOfThreads\n"
         );
     }
+
 }

@@ -55,15 +55,19 @@ public class Segment {
 
     List<Segment> split(List<Integer> excludingIndices) {
         int prevEnd = start;
-        List<Segment> splited = new ArrayList<>(excludingIndices.size() + 1);
+        List<Segment> split = new ArrayList<>(excludingIndices.size() + 1);
         for (int i : excludingIndices) {
-            splited.add(make(prevEnd, i));
+            if (prevEnd < i) {
+                split.add(make(prevEnd, i));
+            }
             prevEnd = i + 1;
         }
         // If last i is end - 1, prevEnd is end
-        splited.add(make(prevEnd, end));
+        if (prevEnd < end) {
+            split.add(make(prevEnd, end));
+        }
 
-        return splited;
+        return split;
     }
 
     @Override
@@ -83,5 +87,29 @@ public class Segment {
     @Override
     public String toString() {
         return "[" + start + ", " + end + "]";
+    }
+
+
+    static List<Integer> segmentsToList(List<Segment> segs) {
+        List<Integer> indices = new ArrayList<>(2 * segs.size());
+        for (Segment seg: segs) {
+            indices.add(seg.start);
+            indices.add(seg.end);
+        }
+        return indices;
+    }
+
+    static String segmentsToString(List<Segment> segs) {
+        StringBuilder s = new StringBuilder();
+        for (int i = 0; i < segs.size(); i++) {
+            Segment seg = segs.get(i);
+            s.append(seg.start);
+            s.append(",");
+            s.append(seg.end);
+            if (i != segs.size() - 1) {
+                s.append(" ");
+            }
+        }
+        return s.toString();
     }
 }

@@ -50,11 +50,10 @@ public class GeneticMap {
      * @return a List of inclusive indices where recombinations should begin
      */
     static List<Integer> getRecombinationIndices() {
-        int numIndices = getPoisson(Configs.genomeLength / 50000000.0);
+        int numIndices = getPoisson(Configs.chromosomeLength / 50000000.0);
+        // At least one recombination
+        numIndices = Math.max(numIndices, 1);
         List<Integer> indices = new ArrayList<>(numIndices);
-        if (numIndices == 0) {
-            return indices;
-        }
 
         double range = (maxGeneticDistance - minGeneticDistance) / (numIndices + 1);
         double origin = minGeneticDistance;
@@ -67,7 +66,7 @@ public class GeneticMap {
                 break;
             }
             indices.add(entry.getValue());
-            origin = bound;
+            origin = prob + 1e-10;
             bound += range;
 
         }

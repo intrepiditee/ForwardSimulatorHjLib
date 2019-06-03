@@ -26,8 +26,6 @@ public class Individual {
 
     static double mutationRate = 1.1 * 10e-8;
 
-    static int randBound = (int) (45 * 1.2);
-
     static byte MALE = 1;
     static byte FEMALE = 0;
 
@@ -41,7 +39,7 @@ public class Individual {
         Individual ind = make();
         ind.fatherID = father.id;
         ind.motherID = mother.id;
-        ind.recombineGenomes(father, mother);
+        ind.recombineChromosomes(father, mother);
 
         return ind;
     }
@@ -51,18 +49,18 @@ public class Individual {
         id = nextID.getAndIncrement();
         paternalChromosome = new ArrayList<>();
         maternalChromosome = new ArrayList<>();
-        paternalChromosome.add(Segment.make(0, Configs.genomeLength));
-        maternalChromosome.add(Segment.make(0, Configs.genomeLength));
+        paternalChromosome.add(Segment.make(0, Configs.chromosomeLength));
+        maternalChromosome.add(Segment.make(0, Configs.chromosomeLength));
     }
 
-    private Individual mergeGenomes() {
-        paternalChromosome = mergeOneGenome(paternalChromosome);
-        maternalChromosome = mergeOneGenome(maternalChromosome);
+    private Individual mergeChromosomes() {
+        paternalChromosome = mergeOneChromosome(paternalChromosome);
+        maternalChromosome = mergeOneChromosome(maternalChromosome);
 
         return this;
     }
 
-    static List<Segment> mergeOneGenome(List<Segment> segments) {
+    static List<Segment> mergeOneChromosome(List<Segment> segments) {
         List<Segment> mergedSegments = new ArrayList<>(segments.size());
 
         int i = 0;
@@ -89,14 +87,15 @@ public class Individual {
     }
 
 
-    private Individual mutateGenomes() {
-        mutateOneGenome(paternalChromosome);
-        mutateOneGenome(maternalChromosome);
+    private Individual mutateChromosomes() {
+        paternalChromosome = mutateOneChromosome(paternalChromosome);
+        maternalChromosome = mutateOneChromosome(maternalChromosome);
         return this;
     }
 
-    static List<Segment> mutateOneGenome(List<Segment> segments) {
-        double expectedNumMutations = Configs.genomeLength * mutationRate;
+
+    private static List<Integer> getMutationIndices() {
+        double expectedNumMutations = Configs.chromosomeLength * mutationRate;
         int numMutations = 0;
         if (expectedNumMutations > 1.0) {
             numMutations = singletonRand.nextInt((int) (2 * expectedNumMutations));
@@ -108,44 +107,64 @@ public class Individual {
 
         List<Integer> mutationIndices = new ArrayList<>(numMutations);
         for (int i = 0; i < numMutations; i++) {
-            Integer index = singletonRand.nextInt(Configs.genomeLength);
+            Integer index = singletonRand.nextInt(Configs.chromosomeLength);
             if (!mutationIndices.contains(index)) {
                 mutationIndices.add(index);
             }
         }
         Collections.sort(mutationIndices);
 
-        List<Segment> mutatedGenome = new ArrayList<>(segments.size());
+        return mutationIndices;
+    }
+
+    static List<Segment> mutateOneChromosome(List<Segment> segments) {
+        List<Integer> mutationIndices = getMutationIndices();
+        return mutateOneChromosome(segments, mutationIndices);
+    }
+
+    static List<Segment> mutateOneChromosome(List<Segment> segments, List<Integer> mutationIndices) {
+        if (mutationIndices.isEmpty()) {
+            return segments;
+        }
+
+        List<Segment> mutatedChromosome = new ArrayList<>(segments.size());
+        int numMutations = mutationIndices.size();
 
         int i = 0;
         int mutationIndex = mutationIndices.get(i);
 
         for (Segment segment : segments) {
             List<Integer> excludingIndicies = null;
-            while (segment.contains(mutationIndex) &&
-                   mutationIndex != segment.start &&
-                   mutationIndex != segment.end - 1) {
-
-                if (excludingIndicies == null) {
-                    excludingIndicies = new ArrayList<>();
-                }
-                excludingIndicies.add(mutationIndex);
+            while (i < numMutations - 1 && segment.start > mutationIndex) {
                 i++;
-                mutationIndex = i >= numMutations ? -1 : mutationIndices.get(i);
+                mutationIndex = mutationIndices.get(i);
+            }
+
+            if (segment.contains(mutationIndex)) {
+                while (segment.contains(mutationIndex)) {
+                    if (excludingIndicies == null) {
+                        excludingIndicies = new ArrayList<>();
+                    }
+                    excludingIndicies.add(mutationIndex);
+                    i++;
+                    mutationIndex = i >= numMutations ? -1 : mutationIndices.get(i);
+                }
             }
 
             if (excludingIndicies != null) {
-                mutatedGenome.addAll(segment.split(excludingIndicies));
+                mutatedChromosome.addAll(segment.split(excludingIndicies));
             } else {
-                mutatedGenome.add(segment);
+                mutatedChromosome.add(segment);
             }
         }
 
-        return mutatedGenome;
+        return mutatedChromosome;
     }
 
-    static List<Segment> recombineOneGenome(List<Segment> oneSegmentList, List<Segment> anotherSegmentList) {
-        List<Integer> recombinationIndices = GeneticMap.getRecombinationIndices();
+
+    static List<Segment> recombineOneChromosome(
+        List<Segment> oneSegmentList, List<Segment> anotherSegmentList,
+        List<Integer> recombinationIndices) {
 
         if (singletonRand.nextBoolean()) {
             List<Segment> temp = oneSegmentList;
@@ -153,70 +172,74 @@ public class Individual {
             anotherSegmentList = temp;
         }
 
-        int i = 0;
-        int recombinationIndex;
+        List<Segment> combinedChromosome = new ArrayList<>(oneSegmentList.size());
+
         int prevRecombinationIndex = -1;
         int oneIndex = 0;
         int anotherIndex = 0;
-        List<Segment> combinedGenome = new ArrayList<>(oneSegmentList.size());
+        Segment oneSegment;
 
-        while (true) {
-            Segment oneSegment = oneSegmentList.get(oneIndex);
-            Segment anotherSegment = anotherSegmentList.get(anotherIndex);
+        // Segment lists will never be empty because segments can only be split
+        int oneLastEnd = oneSegmentList.get(oneSegmentList.size() - 1).end;
+        int anotherLastEnd = anotherSegmentList.get(anotherSegmentList.size() - 1).end;
+        int lastEnd = Math.max(oneLastEnd, anotherLastEnd);
 
-            // After exhausting all recombination indices, set recombinationIndex to -1 so that
-            // no segments can contain it. This way all remaining segments can be added.
-            recombinationIndex = i >= recombinationIndices.size() ? - 1 : recombinationIndices.get(i);
-
-            if (!oneSegment.contains(recombinationIndex)) {
-                combinedGenome.add(Segment.make(oneSegment.start, oneSegment.end));
-                oneIndex++;
-                // While loop terminates here
-                if (oneIndex == oneSegmentList.size()) {
-                    break;
-                }
-            } else {
-                // Need to add the upper part if there is an upper part
-                if (oneSegment.start != recombinationIndex) {
-                    // Start is the earlier of prevRecombinationIndex and oneSegment.start
-                    int start = prevRecombinationIndex > oneSegment.start ?
-                        prevRecombinationIndex : oneSegment.start;
-                    // End is the later of recombinationIndex and oneSegment.end
-                    int end = recombinationIndex < oneSegment.end ?
-                        recombinationIndex : oneSegment.end;
-                    combinedGenome.add(Segment.make(start, end));
-                    if (end == oneSegment.end) {
-                        i++;
-                        oneIndex++;
-                        continue;
-                    }
-                }
-                while (!anotherSegment.contains(recombinationIndex)) {
-                    anotherSegment = anotherSegmentList.get(++anotherIndex);
-                }
-
-                prevRecombinationIndex = recombinationIndex;
-                i++;
-
-                int tempIndex = oneIndex;
-                oneIndex = anotherIndex;
-                anotherIndex = tempIndex;
-
-                List<Segment> tempList = oneSegmentList;
-                oneSegmentList = anotherSegmentList;
-                anotherSegmentList = tempList;
-            }
+        if (recombinationIndices.get(recombinationIndices.size() - 1) < lastEnd) {
+            // Add latest end as a recombination index to allow all segments be added
+            recombinationIndices.add(lastEnd);
         }
 
-        return combinedGenome;
+        for (int recombinationIndex : recombinationIndices) {
+            oneSegment = oneSegmentList.get(oneIndex);
+
+            while (oneSegment.end <= recombinationIndex) {
+                if (oneSegment.end > prevRecombinationIndex) {
+                    int start = Math.max(prevRecombinationIndex, oneSegment.start);
+                    combinedChromosome.add(Segment.make(start, oneSegment.end));
+                }
+                // All segments have been added
+                if (oneIndex == oneSegmentList.size() - 1) {
+                    break;
+                }
+                oneSegment = oneSegmentList.get(++oneIndex);
+            }
+
+            if (oneSegment.contains(recombinationIndex)) {
+                // Need to add the upper part if there is an upper part
+                if (oneSegment.start != recombinationIndex) {
+                    // Start is the later of prevRecombinationIndex and oneSegment.start
+                    int start = Math.max(prevRecombinationIndex, oneSegment.start);
+                    // End is the earlier of recombinationIndex and oneSegment.end
+                    int end = Math.min(recombinationIndex, oneSegment.end);
+                    combinedChromosome.add(Segment.make(start, end));
+                }
+            }
+
+            int tempIndex = oneIndex;
+            oneIndex = anotherIndex;
+            anotherIndex = tempIndex;
+
+            List<Segment> tempList = oneSegmentList;
+            oneSegmentList = anotherSegmentList;
+            anotherSegmentList = tempList;
+
+            prevRecombinationIndex = recombinationIndex;
+        }
+
+        return combinedChromosome;
+    }
+
+    static List<Segment> recombineOneChromosome(List<Segment> oneSegmentList, List<Segment> anotherSegmentList) {
+        List<Integer> recombinationIndices = GeneticMap.getRecombinationIndices();
+        return recombineOneChromosome(oneSegmentList, anotherSegmentList, recombinationIndices);
     }
 
 
-    private Individual recombineGenomes(Individual father, Individual mother) throws SuspendableException {
-        paternalChromosome = recombineOneGenome(father.paternalChromosome, father.maternalChromosome);
-        maternalChromosome = recombineOneGenome(mother.paternalChromosome, mother.maternalChromosome);
-        mergeGenomes();
-        mutateGenomes();
+    private Individual recombineChromosomes(Individual father, Individual mother) throws SuspendableException {
+        paternalChromosome = recombineOneChromosome(father.paternalChromosome, father.maternalChromosome);
+        maternalChromosome = recombineOneChromosome(mother.paternalChromosome, mother.maternalChromosome);
+        mergeChromosomes();
+        mutateChromosomes();
 
         return this;
     }

@@ -50,11 +50,34 @@ public class SegmentTest {
 
     @Test
     void testSplit() {
-        Integer[] indices1 = new Integer[]{1, 5, 8};
-        Segment seg1 = make(0, 10);
-        List<Segment> splited = seg1.split(Arrays.asList(indices1));
+        Integer[] indices = new Integer[]{1, 5, 8};
+        Segment seg = make(0, 10);
         List<Segment> expected = Arrays.asList(make(0, 1), make(2, 5), make(6, 8), make(9, 10));
-        assertEquals(expected, splited);
+        List<Segment> split = seg.split(Arrays.asList(indices));
+        assertEquals(expected, split);
+
+        indices = new Integer[]{4};
+        seg = make(4, 10);
+        expected = Arrays.asList(make(5, 10));
+        split = seg.split(Arrays.asList(indices));
+        assertEquals(expected, split);
+
+        indices = new Integer[]{9};
+        expected = Arrays.asList(make(4, 9));
+        split = seg.split(Arrays.asList(indices));
+        assertEquals(expected, split);
+
+        indices = new Integer[]{4, 9};
+        expected = Arrays.asList(make(5, 9));
+        split = seg.split(Arrays.asList(indices));
+        assertEquals(expected, split);
+
+        indices = new Integer[]{0, 3, 6, 9};
+        seg = make(0, 10);
+        expected = Arrays.asList(make(1, 3), make(4, 6), make(7, 9));
+        split = seg.split(Arrays.asList(indices));
+        assertEquals(expected, split);
+
     }
 
 }

@@ -18,13 +18,13 @@ public class GenomeParser {
     public static void main(String[] args) {
         if (args.length < 6 || (!args[0].equals("--parse"))) {
             System.err.println(
-                "Usage: bash run.sh --parse genomeLength generationSize numberOfGenerationsStored" +
+                "Usage: bash run.sh --parse chromosomeLength generationSize numberOfGenerationsStored" +
                     " exclusiveLowerBound numThreads"
             );
             System.exit(-1);
         }
 
-        Configs.genomeLength = Integer.parseInt(args[1]);
+        Configs.chromosomeLength = Integer.parseInt(args[1]);
         Configs.generationSize = Integer.parseInt(args[2]);
         Configs.numGenerationsStore = Integer.parseInt(args[3]);
         int lowerBound = Integer.parseInt(args[4]);
@@ -227,14 +227,14 @@ public class GenomeParser {
     private static void getVariantSitesMoreThan(int lowerBound) throws SuspendableException {
         final BitSet[] genome = new BitSet[1];
 
-        int numBasesPerThread = Configs.genomeLength / Configs.numThreads;
+        int numBasesPerThread = Configs.chromosomeLength / Configs.numThreads;
 
-        int[] variantSiteCounts = new int[Configs.genomeLength];
+        int[] variantSiteCounts = new int[Configs.chromosomeLength];
         List<Integer> variantSiteIndicesArray = new ConcurrentArrayList<>();
 
         forallPhased(0, Configs.numThreads - 1, (i) -> {
             int start = numBasesPerThread * i;
-            int end = i == Configs.numThreads - 1 ? Configs.genomeLength : start + numBasesPerThread;
+            int end = i == Configs.numThreads - 1 ? Configs.chromosomeLength : start + numBasesPerThread;
 
 //            System.out.println(start);
 //            System.out.println(end);

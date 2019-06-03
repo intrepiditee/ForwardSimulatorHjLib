@@ -24,7 +24,7 @@ public class GeneticMapTest {
             assertEquals(expected, indices);
             if (indices.size() > 0) {
                 assertTrue(indices.get(0) > 0);
-                assertTrue(indices.get(indices.size() - 1) < Configs.genomeLength);
+                assertTrue(indices.get(indices.size() - 1) < Configs.chromosomeLength);
             }
         }
         System.out.println(freq);
