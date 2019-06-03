@@ -12,13 +12,15 @@ public class GenomeParser {
     static int minID = Integer.MAX_VALUE;
     static int maxID = Integer.MIN_VALUE;
 
-    static Integer[] variantSiteIndices;
+    static int[] variantSiteIndices;
+
+    static Map<Byte, String> encoding;
 
     @SuppressWarnings("unchecked")
     public static void main(String[] args) {
         if (args.length < 6 || (!args[0].equals("--parse"))) {
             System.err.println(
-                "Usage: bash run.sh --parse chromosomeLength generationSize numberOfGenerationsStored" +
+                "Usage: bash run.sh --parse genomeLength generationSize numberOfGenerationsStored" +
                     " exclusiveLowerBound numThreads"
             );
             System.exit(-1);
@@ -30,6 +32,12 @@ public class GenomeParser {
         int lowerBound = Integer.parseInt(args[4]);
         Configs.numThreads = Integer.parseInt(args[5]);
 
+        encoding = new HashMap<>();
+        encoding.put((byte) 0, "0|0");
+        encoding.put((byte) 1, "0|1");
+        encoding.put((byte) 2, "1|0");
+        encoding.put((byte) 3, "1|1");
+
         String filename = "variantSiteIndices";
         File f = Utils.getFile(filename);
         if (f.exists()) {
@@ -38,7 +46,8 @@ public class GenomeParser {
                 ObjectInputStream in = Utils.getBufferedObjectInputStream(filename);
                 minID = in.readInt();
                 maxID = in.readInt();
-                variantSiteIndices = (Integer[]) in.readUnshared();
+                variantSiteIndices = (int[]) in.readUnshared();
+                System.out.println(Arrays.toString(variantSiteIndices));
                 in.close();
                 System.out.println("variantSiteIndices file read");
                 System.out.println();
@@ -72,9 +81,7 @@ public class GenomeParser {
         final BitSet[] paternalGenome = new BitSet[1];
         final BitSet[] maternalGenome = new BitSet[1];
 
-        final StringBuilder[] records = new StringBuilder[numSites];
-
-        final String[][] idIndexToBases = new String[maxID - minID + 1][numSites];
+        final byte[][] idIndexToBases = new byte[maxID - minID + 1][numSites];
 
         forallPhased(0, Configs.numThreads - 1, (i) -> {
             int start = numSitesPerThread * i;
@@ -131,15 +138,15 @@ public class GenomeParser {
                         int idIndex = id[0] - minID;
                         if (!paternalBase) {
                             if (!maternalBase) {
-                                idIndexToBases[idIndex][j] = "0|0";
+                                idIndexToBases[idIndex][j] = (byte) 0;
                             } else {
-                                idIndexToBases[idIndex][j] = "0|1";
+                                idIndexToBases[idIndex][j] = (byte) 1;
                             }
                         } else {
                             if (!maternalBase) {
-                                idIndexToBases[idIndex][j] = "1|0";
+                                idIndexToBases[idIndex][j] = (byte) 2;
                             } else {
-                                idIndexToBases[idIndex][j] = "1|1";
+                                idIndexToBases[idIndex][j] = (byte) 3;
                             }
                         }
                     }
@@ -167,40 +174,10 @@ public class GenomeParser {
 
             } // end of all generations
 
-
-            // Generate all the rows
-
-            int numRecordsGenerated = 0;
-            for (int j = start; j < end; j++) {
-                int variantSiteIndex = variantSiteIndices[j];
-
-                records[j] = new StringBuilder();
-                records[j].append("22\t");
-                records[j].append(variantSiteIndex + 1);
-                records[j].append("\trs");
-                records[j].append(variantSiteIndex + 1);
-                records[j].append("\tA\tC\t.\tPASS\t.\tGT");
-
-                for (int ID = minID; ID <= maxID; ID++) {
-                    int idIndex = ID - minID;
-                    String bases = idIndexToBases[idIndex][j];
-
-                    records[j].append("\t");
-                    records[j].append(bases);
-                }
-
-                if (i == 0) {
-                    numRecordsGenerated += Configs.numThreads;
-                    if (numRecordsGenerated % 1000 == 0) {
-                        System.out.println("Records: " + numRecordsGenerated / 1000 + " k generated");
-                    }
-                }
-            }
-
         }); // end of parallel part
 
 
-        // Write all the rows sequentially
+        // Generate and write out all the rows sequentially
 
         PrintWriter out = new PrintWriter(Utils.getBufferedWriter("out.vcf.gz"));
 
@@ -210,35 +187,46 @@ public class GenomeParser {
         }
         out.print("\n");
 
-        int count = 0;
-        for (int i = 0; i < records.length; i++) {
-            out.println(records[i].toString());
-            records[i] = null;
 
-            count += 1;
-            if (count % 1000 == 0) {
-                System.out.println("Records: " + count / 1000 + " k written");
+        int numRecordsWritten = 0;
+        for (int i = 0; i < numSites; i++) {
+            int variantSiteIndex = variantSiteIndices[i];
+
+            StringBuilder s = new StringBuilder();
+            s.append("22\t");
+            s.append(variantSiteIndex + 1);
+            s.append("\trs");
+            s.append(variantSiteIndex + 1);
+            s.append("\tA\tC\t.\tPASS\t.\tGT");
+
+            for (int ID = minID; ID <= maxID; ID++) {
+                int idIndex = ID - minID;
+                String bases = encoding.get(idIndexToBases[idIndex][i]);
+
+                s.append("\t");
+                s.append(bases);
+            }
+
+            out.println(s.toString());
+
+            numRecordsWritten += 1;
+            if (numRecordsWritten % 1000 == 0) {
+                System.out.println("Records: " + numRecordsWritten / 1000 + "k written");
             }
         }
 
         out.close();
     }
 
+
     private static void getVariantSitesMoreThan(int lowerBound) throws SuspendableException {
-        final BitSet[] genome = new BitSet[1];
+        final int[][] chromosome = new int[1][];
 
-        int numBasesPerThread = Configs.chromosomeLength / Configs.numThreads;
-
-        int[] variantSiteCounts = new int[Configs.chromosomeLength];
-        List<Integer> variantSiteIndicesArray = new ConcurrentArrayList<>();
+        int[] numChromosomesWithIndexInSegment = new int[Configs.chromosomeLength];
+        int[][] variantSiteIndices = new int[1][];
+        List<Integer> variantSiteIndicesList = new ConcurrentArrayList<>();
 
         forallPhased(0, Configs.numThreads - 1, (i) -> {
-            int start = numBasesPerThread * i;
-            int end = i == Configs.numThreads - 1 ? Configs.chromosomeLength : start + numBasesPerThread;
-
-//            System.out.println(start);
-//            System.out.println(end);
-
             for (int n = 0; n < Configs.numGenerationsStore; n++) {
                 String filename = "Generation" + n;
                 ObjectInputStream in = i == 0 ? Utils.getBufferedObjectInputStream(filename) : null;
@@ -247,7 +235,9 @@ public class GenomeParser {
 
                 boolean isInt = true;
 
+                // Consumes all chromosomes in one generation
                 while (true) {
+                    // Task 0 reads in the next chromosome
                     if (i == 0) {
                         try {
                             if (isInt) {
@@ -257,10 +247,10 @@ public class GenomeParser {
                             }
                             isInt = !isInt;
 
-                            genome[0] = (BitSet) in.readUnshared();
+                            chromosome[0] = (int[]) in.readUnshared();
 
                         } catch (EOFException e) {
-                            genome[0] = null;
+                            chromosome[0] = null;
                             System.out.println("Generation" + n + " preprocessed");
                         } catch (IOException | ClassNotFoundException e) {
                             e.printStackTrace();
@@ -270,12 +260,24 @@ public class GenomeParser {
 
                     next();
 
-                    if (genome[0] == null) {
+                    if (chromosome[0] == null) {
                         break;
                     }
 
+                    int numSegments = chromosome[0].length / 2;
+                    int numSegmentsPerThread = numSegments / Configs.numThreads;
+                    int start = i * numSegmentsPerThread;
+                    int end = i == Configs.numThreads - 1 ? numSegments : start + numSegmentsPerThread;
                     for (int j = start; j < end; j++) {
-                        variantSiteCounts[j] += genome[0].get(j) ? 1 : 0;
+                        int segmentStartIndex = j * 2;
+                        int segmentEndIndex = segmentStartIndex + 1;
+
+                        int segmentStart = chromosome[0][segmentStartIndex];
+                        int segmentEnd = chromosome[0][segmentEndIndex];
+
+                        for (int k = segmentStart; k < segmentEnd; k++) {
+                            numChromosomesWithIndexInSegment[k]++;
+                        }
                     }
 
                     if (i == 0) {
@@ -297,32 +299,56 @@ public class GenomeParser {
                     }
                 }
 
+            } // end of all generations
+
+            // Determine variant site indices
+            int numGenomes = Configs.numGenerationsStore * Configs.generationSize * 2;
+            int numBasesPerThread = Configs.chromosomeLength / Configs.numThreads;
+            int start = i * numBasesPerThread;
+            int end = i == Configs.numThreads - 1 ? Configs.chromosomeLength : start + numBasesPerThread;
+            for (int j = start; j < end; j++) {
+                int num = numChromosomesWithIndexInSegment[j];
+                int minorityCount = num;
+
+                if (num >= numGenomes / 2) {
+                    minorityCount = numGenomes - num;
+                }
+
+                // Filter out variant sites where the number of chromosomes are
+                // equal to or lower than the exclusive lower bound.
+                if (minorityCount > lowerBound) {
+                    variantSiteIndicesList.add(j);
+                }
             }
 
-            int numGenomes = Configs.numGenerationsStore * Configs.generationSize * 2;
+            next();
 
-            for (int j = start; j < end; j++) {
+            // Task 0 initializes an array for variant site indices
+            if (i == 0) {
+                variantSiteIndices[0] = new int[variantSiteIndicesList.size()];
+            }
 
-                int numOnes = variantSiteCounts[j];
-                int minorityCount = numOnes;
+            next();
 
-                if (numOnes >= numGenomes / 2) {
-                    minorityCount = numGenomes - numOnes;
-                }
-
-                if (minorityCount > lowerBound) {
-                    variantSiteIndicesArray.add(j);
-                }
+            // Fill in the array of variant site indices
+            int numVariantSites = variantSiteIndicesList.size();
+            int numVariantSitesPerThread = numVariantSites / Configs.numThreads;
+            int s = i * numVariantSitesPerThread;
+            int e = i == Configs.numThreads - 1 ? numVariantSites : s + numVariantSitesPerThread;
+            for (int j = s; j < e; j++) {
+                variantSiteIndices[0][j] = variantSiteIndicesList.get(j);
             }
 
         });
 
-        variantSiteIndices = variantSiteIndicesArray.toArray(new Integer[0]);
+        // Sort the array of variant site indices
+        Arrays.sort(variantSiteIndices[0]);
 
         System.out.println("\nPreprocessing completed");
         System.out.println("Preprocessing summary:");
-        System.out.println("Number of variant sites: " + variantSiteIndicesArray.size());
+        System.out.println("Number of variant sites: " + variantSiteIndicesList.size());
 
+        // Write out the array of variant site indices
         System.out.println("Writing variantSiteIndices to file");
         ObjectOutputStream o = Utils.getBufferedObjectOutputStream("variantSiteIndices");
         try {

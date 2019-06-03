@@ -99,6 +99,18 @@ public class Segment {
         return indices;
     }
 
+    static int[] segmentsToArray(List<Segment> segments) {
+        int[] indices = new int[segments.size() * 2];
+        int j = 0;
+        for (int i = 0; i < segments.size(); i++) {
+            Segment seg = segments.get(i);
+            indices[j] = seg.start;
+            indices[j + 1] = seg.end;
+            j += 2;
+        }
+        return indices;
+    }
+
     static String segmentsToString(List<Segment> segs) {
         StringBuilder s = new StringBuilder();
         for (int i = 0; i < segs.size(); i++) {

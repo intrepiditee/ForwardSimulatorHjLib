@@ -2,7 +2,7 @@ package com.intrepiditee;
 
 import java.io.*;
 
-import static com.intrepiditee.Segment.segmentsToList;
+import static com.intrepiditee.Segment.segmentsToArray;
 import static com.intrepiditee.Segment.segmentsToString;
 import static edu.rice.hj.Module0.launchHabaneroApp;
 
@@ -26,6 +26,8 @@ public class Main {
         }
 
         if (args[0].equals("--test")) {
+            Configs.chromosomeLength = 10000;
+            Configs.geneticMapName = "testGeneticMap.gz";
             Configs.numThreads = 4;
         } else if (args[0].equals("--parse")) {
             GenomeParser.main(args);
@@ -76,8 +78,10 @@ public class Main {
 
                         for (Individual ind : toWrite.males) {
                             o.writeInt(ind.id);
-                            o.writeUnshared(segmentsToList(ind.paternalChromosome));
-                            o.writeUnshared(segmentsToList(ind.maternalChromosome));
+                            o.writeUnshared(segmentsToArray(ind.paternalChromosome));
+                            o.writeUnshared(segmentsToArray(ind.maternalChromosome));
+                            w2.write(ind.id);
+                            w2.write("\n");
                             w2.write(segmentsToString(ind.paternalChromosome));
                             w2.write("\n");
                             w2.write(segmentsToString(ind.maternalChromosome));
@@ -87,8 +91,10 @@ public class Main {
 
                         for (Individual ind : toWrite.females) {
                             o.writeInt(ind.id);
-                            o.writeUnshared(segmentsToList(ind.paternalChromosome));
-                            o.writeUnshared(segmentsToList(ind.maternalChromosome));
+                            o.writeUnshared(segmentsToArray(ind.paternalChromosome));
+                            o.writeUnshared(segmentsToArray(ind.maternalChromosome));
+                            w2.write(ind.id);
+                            w2.write("\n");
                             w2.write(segmentsToString(ind.paternalChromosome));
                             w2.write("\n");
                             w2.write(segmentsToString(ind.maternalChromosome));
