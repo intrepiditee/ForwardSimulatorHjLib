@@ -78,15 +78,15 @@ public class Main {
 
                         for (Individual ind : toWrite.males) {
                             o.writeInt(ind.id);
-                            o.writeUnshared(ind.paternalGenome);
-                            o.writeUnshared(ind.maternalGenome);
+                            o.writeUnshared(ind.paternalChromosome);
+                            o.writeUnshared(ind.maternalChromosome);
                             w.write(String.format("%s %s %s\n", ind.id, ind.fatherID, ind.motherID));
                         }
 
                         for (Individual ind : toWrite.females) {
                             o.writeInt(ind.id);
-                            o.writeUnshared(ind.paternalGenome);
-                            o.writeUnshared(ind.maternalGenome);
+                            o.writeUnshared(ind.paternalChromosome);
+                            o.writeUnshared(ind.maternalChromosome);
                             w.write(String.format("%s %s %s\n", ind.id, ind.fatherID, ind.motherID));
                         }
 

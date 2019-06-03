@@ -5,15 +5,13 @@ import org.junit.jupiter.api.Test;
 import java.util.Arrays;
 import java.util.List;
 
-import static com.intrepiditee.Segment.intersect;
-import static com.intrepiditee.Segment.make;
-import static com.intrepiditee.Segment.merge;
+import static com.intrepiditee.Segment.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class SegmentTest {
 
     @Test
-    public void testContains() {
+    void testContains() {
         Segment seg = make(0, 6);
         assertFalse(seg.contains(-10));
         assertTrue(seg.contains(0));
@@ -24,7 +22,7 @@ public class SegmentTest {
     }
 
     @Test
-    public void testIntersectAndMerge() {
+    void testIntersect() {
         Segment seg = make(-10, 4);
 
         Segment seg1 = make(-10, 5);
@@ -36,21 +34,27 @@ public class SegmentTest {
         assertTrue(intersect(seg, seg2));
         assertFalse(intersect(seg, seg3));
         assertFalse(intersect(seg, seg4));
-
-        assertEquals(make(-10, 5), merge(seg, seg1));
-        assertEquals(make(-10, 11), merge(seg, seg2));
-        assertEquals(make(-10, 5), merge(seg1, seg));
-        assertEquals(make(-10, 11), merge(seg2, seg));
     }
 
     @Test
-    public void testSplit() {
+    void testCanMergeAndMerge() {
+        Segment seg = make(1, 2);
+
+        Segment seg1 = make(2, 3);
+        assertTrue(canMerge(seg, seg1));
+        assertEquals(make(1, 3), merge(seg, seg1));
+
+        Segment seg2 = make(3, 4);
+        assertFalse(canMerge(seg, seg2));
+    }
+
+    @Test
+    void testSplit() {
         Integer[] indices1 = new Integer[]{1, 5, 8};
         Segment seg1 = make(0, 10);
         List<Segment> splited = seg1.split(Arrays.asList(indices1));
         List<Segment> expected = Arrays.asList(make(0, 1), make(2, 5), make(6, 8), make(9, 10));
         assertEquals(expected, splited);
-
     }
 
 }

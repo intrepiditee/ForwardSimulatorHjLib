@@ -13,12 +13,12 @@ public class GeneticMap {
 
     static TreeMap<Double, Integer> geneticToPhysicalDistance;
 
-    public static void initialize(String filename) {
+    static void initialize(String filename) {
         sc = Utils.getScanner(filename);
         geneticToPhysicalDistance = new TreeMap<>();
     }
 
-    public static void parse() {
+    static void parse() {
         sc.nextLine();
 
         double geneticDistance = 0.0;
@@ -49,25 +49,44 @@ public class GeneticMap {
      *
      * @return a List of inclusive indices where recombinations should begin
      */
-    public static List<Integer> getRecombinationIndices() {
+    static List<Integer> getRecombinationIndices() {
+        int numIndices = getPoisson(Configs.genomeLength / 50000000.0);
+        List<Integer> indices = new ArrayList<>(numIndices);
+        if (numIndices == 0) {
+            return indices;
+        }
+
+        double range = (maxGeneticDistance - minGeneticDistance) / (numIndices + 1);
         double origin = minGeneticDistance;
-        double bound = maxGeneticDistance + 1.2 * (maxGeneticDistance - origin);
+        double bound = minGeneticDistance + range;
 
-        List<Integer> indices = new ArrayList<>();
-
-        while (true) {
+        for (int i = 0; i < numIndices; i++) {
             double prob = ThreadLocalRandom.current().nextDouble(origin, bound);
-            Map.Entry<Double, Integer> entry = geneticToPhysicalDistance.floorEntry(prob);
+            Map.Entry<Double, Integer> entry = geneticToPhysicalDistance.ceilingEntry(prob);
             if (entry == null) {
                 break;
             }
-
             indices.add(entry.getValue());
+            origin = bound;
+            bound += range;
 
-            origin = prob;
         }
 
         return indices;
+    }
+
+    // https://stackoverflow.com/questions/1241555/algorithm-to-generate-poisson-and-binomial-random-numbers
+    static int getPoisson(double lambda) {
+        double L = Math.exp(-lambda);
+        double p = 1.0;
+        int k = 0;
+
+        do {
+            k++;
+            p *= Math.random();
+        } while (p > L);
+
+        return k - 1;
     }
 
 }

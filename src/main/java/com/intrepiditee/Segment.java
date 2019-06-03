@@ -8,8 +8,7 @@ public class Segment {
     int start;
     int end;
 
-
-    public static Segment make(int start, int end) {
+    static Segment make(int start, int end) {
         assert start < end;
         return new Segment(start, end);
     }
@@ -19,11 +18,8 @@ public class Segment {
         this.end = end;
     }
 
-    public boolean contains(int index) {
-        if (start <= index && index < end) {
-            return true;
-        }
-        return false;
+    boolean contains(int index) {
+        return start <= index && index < end;
     }
 
     /**
@@ -33,21 +29,31 @@ public class Segment {
      * @param seg2 another Segment
      * @return a new merged Segment
      */
-    public static Segment merge(Segment seg1, Segment seg2) {
+    static Segment merge(Segment seg1, Segment seg2) {
         return make(
             seg1.start < seg2.start ? seg1.start : seg2.start,
             seg1.end > seg2.end ? seg1.end : seg2.end
         );
     }
 
-    public static boolean intersect(Segment seg1, Segment seg2) {
+    static boolean intersect(Segment seg1, Segment seg2) {
         if (Math.max(seg1.start, seg2.start) >= Math.min(seg1.end, seg2.end)) {
             return false;
         }
         return true;
     }
 
-    public List<Segment> split(List<Integer> excludingIndices) {
+    static boolean canMerge(Segment seg1, Segment seg2) {
+        if (intersect(seg1, seg2)) {
+            return true;
+        }
+        if (Math.max(seg1.start, seg2.start) == Math.min(seg1.end, seg2.end)) {
+            return true;
+        }
+        return false;
+    }
+
+    List<Segment> split(List<Integer> excludingIndices) {
         int prevEnd = start;
         List<Segment> splited = new ArrayList<>(excludingIndices.size() + 1);
         for (int i : excludingIndices) {

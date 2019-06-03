@@ -7,7 +7,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static com.intrepiditee.Segment.intersect;
+import static com.intrepiditee.Segment.canMerge;
 import static com.intrepiditee.Segment.merge;
 import static com.intrepiditee.Utils.singletonRand;
 
@@ -19,8 +19,8 @@ public class Individual {
     int fatherID;
     int motherID;
 
-    List<Segment> paternalGenome;
-    List<Segment> maternalGenome;
+    List<Segment> paternalChromosome;
+    List<Segment> maternalChromosome;
 
     static AtomicInteger nextID = new AtomicInteger(0);
 
@@ -49,20 +49,20 @@ public class Individual {
 
     private Individual() {
         id = nextID.getAndIncrement();
-        paternalGenome = new ArrayList<>();
-        maternalGenome = new ArrayList<>();
-        paternalGenome.add(Segment.make(0, Configs.genomeLength));
-        maternalGenome.add(Segment.make(0, Configs.genomeLength));
+        paternalChromosome = new ArrayList<>();
+        maternalChromosome = new ArrayList<>();
+        paternalChromosome.add(Segment.make(0, Configs.genomeLength));
+        maternalChromosome.add(Segment.make(0, Configs.genomeLength));
     }
 
     private Individual mergeGenomes() {
-        paternalGenome = mergeOneGenome(paternalGenome);
-        maternalGenome = mergeOneGenome(maternalGenome);
+        paternalChromosome = mergeOneGenome(paternalChromosome);
+        maternalChromosome = mergeOneGenome(maternalChromosome);
 
         return this;
     }
 
-    private List<Segment> mergeOneGenome(List<Segment> segments) {
+    static List<Segment> mergeOneGenome(List<Segment> segments) {
         List<Segment> mergedSegments = new ArrayList<>(segments.size());
 
         int i = 0;
@@ -70,17 +70,18 @@ public class Individual {
         while (i < numSegments) {
             Segment mergedSegment = segments.get(i);
             if (i != numSegments - 1) {
-                Segment nextSegment = segments.get(++i);
-                while (intersect(mergedSegment, nextSegment)) {
+                Segment nextSegment = segments.get(i + 1);
+                while (canMerge(mergedSegment, nextSegment)) {
                     mergedSegment = merge(mergedSegment, nextSegment);
                     i++;
-                    if (i == numSegments) {
+                    if (i == numSegments - 1) {
                         break;
                     } else {
-                        nextSegment = segments.get(i);
+                        nextSegment = segments.get(i + 1);
                     }
                 }
             }
+            i++;
             mergedSegments.add(mergedSegment);
         }
 
@@ -89,12 +90,12 @@ public class Individual {
 
 
     private Individual mutateGenomes() {
-        mutateOneGenome(paternalGenome);
-        mutateOneGenome(maternalGenome);
+        mutateOneGenome(paternalChromosome);
+        mutateOneGenome(maternalChromosome);
         return this;
     }
 
-    private List<Segment> mutateOneGenome(List<Segment> segments) {
+    static List<Segment> mutateOneGenome(List<Segment> segments) {
         double expectedNumMutations = Configs.genomeLength * mutationRate;
         int numMutations = 0;
         if (expectedNumMutations > 1.0) {
@@ -143,7 +144,7 @@ public class Individual {
         return mutatedGenome;
     }
 
-    private List<Segment> recombineOneGenome(List<Segment> oneSegmentList, List<Segment> anotherSegmentList) {
+    static List<Segment> recombineOneGenome(List<Segment> oneSegmentList, List<Segment> anotherSegmentList) {
         List<Integer> recombinationIndices = GeneticMap.getRecombinationIndices();
 
         if (singletonRand.nextBoolean()) {
@@ -212,8 +213,8 @@ public class Individual {
 
 
     private Individual recombineGenomes(Individual father, Individual mother) throws SuspendableException {
-        paternalGenome = recombineOneGenome(father.paternalGenome, father.maternalGenome);
-        maternalGenome = recombineOneGenome(mother.paternalGenome, mother.maternalGenome);
+        paternalChromosome = recombineOneGenome(father.paternalChromosome, father.maternalChromosome);
+        maternalChromosome = recombineOneGenome(mother.paternalChromosome, mother.maternalChromosome);
         mergeGenomes();
         mutateGenomes();
 
