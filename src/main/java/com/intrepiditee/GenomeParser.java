@@ -31,7 +31,6 @@ public class GenomeParser {
         int lowerBound = Integer.parseInt(args[4]);
         Configs.numThreads = Integer.parseInt(args[5]);
 
-
         String filename = "variantSiteIndices";
         File f = Utils.getFile(filename);
         if (f.exists()) {
@@ -44,6 +43,7 @@ public class GenomeParser {
                 System.out.println(Arrays.toString(variantSiteIndices));
                 in.close();
                 System.out.println("variantSiteIndices file read");
+                System.out.println("Number of variant sites: " + variantSiteIndices.length);
                 System.out.println();
 
             } catch (IOException | ClassNotFoundException e) {
@@ -335,13 +335,22 @@ public class GenomeParser {
         for (int i = 0; i < Configs.numGenerationsStore; i++) {
             String filename = "Generation" + i;
             ObjectInputStream in = Utils.getBufferedObjectInputStream(filename);
-            try {
-                int id = in.readInt();
-                idToChromosomes[id - minID][0] = (int[]) in.readUnshared();
-                idToChromosomes[id - minID][1] = (int[]) in.readUnshared();
-            } catch (IOException | ClassNotFoundException e) {
-                e.printStackTrace();
-                System.exit(-1);
+            while (true) {
+                try {
+                    int id = in.readInt();
+                    idToChromosomes[id - minID][0] = (int[]) in.readUnshared();
+                    idToChromosomes[id - minID][1] = (int[]) in.readUnshared();
+                } catch (EOFException e) {
+                    StringBuilder s = new StringBuilder();
+                    s.append("Chromosomes: Generation");
+                    s.append(i);
+                    s.append(" read");
+                    System.out.println(s.toString());
+                    break;
+                } catch (IOException | ClassNotFoundException e) {
+                    e.printStackTrace();
+                    System.exit(-1);
+                }
             }
 
             count += 2;
