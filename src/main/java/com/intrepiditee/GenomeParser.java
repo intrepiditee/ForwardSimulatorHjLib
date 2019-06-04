@@ -106,8 +106,8 @@ public class GenomeParser {
                 }
                 int end = Math.min(
                     numSites,
-                    start + i == Configs.numThreads - 1 ?
-                        siteBatchSize - i * numSitesPerThread : numSitesPerThread
+                    start + (i == Configs.numThreads - 1 ?
+                        siteBatchSize - i * numSitesPerThread : numSitesPerThread)
                 );
 
                 System.out.println("o " + offset);
