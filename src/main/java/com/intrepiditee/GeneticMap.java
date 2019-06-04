@@ -158,25 +158,24 @@ public class GeneticMap {
 
     List<Integer> getRecombinationIndices(int chromosomeNumber) {
         int numIndices = getPoisson(Configs.chromosomeLength / 50000000.0);
-        // At least one recombination
-        numIndices = Math.max(numIndices, 1);
         List<Integer> indices = new ArrayList<>(numIndices);
-
-        double range = (maxGeneticDistance - minGeneticDistance) / (numIndices + 1);
-        double origin = minGeneticDistance;
-        double bound = minGeneticDistance + range;
+        if (numIndices == 0) {
+            return indices;
+        }
 
         for (int i = 0; i < numIndices; i++) {
-            double prob = ThreadLocalRandom.current().nextDouble(origin, bound);
-            Map.Entry<Double, Integer> entry = geneticToPhysicalDistance.ceilingEntry(prob);
-            if (entry == null) {
+            while (true) {
+                double prob = ThreadLocalRandom.current().nextDouble(minGeneticDistance, maxGeneticDistance);
+                Map.Entry<Double, Integer> entry = geneticToPhysicalDistance.ceilingEntry(prob);
+                if (entry == null) {
+                    continue;
+                }
+                indices.add(entry.getValue());
                 break;
             }
-            indices.add(entry.getValue());
-            origin = prob + 1e-10;
-            bound += range;
 
         }
+        Collections.sort(indices);
 
         return indices;
     }
