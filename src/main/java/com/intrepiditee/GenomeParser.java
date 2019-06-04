@@ -16,7 +16,6 @@ public class GenomeParser {
 
     static int[] variantSiteIndices;
 
-    @SuppressWarnings("unchecked")
     public static void main(String[] args) {
         if (args.length < 6 || (!args[0].equals("--parse"))) {
             System.err.println(
@@ -178,7 +177,7 @@ public class GenomeParser {
         final int[][] chromosome = new int[1][];
 
         int[] numChromosomesWithIndexInSegment = new int[Configs.chromosomeLength];
-        int[][] variantSiteIndices = new int[1][];
+        int[][] variantSiteIndicesLocal = new int[1][];
         List<Integer> variantSiteIndicesList = new ConcurrentArrayList<>();
 
         forallPhased(0, Configs.numThreads - 1, (i) -> {
@@ -280,7 +279,7 @@ public class GenomeParser {
 
             // Task 0 initializes an array for variant site indices
             if (i == 0) {
-                variantSiteIndices[0] = new int[variantSiteIndicesList.size()];
+                variantSiteIndicesLocal[0] = new int[variantSiteIndicesList.size()];
             }
 
             next();
@@ -291,15 +290,17 @@ public class GenomeParser {
             int s = i * numVariantSitesPerThread;
             int e = i == Configs.numThreads - 1 ? numVariantSites : s + numVariantSitesPerThread;
             for (int j = s; j < e; j++) {
-                variantSiteIndices[0][j] = variantSiteIndicesList.get(j);
+                variantSiteIndicesLocal[0][j] = variantSiteIndicesList.get(j);
             }
 
         });
 
-        // Sort the array of variant site indices
-        Arrays.sort(variantSiteIndices[0]);
+        variantSiteIndices = variantSiteIndicesLocal[0];
 
-        System.out.println(variantSiteIndices[0]);
+        // Sort the array of variant site indices
+        Arrays.sort(variantSiteIndices);
+
+        System.out.println(variantSiteIndices);
 
         System.out.println("\nPreprocessing completed");
         System.out.println("Preprocessing summary:");
@@ -311,7 +312,7 @@ public class GenomeParser {
         try {
             o.writeInt(minID);
             o.writeInt(maxID);
-            o.writeUnshared(variantSiteIndices[0]);
+            o.writeUnshared(variantSiteIndices);
             o.close();
         } catch (IOException e) {
             e.printStackTrace();
