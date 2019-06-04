@@ -37,20 +37,14 @@ public class Segment {
     }
 
     static boolean intersect(Segment seg1, Segment seg2) {
-        if (Math.max(seg1.start, seg2.start) >= Math.min(seg1.end, seg2.end)) {
-            return false;
-        }
-        return true;
+        return Math.max(seg1.start, seg2.start) < Math.min(seg1.end, seg2.end);
     }
 
     static boolean canMerge(Segment seg1, Segment seg2) {
         if (intersect(seg1, seg2)) {
             return true;
         }
-        if (Math.max(seg1.start, seg2.start) == Math.min(seg1.end, seg2.end)) {
-            return true;
-        }
-        return false;
+        return Math.max(seg1.start, seg2.start) == Math.min(seg1.end, seg2.end);
     }
 
     List<Segment> split(List<Integer> excludingIndices) {
@@ -77,11 +71,8 @@ public class Segment {
         }
 
         Segment o = (Segment) other;
-        if (o.start == start && o.end == end) {
-            return true;
-        }
+        return o.start == start && o.end == end;
 
-        return false;
     }
 
     @Override
@@ -102,8 +93,7 @@ public class Segment {
     static int[] segmentsToArray(List<Segment> segments) {
         int[] indices = new int[segments.size() * 2];
         int j = 0;
-        for (int i = 0; i < segments.size(); i++) {
-            Segment seg = segments.get(i);
+        for (Segment seg : segments) {
             indices[j] = seg.start;
             indices[j + 1] = seg.end;
             j += 2;

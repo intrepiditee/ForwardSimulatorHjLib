@@ -179,7 +179,7 @@ public class Utils {
     static void printUsage() {
         System.err.println(
             "Usage:\n" +
-                "1) Simulation: bash run.sh numberOfGenerations " +
+                "1) Simulation: bash run.sh --simulate numberOfGenerations " +
                    "numberOfGenerationsToStore generationSize numberOfThreads\n" +
                 "2) VCF: bash run.sh --parse genomeLength generationSize " +
                    "numberOfGenerationsStored exclusiveLowerBound numberOfThreads\n" +
