@@ -40,8 +40,8 @@ public class GenomeParser {
                 minID = in.readInt();
                 maxID = in.readInt();
                 variantSiteIndices = (int[]) in.readUnshared();
-                System.out.println(Arrays.toString(variantSiteIndices));
                 in.close();
+
                 System.out.println("variantSiteIndices file read");
                 System.out.println("Number of variant sites: " + variantSiteIndices.length);
                 System.out.println();
@@ -109,6 +109,10 @@ public class GenomeParser {
                     start + i == Configs.numThreads - 1 ?
                         siteBatchSize - i * numSitesPerThread : numSitesPerThread
                 );
+
+                System.out.println("o " + offset);
+                System.out.println("s " + start);
+                System.out.println("e" + end);
 
                 for (int k = start; k < end; k++) {
                     int variantSiteIndex = variantSiteIndices[k];
@@ -304,8 +308,6 @@ public class GenomeParser {
 
         // Sort the array of variant site indices
         Arrays.sort(variantSiteIndices);
-
-        System.out.println(variantSiteIndices);
 
         System.out.println("\nPreprocessing completed");
         System.out.println("Preprocessing summary:");
