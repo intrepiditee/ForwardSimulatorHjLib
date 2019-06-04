@@ -5,6 +5,7 @@ import edu.rice.hj.api.SuspendableException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.intrepiditee.Segment.canMerge;
@@ -21,6 +22,8 @@ public class Individual {
 
     List<Segment> paternalChromosome;
     List<Segment> maternalChromosome;
+
+    Map<Integer, List<Segment>> genome;
 
     static AtomicInteger nextID = new AtomicInteger(0);
 
@@ -230,7 +233,8 @@ public class Individual {
     }
 
     static List<Segment> recombineOneChromosome(List<Segment> oneSegmentList, List<Segment> anotherSegmentList) {
-        List<Integer> recombinationIndices = GeneticMap.getRecombinationIndices();
+        GeneticMap m = GeneticMap.makeFromFilename("testGeneticMap.gz");
+        List<Integer> recombinationIndices = m.getRecombinationIndices();
         return recombineOneChromosome(oneSegmentList, anotherSegmentList, recombinationIndices);
     }
 

@@ -110,10 +110,6 @@ public class GenomeParser {
                         siteBatchSize - i * numSitesPerThread : numSitesPerThread)
                 );
 
-                System.out.println("o " + offset);
-                System.out.println("s " + start);
-                System.out.println("e" + end);
-
                 for (int k = start; k < end; k++) {
                     int variantSiteIndex = variantSiteIndices[k];
                     StringBuilder s = new StringBuilder();
@@ -149,6 +145,11 @@ public class GenomeParser {
                 // Task 0 writes out all records in this batch
                 if (i == 0) {
                     for (String record : batchRecords) {
+                        // Last batch may not be full
+                        if (record == null) {
+                            break;
+                        }
+
                         try {
                             out.write(record);
                         } catch (IOException e) {
@@ -160,6 +161,8 @@ public class GenomeParser {
                             StringBuilder s = new StringBuilder();
                             s.append("Records: ");
                             s.append(count / 1000);
+                            s.append("k out of ");
+                            s.append(numSites / 1000);
                             s.append("k written");
                             System.out.println(s.toString());
                         }

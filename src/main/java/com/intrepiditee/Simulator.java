@@ -22,8 +22,8 @@ public class Simulator {
 
         launchHabaneroApp(() -> {
             try {
-                GeneticMap.initialize(Configs.geneticMapName);
-                GeneticMap.parse();
+                GeneticMap m = GeneticMap.makeFromFilename(Configs.geneticMapName);
+                m.parse();
 
                 Generation next = null;
 

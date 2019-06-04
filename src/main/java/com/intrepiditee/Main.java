@@ -22,6 +22,7 @@ public class Main {
             case "--all":
                 Simulator.main(args);
                 GenomeParser.main(args);
+                GeneticMap.main(args);
                 PedigreeGraph.main(args);
                 break;
             case "--simulate":
@@ -29,6 +30,9 @@ public class Main {
                 break;
             case "--parse":
                 GenomeParser.main(args);
+                break;
+            case "--map":
+                GeneticMap.main(args);
                 break;
             case "--pedigree":
                 PedigreeGraph.main(args);
