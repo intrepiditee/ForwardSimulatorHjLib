@@ -4,7 +4,10 @@ import edu.rice.hj.api.SuspendableException;
 
 import java.io.*;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
+import static com.intrepiditee.Utils.getBufferedWriter;
+import static com.intrepiditee.Utils.singletonRand;
 import static edu.rice.hj.Module0.*;
 
 public class GenomeParser {
@@ -13,8 +16,6 @@ public class GenomeParser {
     static int maxID = Integer.MIN_VALUE;
 
     static int[] variantSiteIndices;
-
-    static Map<Byte, String> encoding;
 
     @SuppressWarnings("unchecked")
     public static void main(String[] args) {
@@ -32,11 +33,6 @@ public class GenomeParser {
         int lowerBound = Integer.parseInt(args[4]);
         Configs.numThreads = Integer.parseInt(args[5]);
 
-        encoding = new HashMap<>();
-        encoding.put((byte) 0, "0|0");
-        encoding.put((byte) 1, "0|1");
-        encoding.put((byte) 2, "1|0");
-        encoding.put((byte) 3, "1|1");
 
         String filename = "variantSiteIndices";
         File f = Utils.getFile(filename);
@@ -72,150 +68,107 @@ public class GenomeParser {
     }
 
     private static void writeVCF() throws SuspendableException {
-        Arrays.sort(variantSiteIndices);
+        int[][][] idToChromosomes = readChromosomes();
 
         int numSites = variantSiteIndices.length;
-        int numSitesPerThread = numSites / Configs.numThreads;
+        int siteBatchSize = Math.min(numSites, 10000);
+        int numBatches = (int) Math.ceil(numSites / (double) siteBatchSize);
+        int numSitesPerThread = siteBatchSize / Configs.numThreads;
 
-        final int[] id = new int[1];
-        final BitSet[] paternalGenome = new BitSet[1];
-        final BitSet[] maternalGenome = new BitSet[1];
+        String[] batchRecords = new String[siteBatchSize];
 
-        final byte[][] idIndexToBases = new byte[maxID - minID + 1][numSites];
+        BufferedWriter out = getBufferedWriter("out.vcf.gz");
+        try {
+            out.write("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT");
+            for (int i = minID; i <= maxID; i++) {
+                out.write("\t" + i);
+            }
+            out.write("\n");
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.exit(-1);
+        }
 
+        // Generate record strings in batch. In each batch, records are generated
+        // in parallel. After all records in a batch are generated, one task writes
+        // then all out. Then, all the tasks continue to the next batch.
         forallPhased(0, Configs.numThreads - 1, (i) -> {
-            int start = numSitesPerThread * i;
-            int end = i == Configs.numThreads - 1 ? numSites : start + numSitesPerThread;
+            int count = 0;
 
-//            System.out.println(start);
-//            System.out.println(end);
+            for (int j = 0; j < numBatches; j++) {
+                int offset = j * siteBatchSize;
+                int start = offset + i * numSitesPerThread;
+                if (start >= numSites) {
+                    break;
+                }
+                int end = Math.min(
+                    numSites,
+                    start + i == Configs.numThreads - 1 ?
+                        siteBatchSize - i * numSitesPerThread : numSitesPerThread
+                );
 
-            // Store all base pairs at variant sites
+                for (int k = start; k < end; k++) {
+                    int variantSiteIndex = variantSiteIndices[k];
+                    StringBuilder s = new StringBuilder();
+                    s.append("22\t");
+                    s.append(variantSiteIndex + 1);
+                    s.append("\trs");
+                    s.append(variantSiteIndex + 1);
+                    s.append("\tA\tC\t.\tPASS\t.\tGT");
 
-            for (int n = 0; n < Configs.numGenerationsStore; n++) {
-                String filename = i == 0 ? "Generation" + n : null;
-                ObjectInputStream in = i == 0 ?
-                    Utils.getBufferedObjectInputStream(filename) :
-                    null;
+                    boolean baseIfInSegment = singletonRand.nextBoolean();
+                    for (int ID = minID; ID <= maxID; ID++) {
+                        int idIndex = ID - minID;
+                        int[] paternalChromosome = idToChromosomes[idIndex][0];
+                        int[] maternalChromosome = idToChromosomes[idIndex][1];
 
+                        String bases = getBasesAt(paternalChromosome, maternalChromosome, variantSiteIndex, baseIfInSegment);
 
-                int numProcessed = 0;
+                        s.append("\t");
+                        s.append(bases);
+                    }
+                    s.append("\n");
 
-                while (true) {
-                    if (i == 0) {
+                    batchRecords[k - offset] = s.toString();
+
+                }
+
+                // Wait for all tasks in this batch to finish
+                next();
+
+                // Task 0 writes out all records in this batch
+                if (i == 0) {
+                    for (String record : batchRecords) {
                         try {
-                            // Read one individual
-                            id[0] = in.readInt();
-                            minID = Math.min(minID, id[0]);
-                            maxID = Math.max(maxID, id[0]);
-
-//                            System.out.println(id[0]);
-
-                            paternalGenome[0] = (BitSet) in.readUnshared();
-                            maternalGenome[0] = (BitSet) in.readUnshared();
-
-                        } catch (EOFException e) {
-                            id[0] = -1;
-                            System.out.println("Generation" + n + " processed");
-                        } catch (IOException | ClassNotFoundException e) {
+                            out.write(record);
+                        } catch (IOException e) {
                             e.printStackTrace();
                             System.exit(-1);
                         }
-                    }
-
-                    next();
-
-                    if (id[0] == -1) {
-                        break;
-                    }
-
-                    for (int j = start; j < end; j++) {
-                        int variantSiteIndex = variantSiteIndices[j];
-
-                        boolean paternalBase = paternalGenome[0].get(variantSiteIndex);
-                        boolean maternalBase = maternalGenome[0].get(variantSiteIndex);
-
-                        int idIndex = id[0] - minID;
-                        if (!paternalBase) {
-                            if (!maternalBase) {
-                                idIndexToBases[idIndex][j] = (byte) 0;
-                            } else {
-                                idIndexToBases[idIndex][j] = (byte) 1;
-                            }
-                        } else {
-                            if (!maternalBase) {
-                                idIndexToBases[idIndex][j] = (byte) 2;
-                            } else {
-                                idIndexToBases[idIndex][j] = (byte) 3;
-                            }
+                        count++;
+                        if (count % 1000 == 0) {
+                            StringBuilder s = new StringBuilder();
+                            s.append("Records: ");
+                            s.append(count / 1000);
+                            s.append("k written");
+                            System.out.println(s.toString());
                         }
-                    }
-
-                    next();
-
-                    if (i == 0) {
-                        numProcessed += 2;
-                        if (numProcessed % 1000 == 0) {
-                            System.out.println("Generation" + n + ": " + numProcessed / 1000 + "k processed");
-                        }
-                    }
-
-                } // end of while
-
-
-                if (i == 0) {
-                    try {
-                        in.close();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                        System.exit(-1);
                     }
                 }
 
-            } // end of all generations
+                // Other tasks wait for task 0 to finish writing
+                next();
 
-        }); // end of parallel part
+            } // End of all batches
 
+        });
 
-        // Generate and write out all the rows sequentially
-
-        PrintWriter out = new PrintWriter(Utils.getBufferedWriter("out.vcf.gz"));
-
-        out.print("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT");
-        for (int i = minID; i <= maxID; i++) {
-            out.print("\t" + i);
+        try {
+            out.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.exit(-1);
         }
-        out.print("\n");
-
-
-        int numRecordsWritten = 0;
-        for (int i = 0; i < numSites; i++) {
-            int variantSiteIndex = variantSiteIndices[i];
-
-            StringBuilder s = new StringBuilder();
-            s.append("22\t");
-            s.append(variantSiteIndex + 1);
-            s.append("\trs");
-            s.append(variantSiteIndex + 1);
-            s.append("\tA\tC\t.\tPASS\t.\tGT");
-
-            for (int ID = minID; ID <= maxID; ID++) {
-                int idIndex = ID - minID;
-                String bases = encoding.get(idIndexToBases[idIndex][i]);
-
-                s.append("\t");
-                s.append(bases);
-            }
-
-            out.println(s.toString());
-
-            numRecordsWritten += 1;
-            if (numRecordsWritten % 1000 == 0) {
-                System.out.println("Records: " + numRecordsWritten / 1000 + "k written");
-            }
-        }
-
-        out.close();
     }
 
 
@@ -363,4 +316,99 @@ public class GenomeParser {
         System.out.println("variantSiteIndices written to file\n");
     }
 
+    private static int[][][] readChromosomes() {
+        int[][][] idToChromosomes = new int[Configs.generationSize * Configs.numGenerationsStore][][];
+        for (int i = 0; i < Configs.numGenerationsStore; i++) {
+            String filename = "Generation" + i;
+            ObjectInputStream in = Utils.getBufferedObjectInputStream(filename);
+            try {
+                int id = in.readInt();
+                idToChromosomes[id - minID][0] = (int[]) in.readUnshared();
+                idToChromosomes[id - minID][1] = (int[]) in.readUnshared();
+            } catch (IOException | ClassNotFoundException e) {
+                e.printStackTrace();
+                System.exit(-1);
+            }
+        }
+
+        return idToChromosomes;
+    }
+
+    private static boolean getIsInSegmentFromIndex(int index) {
+        boolean base;
+        if (index > 0) {
+            // index can be the start or end of a segment
+            if (index % 2 == 0) {
+                // index is start of a segment, so included in it
+                base = true;
+            } else {
+                // index is end of a segment, so not included in it
+                base = false;
+            }
+        } else {
+            int insertionPoint = -(index + 1);
+            if (insertionPoint % 2 == 0) {
+                // start of a segment is larger than index
+                // index is not in any segment
+                base = false;
+            } else {
+                // end of a segment is larger than index
+                // index is in that segment
+                base = true;
+            }
+        }
+        return base;
+    }
+
+    private static String getBasesFromIsInSegment(
+        boolean paternalIsInSegment, boolean maternalIsInSegment,
+        boolean baseIfInSegment) {
+
+        String bases;
+        if (!paternalIsInSegment) {
+            if (!maternalIsInSegment) {
+                if (baseIfInSegment) {
+                    bases = "0|0";
+                } else {
+                    bases = "1|1";
+                }
+            } else {
+                if (baseIfInSegment) {
+                    bases = "0|1";
+                } else {
+                    bases = "1|0";
+                }
+            }
+        } else{
+            if (!maternalIsInSegment) {
+                if (baseIfInSegment) {
+                    bases = "1|0";
+                } else {
+                    bases = "0|1";
+                }
+            } else {
+                if (baseIfInSegment) {
+                    bases = "1|1";
+                } else {
+                    bases = "0|0";
+                }
+            }
+        }
+        return bases;
+    }
+
+    private static String getBasesAt(
+        int[] paternalChromosome, int[] maternalChromosome,
+        int variantSiteIndex, boolean baseIfInSegment) {
+
+        int paternalIndex = Arrays.binarySearch(paternalChromosome, variantSiteIndex);
+        int maternalIndex = Arrays.binarySearch(maternalChromosome, variantSiteIndex);
+
+        boolean paternalIsInSegment = getIsInSegmentFromIndex(paternalIndex);
+        boolean maternalIsInSegment = getIsInSegmentFromIndex(maternalIndex);
+
+        String bases = getBasesFromIsInSegment(paternalIsInSegment, maternalIsInSegment, baseIfInSegment);
+        return bases;
+
+    }
 }
