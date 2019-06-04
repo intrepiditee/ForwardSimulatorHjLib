@@ -87,6 +87,11 @@ public class GenomeParser {
             System.exit(-1);
         }
 
+        boolean[] basesIfInSegment = new boolean[numSites];
+        for (int i = 0; i < numSites; i++) {
+            basesIfInSegment[i] = singletonRand.nextBoolean();
+        }
+
         // Generate record strings in batch. In each batch, records are generated
         // in parallel. After all records in a batch are generated, one task writes
         // then all out. Then, all the tasks continue to the next batch.
@@ -114,7 +119,7 @@ public class GenomeParser {
                     s.append(variantSiteIndex + 1);
                     s.append("\tA\tC\t.\tPASS\t.\tGT");
 
-                    boolean baseIfInSegment = singletonRand.nextBoolean();
+                    boolean baseIfInSegment = basesIfInSegment[k];
                     for (int ID = minID; ID <= maxID; ID++) {
                         int idIndex = ID - minID;
                         int[] paternalChromosome = idToChromosomes[idIndex][0];
@@ -326,7 +331,7 @@ public class GenomeParser {
         System.out.println();
 
         int count = 0;
-        int[][][] idToChromosomes = new int[Configs.generationSize * Configs.numGenerationsStore][][];
+        int[][][] idToChromosomes = new int[Configs.generationSize * Configs.numGenerationsStore][2][];
         for (int i = 0; i < Configs.numGenerationsStore; i++) {
             String filename = "Generation" + i;
             ObjectInputStream in = Utils.getBufferedObjectInputStream(filename);

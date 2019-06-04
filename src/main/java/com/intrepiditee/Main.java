@@ -19,6 +19,11 @@ public class Main {
         }
 
         switch (args[0]) {
+            case "--all":
+                Simulator.main(args);
+                GenomeParser.main(args);
+                PedigreeGraph.main(args);
+                break;
             case "--simulate":
                 Simulator.main(args);
                 break;

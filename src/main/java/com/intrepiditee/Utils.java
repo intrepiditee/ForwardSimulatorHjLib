@@ -16,23 +16,6 @@ public class Utils {
 
     static Random singletonRand = new Random();
 
-    private static BitSet generateRandomSequence(int genomeLength) {
-        Random sequenceRandom = new Random();
-        BitSet sequence = new BitSet();
-        for (int i = 0; i < genomeLength; i++) {
-            sequence.set(i, sequenceRandom.nextBoolean());
-        }
-
-        return sequence;
-    }
-
-
-    public static String bitSetToString(BitSet s) {
-        final StringBuilder buffer = new StringBuilder(s.size());
-        IntStream.range(0, s.size()).mapToObj(i -> s.get(i) ? '1' : '0').forEach(buffer::append);
-        return buffer.toString();
-    }
-
 
     public static String getPWD() {
         String pwd = null;
