@@ -121,7 +121,10 @@ public class GenomeParser {
                         int[] paternalChromosome = idToChromosomes[idIndex][0];
                         int[] maternalChromosome = idToChromosomes[idIndex][1];
 
-                        String bases = getBasesAt(paternalChromosome, maternalChromosome, variantSiteIndex, baseIfInSegment);
+                        String bases = getBasesAt(
+                            paternalChromosome, maternalChromosome,
+                            variantSiteIndex, baseIfInSegment
+                        );
 
                         s.append("\t");
                         s.append(bases);
@@ -296,6 +299,8 @@ public class GenomeParser {
         // Sort the array of variant site indices
         Arrays.sort(variantSiteIndices[0]);
 
+        System.out.println(variantSiteIndices[0]);
+
         System.out.println("\nPreprocessing completed");
         System.out.println("Preprocessing summary:");
         System.out.println("Number of variant sites: " + variantSiteIndicesList.size());
@@ -315,7 +320,11 @@ public class GenomeParser {
         System.out.println("variantSiteIndices written to file\n");
     }
 
+
     private static int[][][] readChromosomes() {
+        System.out.println();
+
+        int count = 0;
         int[][][] idToChromosomes = new int[Configs.generationSize * Configs.numGenerationsStore][][];
         for (int i = 0; i < Configs.numGenerationsStore; i++) {
             String filename = "Generation" + i;
@@ -327,6 +336,15 @@ public class GenomeParser {
             } catch (IOException | ClassNotFoundException e) {
                 e.printStackTrace();
                 System.exit(-1);
+            }
+
+            count += 2;
+            if (count % 1000 == 0) {
+                StringBuilder s = new StringBuilder();
+                s.append("Chromosomes: ");
+                s.append(count / 1000);
+                s.append("k read");
+                System.out.println(s.toString());
             }
         }
 
@@ -408,6 +426,7 @@ public class GenomeParser {
 
         String bases = getBasesFromIsInSegment(paternalIsInSegment, maternalIsInSegment, baseIfInSegment);
         return bases;
-
     }
+
+
 }
