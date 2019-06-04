@@ -4,7 +4,6 @@ import edu.rice.hj.api.SuspendableException;
 
 import java.io.*;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.intrepiditee.Utils.getBufferedWriter;
 import static com.intrepiditee.Utils.singletonRand;
@@ -307,7 +306,7 @@ public class GenomeParser {
         try {
             o.writeInt(minID);
             o.writeInt(maxID);
-            o.writeUnshared(variantSiteIndices);
+            o.writeUnshared(variantSiteIndices[0]);
             o.close();
         } catch (IOException e) {
             e.printStackTrace();
