@@ -8,10 +8,10 @@ import java.util.List;
 
 //import static com.intrepiditee.Individual.mergeOneChromosome;
 //import static com.intrepiditee.Individual.mutateOneChromosome;
+import static com.intrepiditee.Individual.recombineMutationIndices;
 import static com.intrepiditee.Individual.recombineOneChromosome;
 import static com.intrepiditee.Segment.make;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class IndividualTest {
 
@@ -66,26 +66,23 @@ public class IndividualTest {
         List<Segment> segs2 = Arrays.asList(
             make(3, 4, 2), make(12, 14, 3)
         );
-        List<Integer> indices = new ArrayList<>(Arrays.asList(2, 6, 10));
-        List<Segment> expected1 = Arrays.asList(
+        List<Integer> indices = new ArrayList<>(Arrays.asList(2, 6, 10, Configs.chromosomeLength - 1));
+        List<Segment> expected = Arrays.asList(
             make(0, 2, 0), make(3, 4, 2),
             make(12, 14, 3)
         );
-        List<Segment> expected2 = Arrays.asList(
-            make(2, 5, 0), make(10, 15, 1)
-        );
         List<Segment> recombined = recombineOneChromosome(segs1, segs2, indices);
-        assertTrue(recombined.equals(expected1) || recombined.equals(expected2));
+        assertEquals(expected, recombined);
 
         segs1 = Arrays.asList(make(0, 10, 0));
         segs2 = Arrays.asList(make(0, 10, 0));
-        indices = new ArrayList<>(Arrays.asList(0, 4, 6, 9, 10));
-        expected1 = Arrays.asList(
+        indices = new ArrayList<>(Arrays.asList(0, 4, 6, 9, 10, Configs.chromosomeLength - 1));
+        expected = Arrays.asList(
             make(0, 4, 0), make(4, 6, 0),
             make(6, 9, 0), make(9, 10, 0)
         );
         recombined = recombineOneChromosome(segs1, segs2, indices);
-        assertEquals(expected1, recombined);
+        assertEquals(expected, recombined);
 
         segs1 = Arrays.asList(
             make(4, 5, 5), make(20, 40, 6),
@@ -95,18 +92,64 @@ public class IndividualTest {
             make(1, 3, 3), make(10, 20, 1),
             make(30, 33, 0), make(80, 90, 4)
         );
-        indices = new ArrayList<>(Arrays.asList(0, 4, 20, 44, 68, 91, 102));
-        expected1 = Arrays.asList(
-            make(1, 3, 3), make(4, 5, 5),
-            make(30, 33, 0), make(44, 60, 7),
-            make(61, 68, 7), make(80, 90, 4));
-        expected2 = Arrays.asList(
+        indices = new ArrayList<>(Arrays.asList(0, 4, 20, 44, 68, 91, 102, Configs.chromosomeLength - 1));
+        expected = Arrays.asList(
             make(10, 20, 1), make(20, 40, 6),
             make(43, 44, 7), make(68, 70, 7)
         );
-        recombined = recombineOneChromosome(segs1, segs2, indices);
-        assertTrue(recombined.equals(expected1) || recombined.equals(expected2));
+        recombined = recombineOneChromosome(segs2, segs1, indices);
+        assertEquals(expected, recombined);
     }
+
+
+    @Test
+    void testRecombineMutationIndices() {
+        List<Integer> oneMutationIndices = Arrays.asList(10);
+        List<Integer> anotherMutationIndices = Arrays.asList(20);
+        List<Integer> recombinationIndices = Arrays.asList(15, Configs.chromosomeLength - 1);
+        List<Integer> expected = Arrays.asList(10, 20);
+        List<Integer> recombined = recombineMutationIndices(
+            oneMutationIndices, anotherMutationIndices, recombinationIndices
+        );
+        assertEquals(expected, recombined);
+
+        expected = Arrays.asList();
+        recombined = recombineMutationIndices(
+            anotherMutationIndices, oneMutationIndices, recombinationIndices
+        );
+        assertEquals(expected, recombined);
+
+        oneMutationIndices = Arrays.asList();
+        anotherMutationIndices = Arrays.asList();
+        recombinationIndices = Arrays.asList(Configs.chromosomeLength - 1);
+        expected = Arrays.asList();
+        recombined = recombineMutationIndices(
+            oneMutationIndices, anotherMutationIndices, recombinationIndices
+        );
+        assertEquals(expected, recombined);
+
+        oneMutationIndices = Arrays.asList(1, 2, 3, 4, 5, 6, 7);
+        recombinationIndices = Arrays.asList(1, 3, 4, 6, 7, 8, Configs.chromosomeLength);
+        expected = Arrays.asList(3, 6);
+        recombined = recombineMutationIndices(
+            oneMutationIndices, anotherMutationIndices, recombinationIndices
+        );
+        assertEquals(expected, recombined);
+
+
+        oneMutationIndices = Arrays.asList(10, 24, 243, 625, 920, 1505, 10240, 510523);
+        anotherMutationIndices = Arrays.asList(105, 115, 205, 506, 802, 999, 10424, 49522, 109999);
+        recombinationIndices = Arrays.asList(
+            24, 57, 92, 235, 643, 952, 1063, 3055, 9032, 105235, Configs.chromosomeLength - 1
+        );
+        expected = Arrays.asList(24, 506, 920, 999, 1505, 10240, 109999);
+        recombined = recombineMutationIndices(
+            anotherMutationIndices, oneMutationIndices, recombinationIndices
+        );
+        assertEquals(expected, recombined);
+    }
+
+
 
 //    @Test
 //    void testMutateOneChromosome() {

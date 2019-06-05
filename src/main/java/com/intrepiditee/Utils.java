@@ -5,7 +5,6 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
-import java.util.stream.IntStream;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
@@ -22,7 +21,11 @@ public class Utils {
         try {
             URL jarPathURL = Main.class.getProtectionDomain().getCodeSource().getLocation();
             String jarPath = jarPathURL.toURI().toString();
-            pwd = jarPath.substring(5, jarPath.length() - 45);
+            pwd = jarPath.substring(
+                "file:".length(),
+                jarPath.length() - "file:".length() -
+                    "ForwardSimulatorHjLib-1.0-SNAPSHOT-shaded".length() + 1
+            );
         } catch (URISyntaxException e) {
             e.printStackTrace();
             System.exit(-1);
@@ -128,6 +131,12 @@ public class Utils {
         return f;
     }
 
+    public static Scanner getScannerFromGZip(String filename) {
+        BufferedReader r = getBufferedGZipReader(filename);
+        Scanner sc = new Scanner(r);
+        return sc;
+    }
+
     public static Scanner getScanner(String filename) {
         BufferedReader r = getBufferedReader(filename);
         Scanner sc = new Scanner(r);
@@ -135,29 +144,44 @@ public class Utils {
     }
 
 
-    public static BufferedReader getBufferedReader(String filename) {
-        return getBufferedReader(filename, bufferSize);
+    public static BufferedReader getBufferedGZipReader(String filename) {
+        return getBufferedGZipReader(filename, bufferSize);
     }
 
 
-    public static BufferedWriter getBufferedWriter(String filename) {
-        return getBufferedWriter(filename, bufferSize);
+    public static BufferedWriter getBufferedGZipWriter(String filename) {
+        return getBufferedGZipWriter(filename, bufferSize);
     }
 
 
-    public static BufferedWriter getBufferedWriter(String filename, int bufferSize) {
+    public static BufferedWriter getBufferedGZipWriter(String filename, int bufferSize) {
         GZIPOutputStream zip = getGZIPOutputStream(filename);
         BufferedWriter w = new BufferedWriter(new OutputStreamWriter(zip, StandardCharsets.UTF_8), bufferSize);
         return w;
     }
 
 
-    public static BufferedReader getBufferedReader(String filename, int bufferSize) {
+    public static BufferedReader getBufferedGZipReader(String filename, int bufferSize) {
         GZIPInputStream zip = getGZIPInputStream(filename);
         BufferedReader r = new BufferedReader(new InputStreamReader(zip, StandardCharsets.UTF_8), bufferSize);
         return r;
     }
 
+    public static BufferedReader getBufferedReader(String filename, int bufferSize) {
+        return new BufferedReader(new InputStreamReader(getBufferedInputStream(filename)), bufferSize);
+    }
+
+    public static BufferedReader getBufferedReader(String filename) {
+        return new BufferedReader(new InputStreamReader(getBufferedInputStream(filename)), bufferSize);
+    }
+
+    public static BufferedWriter getBufferedWriter(String filename, int bufferSize) {
+        return new BufferedWriter(new OutputStreamWriter(getBufferedOutputStream(filename)), bufferSize);
+    }
+
+    public static BufferedWriter getBufferedWriter(String filename) {
+        return new BufferedWriter(new OutputStreamWriter(getBufferedOutputStream(filename)), bufferSize);
+    }
 
     static void printUsage() {
         System.err.println(
@@ -170,5 +194,6 @@ public class Utils {
                    "exclusiveUpperBound numberOfThreads\n"
         );
     }
+
 
 }

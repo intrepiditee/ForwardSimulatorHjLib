@@ -6,6 +6,7 @@ import java.io.ObjectInputStream;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
+
 public class GeneticMap {
 
     // Both are inclusive
@@ -20,11 +21,15 @@ public class GeneticMap {
     TreeMap<Double, Integer> geneticToPhysicalDistance;
     TreeMap<Integer, Double> physicalToGeneticDistance;
 
+    static Map<Integer, Double> chromosomeNumberToGeneticLength;
+    static Map<Integer, Integer> chromosomeNumberToPhysicalLength;
+
+    static Map<Integer, Map<Byte, GeneticMap>> chromosomeNumberToSexToMap;
+
     static String prefix = "decode_map/";
     static String summaryFilename = "male.gmap.summary";
     static String malePrefix = "male.gmap.cumulative.chr";
     static String femalePrefix = "female.gmap.cumulative.chr";
-    static int numChromosomes = 22;
 
     static byte MALE = 1;
     static byte FEMALE = 0;
@@ -33,53 +38,122 @@ public class GeneticMap {
     static byte GENETIC_TO_PHYSICAL = 3;
     static byte PHYSICAL_TO_GENETIC = 4;
 
+
     public static void main(String[] args) {
-        GeneticMap map = makeFromFilename("male.gmap.cumulative.chr22.gz").parseDirection(PHYSICAL_TO_GENETIC);
+        System.out.println();
+
+        Map<Integer, Byte> chromosomeNumberToSex = getChromosomeNumberToSex();
+        makeFromMap(chromosomeNumberToSex);
+
         ObjectInputStream in = Utils.getBufferedObjectInputStream("variantSiteIndices");
+
+        int[] indices = null;
         try {
             in.readInt();
             in.readInt();
-            int[] indices = (int[]) in.readUnshared();
-            BufferedWriter w = Utils.getBufferedWriter("map.chr22.gz");
-            for (int index : indices) {
-                StringBuilder s = new StringBuilder();
-                s.append(index);
-                s.append("\t");
-
-                if (index < map.minPhysicalDistance) {
-                    s.append(map.minGeneticDistance);
-                } else if (index > map.maxPhysicalDistance) {
-                    s.append(map.maxGeneticDistance);
-                } else {
-                    Map.Entry<Integer, Double> floorEntry = map.physicalToGeneticDistance.floorEntry(index);
-                    Map.Entry<Integer, Double> ceilEntry = map.physicalToGeneticDistance.ceilingEntry(index);
-
-                    if (ceilEntry.equals(floorEntry)) {
-                        s.append(floorEntry.getValue());
-                    } else {
-                        s.append(
-                            interpolate(
-                                floorEntry.getKey(), floorEntry.getValue(),
-                                ceilEntry.getKey(), ceilEntry.getValue(),
-                                index
-                            )
-                        );
-                    }
-                }
-                s.append("\n");
-                w.write(s.toString());
-            }
-            w.close();
+            indices = (int[]) in.readUnshared();
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
             System.exit(-1);
         }
 
+        try {
+            for (Map.Entry<Integer, Map<Byte, GeneticMap>> e : chromosomeNumberToSexToMap.entrySet()) {
+                for (byte sex : new byte[]{MALE, FEMALE}) {
+                    GeneticMap map = e.getValue().get(sex).parseDirection(PHYSICAL_TO_GENETIC);
+
+                    int chromosomeNumber = e.getKey();
+                    StringBuilder sb = new StringBuilder();
+                    sb.append("map/");
+                    sb.append(sex == MALE ? "male" : "female");
+                    sb.append(".chr");
+                    sb.append(chromosomeNumber);
+                    sb.append(".txt");
+                    String filename = sb.toString();
+
+                    BufferedWriter w = Utils.getBufferedWriter(filename);
+
+                    for (int i = 0; i < indices.length; i++) {
+                        StringBuilder s = new StringBuilder();
+                        s.append(i);
+                        s.append("\t");
+
+                        int index = indices[i];
+                        if (index < map.minPhysicalDistance) {
+                            s.append(map.minGeneticDistance);
+                        } else if (index > map.maxPhysicalDistance) {
+                            s.append(map.maxGeneticDistance);
+                        } else {
+                            // Both will not be null
+                            Map.Entry<Integer, Double> floorEntry = map.physicalToGeneticDistance.floorEntry(index);
+                            Map.Entry<Integer, Double> ceilEntry = map.physicalToGeneticDistance.ceilingEntry(index);
+
+                            if (ceilEntry.equals(floorEntry)) {
+                                s.append(floorEntry.getValue());
+                            } else {
+                                s.append(
+                                    interpolate(
+                                        floorEntry.getKey(), floorEntry.getValue(),
+                                        ceilEntry.getKey(), ceilEntry.getValue(),
+                                        index
+                                    )
+                                );
+                            }
+                        }
+
+                        s.append("\n");
+                        w.write(s.toString());
+                    }
+
+                    w.close();
+                    System.out.println(filename + " written");
+
+                } // End of male and female
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.exit(-1);
+        }
 
     }
 
 
-    static Map<Integer, Map<Byte, GeneticMap>> makeFromMap(Map<Integer, Byte> chromosomeNumberToSex) {
+    static Map<Integer, Byte> getChromosomeNumberToSex() {
+        Map<Integer, Byte> chromosomeNumberToSex = new HashMap<>();
+        for (int i = 1; i <= 22; i++) {
+            chromosomeNumberToSex.put(i, BOTH);
+        }
+        return chromosomeNumberToSex;
+    }
+
+    static void parseSummary() {
+        if (chromosomeNumberToGeneticLength != null &&
+            chromosomeNumberToPhysicalLength != null) {
+            return;
+        }
+
+        chromosomeNumberToGeneticLength = new HashMap<>();
+        chromosomeNumberToPhysicalLength = new HashMap<>();
+
+        Scanner sc = Utils.getScanner(prefix + summaryFilename);
+        sc.nextLine();
+        while (sc.hasNext()) {
+            String line = sc.nextLine();
+            String[] split = line.split("\t");
+            int chromosomeNumber = Integer.parseInt(split[0].substring("chr".length()));
+            chromosomeNumberToGeneticLength.put(
+                chromosomeNumber,
+                Double.parseDouble(split[2])
+            );
+            chromosomeNumberToPhysicalLength.put(
+                chromosomeNumber,
+                Integer.parseInt(split[3])
+            );
+        }
+    }
+
+    static void makeFromMap(Map<Integer, Byte> chromosomeNumberToSex) {
         Map<Integer, Map<Byte, GeneticMap>> maps = new HashMap<>(chromosomeNumberToSex.size());
         for (Map.Entry<Integer, Byte> e : chromosomeNumberToSex.entrySet()) {
             int chromosomeNumber = e.getKey();
@@ -94,14 +168,15 @@ public class GeneticMap {
             maps.put(chromosomeNumber, byteToMap);
 
         }
-        return maps;
+
+        chromosomeNumberToSexToMap = maps;
     }
 
     static GeneticMap make(int chromosomeNumber, byte sex) {
         return new GeneticMap(
             sex == MALE ?
-                prefix + malePrefix + chromosomeNumber :
-                prefix + femalePrefix + chromosomeNumber
+                malePrefix + chromosomeNumber :
+                femalePrefix + chromosomeNumber
         );
     }
 
@@ -110,16 +185,17 @@ public class GeneticMap {
     }
 
     private GeneticMap(String filename) {
-        sc = Utils.getScanner(filename);
+        sc = Utils.getScanner(prefix + filename);
     }
 
-    GeneticMap parse() {
-        return parseDirection(GENETIC_TO_PHYSICAL);
+    GeneticMap parseBothDirections() {
+        return parseDirection(BOTH);
     }
 
     @SuppressWarnings("unchecked")
     GeneticMap parseDirection(byte direction) {
-        TreeMap map = new TreeMap<>();
+        TreeMap mapGeneticToPhysical = new TreeMap<>();
+        TreeMap mapPhysicalToGenetic = new TreeMap<>();
 
         double geneticDistance = 0.0;
         int physicalDistance = 0;
@@ -129,10 +205,11 @@ public class GeneticMap {
         while (sc.hasNext()) {
             geneticDistance = sc.nextDouble();
             physicalDistance = sc.nextInt();
-            if (direction == GENETIC_TO_PHYSICAL) {
-                map.put(geneticDistance, physicalDistance);
-            } else if (direction == PHYSICAL_TO_GENETIC) {
-                map.put(physicalDistance, geneticDistance);
+            if (direction == BOTH || direction == GENETIC_TO_PHYSICAL) {
+                mapGeneticToPhysical.put(geneticDistance, physicalDistance);
+            }
+            if (direction == BOTH || direction == PHYSICAL_TO_GENETIC) {
+                mapPhysicalToGenetic.put(physicalDistance, geneticDistance);
             }
 
             if (isFirst) {
@@ -147,17 +224,18 @@ public class GeneticMap {
 
         maxGeneticDistance = geneticDistance;
         maxPhysicalDistance = physicalDistance;
-        if (direction == GENETIC_TO_PHYSICAL) {
-            geneticToPhysicalDistance = map;
-        } else if (direction == PHYSICAL_TO_GENETIC) {
-            physicalToGeneticDistance = map;
+        if (direction == BOTH || direction == GENETIC_TO_PHYSICAL) {
+            geneticToPhysicalDistance = mapGeneticToPhysical;
+        }
+        if (direction == BOTH || direction == PHYSICAL_TO_GENETIC) {
+            physicalToGeneticDistance = mapPhysicalToGenetic;
         }
 
         return this;
     }
 
     List<Integer> getRecombinationIndices(int chromosomeNumber) {
-        int numIndices = getPoisson(Configs.chromosomeLength / 50000000.0);
+        int numIndices = getPoisson(chromosomeNumberToGeneticLength.get(chromosomeNumber) / 50);
         List<Integer> indices = new ArrayList<>(numIndices);
         if (numIndices == 0) {
             return indices;
@@ -176,6 +254,12 @@ public class GeneticMap {
 
         }
         Collections.sort(indices);
+
+
+        if (indices.get(indices.size() - 1) < Configs.chromosomeLength - 1) {
+            // Add end of chromosome as a recombination index to allow all segments be added
+            indices.add(Configs.chromosomeLength - 1);
+        }
 
         return indices;
     }

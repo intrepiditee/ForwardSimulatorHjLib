@@ -21,7 +21,7 @@ public class Main {
         switch (args[0]) {
             case "--all":
                 Simulator.main(args);
-                GenomeParser.main(args);
+                VCFGenerator.main(args);
                 GeneticMap.main(args);
                 PedigreeGraph.main(args);
                 break;
@@ -29,7 +29,10 @@ public class Main {
                 Simulator.main(args);
                 break;
             case "--parse":
-                GenomeParser.main(args);
+                VCFParser.main(args);
+                break;
+            case "--generate":
+                VCFGenerator.main(args);
                 break;
             case "--map":
                 GeneticMap.main(args);

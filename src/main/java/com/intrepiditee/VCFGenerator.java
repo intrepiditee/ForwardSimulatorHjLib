@@ -5,11 +5,11 @@ import edu.rice.hj.api.SuspendableException;
 import java.io.*;
 import java.util.*;
 
-import static com.intrepiditee.Utils.getBufferedWriter;
+import static com.intrepiditee.Utils.getBufferedGZipWriter;
 import static com.intrepiditee.Utils.singletonRand;
 import static edu.rice.hj.Module0.*;
 
-public class GenomeParser {
+public class VCFGenerator {
 
     static int minID = Integer.MAX_VALUE;
     static int maxID = Integer.MIN_VALUE;
@@ -75,7 +75,7 @@ public class GenomeParser {
 
         String[] batchRecords = new String[siteBatchSize];
 
-        BufferedWriter out = getBufferedWriter("out.vcf.gz");
+        BufferedWriter out = getBufferedGZipWriter("out.vcf.gz");
         try {
             out.write("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT");
             for (int i = minID; i <= maxID; i++) {

@@ -3,6 +3,8 @@ package com.intrepiditee;
 import java.io.BufferedWriter;
 import java.io.ObjectOutputStream;
 
+import static com.intrepiditee.GeneticMap.GENETIC_TO_PHYSICAL;
+import static com.intrepiditee.Segment.getFounderArray;
 import static com.intrepiditee.Segment.segmentsToArray;
 import static com.intrepiditee.Segment.segmentsToString;
 import static edu.rice.hj.Module0.launchHabaneroApp;
@@ -23,7 +25,7 @@ public class Simulator {
         launchHabaneroApp(() -> {
             try {
                 GeneticMap m = GeneticMap.makeFromFilename(Configs.geneticMapName);
-                m.parse();
+                m.parseDirection(GENETIC_TO_PHYSICAL);
 
                 Generation next = null;
 
@@ -44,14 +46,16 @@ public class Simulator {
                     }
 
                     if (toWrite != null) {
-                        BufferedWriter w2 = Utils.getBufferedWriter(filename + ".txt.gz");
-                        BufferedWriter w = Utils.getBufferedWriter(filename + "Pedigree.txt.gz");
+                        BufferedWriter w2 = Utils.getBufferedWriter(filename + ".txt");
+                        BufferedWriter w = Utils.getBufferedGZipWriter(filename + "Pedigree.txt.gz");
                         ObjectOutputStream o = Utils.getBufferedObjectOutputStream(filename);
 
                         for (Individual ind : toWrite.males) {
                             o.writeInt(ind.id);
                             o.writeUnshared(segmentsToArray(ind.paternalChromosome));
+                            o.writeUnshared(getFounderArray(ind.paternalChromosome));
                             o.writeUnshared(segmentsToArray(ind.maternalChromosome));
+                            o.writeUnshared(getFounderArray(ind.maternalChromosome));
                             w2.write(ind.id);
                             w2.write("\n");
                             w2.write(segmentsToString(ind.paternalChromosome));
@@ -64,7 +68,9 @@ public class Simulator {
                         for (Individual ind : toWrite.females) {
                             o.writeInt(ind.id);
                             o.writeUnshared(segmentsToArray(ind.paternalChromosome));
+                            o.writeUnshared(getFounderArray(ind.paternalChromosome));
                             o.writeUnshared(segmentsToArray(ind.maternalChromosome));
+                            o.writeUnshared(getFounderArray(ind.maternalChromosome));
                             w2.write(ind.id);
                             w2.write("\n");
                             w2.write(segmentsToString(ind.paternalChromosome));

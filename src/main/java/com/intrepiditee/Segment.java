@@ -1,6 +1,5 @@
 package com.intrepiditee;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class Segment {
@@ -79,18 +78,9 @@ public class Segment {
 
     @Override
     public String toString() {
-        return "[" + start + ", " + end + "]";
+        return "[" + start + ", " + end + ", " + founderID + "]";
     }
 
-
-    static List<Integer> segmentsToList(List<Segment> segs) {
-        List<Integer> indices = new ArrayList<>(2 * segs.size());
-        for (Segment seg: segs) {
-            indices.add(seg.start);
-            indices.add(seg.end);
-        }
-        return indices;
-    }
 
     static int[] segmentsToArray(List<Segment> segments) {
         int[] indices = new int[segments.size() * 2];
@@ -103,6 +93,15 @@ public class Segment {
         return indices;
     }
 
+    static int[] getFounderArray(List<Segment> segments) {
+        int[] founderIDs = new int[segments.size()];
+        int j = 0;
+        for (Segment seg : segments) {
+            founderIDs[j] = seg.founderID;
+        }
+        return founderIDs;
+    }
+
     static String segmentsToString(List<Segment> segs) {
         StringBuilder s = new StringBuilder();
         for (int i = 0; i < segs.size(); i++) {
@@ -110,6 +109,8 @@ public class Segment {
             s.append(seg.start);
             s.append(",");
             s.append(seg.end);
+            s.append(",");
+            s.append(seg.founderID);
             if (i != segs.size() - 1) {
                 s.append(" ");
             }

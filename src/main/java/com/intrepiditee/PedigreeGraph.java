@@ -2,12 +2,10 @@ package com.intrepiditee;
 
 import edu.rice.hj.api.SuspendableException;
 import edu.rice.hj.runtime.config.HjSystemProperty;
-import javafx.util.Pair;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static edu.rice.hj.Module0.launchHabaneroApp;
@@ -54,7 +52,7 @@ public class PedigreeGraph {
 
     public static void addGenerationToGraph(int generation) {
         String filename = "Generation" + generation + "Pedigree.txt.gz";
-        Scanner sc = Utils.getScanner(filename);
+        Scanner sc = Utils.getScannerFromGZip(filename);
 
         while (sc.hasNextInt()) {
             int id = sc.nextInt();
@@ -102,7 +100,7 @@ public class PedigreeGraph {
 
 
     public static void computePairwiseDegreeLessThanAndWrite(int upperBound) throws SuspendableException {
-        BufferedWriter w = Utils.getBufferedWriter("degrees.txt");
+        BufferedWriter w = Utils.getBufferedGZipWriter("degrees.txt");
 
         AtomicInteger pairCount = new AtomicInteger(0);
 
