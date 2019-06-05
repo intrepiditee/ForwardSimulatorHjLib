@@ -38,6 +38,7 @@ public class VCFParser {
 
                 for (int i = start + 1; i < end + 1; i++) {
                     String filename = vcfPrefix + i + vcfPostfix;
+                    System.out.println(filename);
                     Scanner sc = Utils.getScanner(filename);
                     sc.nextLine();
                     sc.nextLine();
@@ -49,6 +50,7 @@ public class VCFParser {
                         Set<Integer> idIndices = new HashSet<>();
                         while (idIndices.size() != Configs.generationSize) {
                             int id = ThreadLocalRandom.current().nextInt(useless.length, fields.length);
+                            System.out.println(id);
                             idIndices.add(id);
                         }
 
@@ -113,6 +115,7 @@ public class VCFParser {
                         for (int j = 0; j < bases.size(); j++) {
                             basesArray[j] = bases.get(j);
                         }
+
                         try {
                             o.writeUnshared(basesArray);
                         } catch (IOException e) {
