@@ -6,8 +6,9 @@ import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
 import static com.intrepiditee.Utils.getBufferedObjectOutputStream;
+import static edu.rice.hj.Module0.forallPhased;
 import static edu.rice.hj.Module0.launchHabaneroApp;
-import static edu.rice.hj.Module1.forall;
+import static edu.rice.hj.Module0.next;
 
 public class VCFParser {
 
@@ -28,13 +29,12 @@ public class VCFParser {
         };
 
         int numFilesPerThread = Configs.numChromosomes / Configs.numThreads;
+        int[][] idIndicesArray = new int[1][];
 
         launchHabaneroApp(() -> {
-            forall(0, Configs.numThreads - 1, (n) -> {
+            forallPhased(0, Configs.numThreads - 1, (n) -> {
                 int start = n * numFilesPerThread;
                 int end = n == Configs.numThreads - 1 ? Configs.numChromosomes : start + numFilesPerThread;
-
-                int[] idIndicesArray = null;
 
                 for (int i = start + 1; i < end + 1; i++) {
                     String filename = vcfPrefix + i + vcfPostfix;
@@ -52,22 +52,22 @@ public class VCFParser {
                             idIndices.add(id);
                         }
 
-                        idIndicesArray = new int[idIndices.size()];
+                        idIndicesArray[0] = new int[idIndices.size()];
                         int j = 0;
                         for (int index : idIndices.toArray(new Integer[0])) {
-                            idIndicesArray[j++] = index;
+                            idIndicesArray[0][j++] = index;
                         }
-                        Arrays.sort(idIndicesArray);
+                        Arrays.sort(idIndicesArray[0]);
 
                         int[] ids = new int[idIndices.size()];
                         int k = 0;
-                        for (int index : idIndicesArray) {
+                        for (int index : idIndicesArray[0]) {
                             ids[k++] = Integer.parseInt(fields[index]);
                         }
 
                         try {
                             ObjectOutputStream o = getBufferedObjectOutputStream(prefix + "indices.chr"+ i);
-                            o.writeUnshared(idIndicesArray);
+                            o.writeUnshared(idIndicesArray[0]);
                             o.close();
 
                             o = getBufferedObjectOutputStream(prefix + "ids.chr" + i);
@@ -82,6 +82,8 @@ public class VCFParser {
                         sc.nextLine();
                     }
 
+                    next();
+
                     ArrayList<Integer> sites = new ArrayList<>();
                     ObjectOutputStream o = getBufferedObjectOutputStream(prefix + "bases.chr"+ i);
                     while (sc.hasNextLine()) {
@@ -89,7 +91,7 @@ public class VCFParser {
                         sites.add(Integer.parseInt(fields[1]));
 
                         ArrayList<Byte> bases = new ArrayList<>();
-                        for (int index : idIndicesArray) {
+                        for (int index : idIndicesArray[0]) {
                             byte encoding = -1;
                             switch (fields[index]) {
                                 case "0|0":
