@@ -6,6 +6,7 @@ import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
 import static com.intrepiditee.Utils.getBufferedObjectOutputStream;
+import static com.intrepiditee.Utils.singletonRand;
 import static edu.rice.hj.Module0.forallPhased;
 import static edu.rice.hj.Module0.launchHabaneroApp;
 import static edu.rice.hj.Module0.next;
@@ -46,10 +47,10 @@ public class VCFParser {
 
                     if (i == 1) {
                         String[] fields = sc.nextLine().split("\t");
-                        ThreadLocalRandom.current().setSeed(0);
+                        singletonRand.setSeed(0);
                         Set<Integer> idIndices = new HashSet<>();
                         while (idIndices.size() != Configs.generationSize) {
-                            int id = ThreadLocalRandom.current().nextInt(useless.length, fields.length);
+                            int id = useless.length + singletonRand.nextInt(fields.length - useless.length);
                             System.out.println(id);
                             idIndices.add(id);
                         }
