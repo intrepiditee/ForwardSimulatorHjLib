@@ -39,11 +39,12 @@ public class VCFParser {
 
                 for (int i = start + 1; i < end + 1; i++) {
                     String filename = vcfPrefix + i + vcfPostfix;
-                    System.out.println(filename);
                     Scanner sc = Utils.getScanner(filename);
                     sc.nextLine();
                     sc.nextLine();
                     sc.nextLine();
+
+                    int count = 0;
 
                     if (i == 1) {
                         String[] fields = sc.nextLine().split("\t");
@@ -124,6 +125,11 @@ public class VCFParser {
                             System.exit(-1);
                         }
 
+                        count++;
+                        if (count % 1000 == 0) {
+                            System.out.println(filename + count / 1000 + "k sites parsed");
+                        }
+
                     }
 
                     try {
@@ -148,7 +154,8 @@ public class VCFParser {
                     }
 
                     System.out.println(filename + " parsed");
-                }
+
+                } // End of all files
             });
         });
 
