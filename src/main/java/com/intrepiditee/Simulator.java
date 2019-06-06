@@ -33,6 +33,7 @@ public class Simulator {
 
         launchHabaneroApp(() -> {
             try {
+                GeneticMap.parseLengths();
                 GeneticMap.makeFromChromosomeNumbers(getChromosomeNumbers());
                 GeneticMap.parseAllMaps(GENETIC_TO_PHYSICAL);
 

@@ -130,7 +130,7 @@ public class GeneticMap {
     }
 
 
-    static void parseLengths() {
+    static Map<Integer, Integer> parseLengths() {
         chromosomeNumberToPhysicalLength = new HashMap<>();
 
         String filename = pathPrefix + chromosomeLengthFilename;
@@ -145,16 +145,17 @@ public class GeneticMap {
             );
         }
         sc.close();
+
+        return chromosomeNumberToPhysicalLength;
     }
 
     static Map<Integer, GeneticMap> makeFromChromosomeNumbers(int... chromosomeNumbers) {
-        if (chromosomeNumberToGeneticMap != null) {
-            return chromosomeNumberToGeneticMap;
+        if (chromosomeNumberToGeneticMap == null) {
+            chromosomeNumberToGeneticMap = new HashMap<>();
         }
 
-        chromosomeNumberToGeneticMap = new HashMap<>();
         for (int c : chromosomeNumbers) {
-            chromosomeNumberToGeneticMap.put(c, make(c));
+            chromosomeNumberToGeneticMap.putIfAbsent(c, make(c));
         }
         return chromosomeNumberToGeneticMap;
 
@@ -178,8 +179,6 @@ public class GeneticMap {
             m.parseDirection(direction);
         }
     }
-
-
 
     @SuppressWarnings("unchecked")
     GeneticMap parseDirection(byte direction) {
