@@ -15,8 +15,31 @@ public class Utils {
 
     static Random singletonRand = new Random();
 
+    static int[] toIntArray(List<Integer> list) {
+        int[] array = new int[list.size()];
+        for (int i = 0; i < list.size(); i++) {
+            array[i] = list.get(i);
+        }
+        return array;
+    }
 
-    public static String getPWD() {
+    static int[] toIntArray(Integer[] integerArray) {
+        int[] array = new int[integerArray.length];
+        for (int i = 0; i < integerArray.length; i++) {
+            array[i] = integerArray[i];
+        }
+        return array;
+    }
+
+    static byte[] toByteArray(List<Byte> list) {
+        byte[] array = new byte[list.size()];
+        for (int i = 0; i < list.size(); i++) {
+            array[i] = list.get(i);
+        }
+        return array;
+    }
+
+    static String getPWD() {
         String pwd = null;
         try {
             URL jarPathURL = Main.class.getProtectionDomain().getCodeSource().getLocation();
@@ -34,12 +57,12 @@ public class Utils {
         return pwd;
     }
 
-    public static File getFile(String filename) {
+    static File getFile(String filename) {
         return new File(getPWD() + filename);
     }
 
 
-    public static GZIPOutputStream getGZIPOutputStream(String filename) {
+    static GZIPOutputStream getGZIPOutputStream(String filename) {
         File f = createEmptyFile(filename);
         GZIPOutputStream o = null;
         try {
