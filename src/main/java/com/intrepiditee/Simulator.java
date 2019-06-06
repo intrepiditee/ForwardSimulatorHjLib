@@ -54,20 +54,20 @@ public class Simulator {
                     }
 
                     if (toWrite != null) {
-                        BufferedWriter pedigreeWriter = getBufferedGZipWriter(prefix + "_pedigree.txt.gz");
+                        BufferedWriter pedigreeWriter = getBufferedGZipWriter(
+                            prefix + generationIndex + "_pedigree.txt.gz"
+                        );
 
                         for (int c = 1; c <= numChromosomes; c++) {
-                            StringBuilder sb = new StringBuilder(prefix);
-                            sb.append(generationIndex);
-                            sb.append("_chr");
-                            sb.append(c);
-                            String filename = sb.toString();
+                            String filename = prefix + generationIndex + "_chr" + c;
 
                             ObjectOutputStream genomeOut = getBufferedObjectOutputStream(filename);
                             BufferedWriter genomeWriter = getBufferedWriter(filename + ".txt");
 
                             for (Individual ind : toWrite.males) {
                                 Map<Byte, List<Segment>> chromosomesPair = ind.genome.get(c);
+                                ind.mergeChromosomes();
+
                                 genomeOut.writeInt(ind.id);
                                 genomeOut.writeUnshared(chromosomesPair);
 
@@ -87,6 +87,8 @@ public class Simulator {
 
                             for (Individual ind : toWrite.females) {
                                 Map<Byte, List<Segment>> chromosomesPair = ind.genome.get(c);
+                                ind.mergeChromosomes();
+
                                 genomeOut.writeInt(ind.id);
                                 genomeOut.writeUnshared(chromosomesPair);
 

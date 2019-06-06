@@ -156,6 +156,12 @@ public class Generation {
             }
         });
 
+        if (Utils.singletonRand.nextBoolean()) {
+            Collections.shuffle(next.males);
+        } else {
+            Collections.shuffle(next.females);
+        }
+
         return next;
     }
 

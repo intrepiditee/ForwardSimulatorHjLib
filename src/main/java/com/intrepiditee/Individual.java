@@ -80,8 +80,6 @@ public class Individual {
             List<Segment> maternalChromosome = chromosomePair.get(FEMALE);
             chromosomePair.put(MALE, mergeOneChromosome(paternalChromosome));
             chromosomePair.put(FEMALE, mergeOneChromosome(maternalChromosome));
-
-            genome.put(c, chromosomePair);
         }
 
         return this;
