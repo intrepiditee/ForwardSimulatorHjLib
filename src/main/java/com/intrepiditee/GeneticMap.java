@@ -261,13 +261,12 @@ public class GeneticMap {
         }
         Collections.sort(indices);
 
-
-
         if (indices.get(indices.size() - 1) < chromosomeLength - 1) {
             // Add end of chromosome as a recombination index to allow all segments be added
             indices.add(chromosomeLength - 1);
         }
 
+        System.out.println("indices: " + indices);
         return indices;
     }
 

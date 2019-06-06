@@ -214,10 +214,10 @@ public class Individual {
         GeneticMap m = chromosomeNumberToGeneticMap.get(chromosomeNumber);
         List<Integer> recombinationIndices = m.getRecombinationIndices(chromosomeNumber);
 
+        // They belong to the parent
         Map<Byte, List<Segment>> chromosomesPair = parent.genome.get(chromosomeNumber);
         List<Segment> paternalChromosome = chromosomesPair.get(MALE);
         List<Segment> maternalChromosome = chromosomesPair.get(FEMALE);
-
         Map<Byte, List<Integer>> mutationIndicesPair = parent.mutationIndices.get(chromosomeNumber);
         List<Integer> paternalMutationIndices = mutationIndicesPair.get(MALE);
         List<Integer> maternalMutationIndices = mutationIndicesPair.get(FEMALE);
@@ -237,29 +237,24 @@ public class Individual {
             anotherMutationIndices = tempp;
         }
 
-        if (parent.id == fatherID) {
-            paternalMutationIndices = recombineMutationIndices(
-                oneMutationIndices, anotherMutationIndices, recombinationIndices
-            );
-            paternalChromosome = recombineOneChromosome(
-                oneSegmentList, anotherSegmentList, recombinationIndices
-            );
-            addMutationIndices(paternalMutationIndices, chromosomeNumber);
-        } else if (parent.id == motherID) {
-            maternalMutationIndices = recombineMutationIndices(
-                oneMutationIndices, anotherMutationIndices, recombinationIndices
-            );
-            maternalChromosome = recombineOneChromosome(
-                oneSegmentList, anotherSegmentList, recombinationIndices
-            );
-            addMutationIndices(maternalMutationIndices, chromosomeNumber);
-        }
+        // Generate one chromosome for the child
+        // Generate mutation indices on that chromosome for the child
+        List<Integer> childMutationIndices = recombineMutationIndices(
+            oneMutationIndices, anotherMutationIndices, recombinationIndices
+        );
+        List<Segment> childChromosome = recombineOneChromosome(
+            oneSegmentList, anotherSegmentList, recombinationIndices
+        );
+        addMutationIndices(childMutationIndices, chromosomeNumber);
 
-        chromosomesPair.put(MALE, paternalChromosome);
-        chromosomesPair.put(FEMALE, maternalChromosome);
+        Map<Byte, List<Segment>> childChromosomesPair = genome.get(chromosomeNumber);
+        Map<Byte, List<Integer>> childMutationIndicesPair = mutationIndices.get(chromosomeNumber);
+        // Determine if the newly generated chromosome is paternal or maternal
+        byte sex = parent.id == fatherID ? MALE : FEMALE;
 
-        mutationIndicesPair.put(MALE, paternalMutationIndices);
-        mutationIndicesPair.put(FEMALE, maternalMutationIndices);
+        childChromosomesPair.put(sex, childChromosome);
+        childMutationIndicesPair.put(MALE, childMutationIndices);
+
     }
 
     private void meiosisOneParent(Individual parent) {
