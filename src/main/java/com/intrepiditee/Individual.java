@@ -160,8 +160,6 @@ public class Individual {
         List<Segment> oneSegmentList, List<Segment> anotherSegmentList,
         List<Integer> recombinationIndices) {
 
-        System.out.println(oneSegmentList);
-
         List<Segment> combinedChromosome = new ArrayList<>(oneSegmentList.size());
 
         int prevRecombinationIndex = -1;
@@ -205,6 +203,10 @@ public class Individual {
 
             prevRecombinationIndex = recombinationIndex;
         }
+
+        System.out.println("one " + oneSegmentList);
+        System.out.println("another " + oneSegmentList);
+        System.out.println("combined " + combinedChromosome);
 
         return combinedChromosome;
     }
