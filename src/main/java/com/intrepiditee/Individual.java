@@ -57,6 +57,7 @@ public class Individual {
             int chromosomeLen = chromosomeNumberToPhysicalLength.get(c);
             Segment seg = Segment.make(0, chromosomeLen - 1, id);
             paternalChromosome.add(seg);
+            seg = Segment.make(0, chromosomeLen - 1, id);
             maternalChromosome.add(seg);
             chromosomesPair.put(MALE, paternalChromosome);
             chromosomesPair.put(FEMALE, maternalChromosome);
@@ -158,6 +159,8 @@ public class Individual {
     static List<Segment> recombineOneChromosome(
         List<Segment> oneSegmentList, List<Segment> anotherSegmentList,
         List<Integer> recombinationIndices) {
+
+        System.out.println(oneSegmentList);
 
         List<Segment> combinedChromosome = new ArrayList<>(oneSegmentList.size());
 

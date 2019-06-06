@@ -156,8 +156,6 @@ public class Generation {
             }
         });
 
-
-
         return next;
     }
 
