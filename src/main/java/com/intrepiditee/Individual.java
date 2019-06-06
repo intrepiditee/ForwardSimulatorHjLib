@@ -51,8 +51,8 @@ public class Individual {
 
         for (int c = 1; c <= numChromosomes; c++) {
             Map<Byte, List<Segment>> chromosomesPair = new HashMap<>();
-            List<Segment> paternalChromosome = chromosomesPair.get(MALE);
-            List<Segment> maternalChromosome = chromosomesPair.get(FEMALE);
+            List<Segment> paternalChromosome = new ArrayList<>();
+            List<Segment> maternalChromosome = new ArrayList<>();
 
             int chromosomeLen = chromosomeNumberToPhysicalLength.get(c);
             Segment seg = Segment.make(0, chromosomeLen - 1, id);
