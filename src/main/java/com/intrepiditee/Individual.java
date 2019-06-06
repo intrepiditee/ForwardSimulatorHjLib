@@ -204,10 +204,6 @@ public class Individual {
             prevRecombinationIndex = recombinationIndex;
         }
 
-        System.out.println("one " + oneSegmentList);
-        System.out.println("another " + oneSegmentList);
-        System.out.println("combined " + combinedChromosome);
-
         return combinedChromosome;
     }
 

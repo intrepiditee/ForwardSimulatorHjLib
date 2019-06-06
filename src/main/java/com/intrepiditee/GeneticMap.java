@@ -267,7 +267,6 @@ public class GeneticMap {
             indices.add(chromosomeLength - 1);
         }
 
-        System.out.println("indices: " + indices);
         return indices;
     }
 

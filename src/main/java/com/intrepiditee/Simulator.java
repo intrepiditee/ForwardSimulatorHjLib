@@ -10,8 +10,6 @@ import static com.intrepiditee.Configs.MALE;
 import static com.intrepiditee.GeneticMap.GENETIC_TO_PHYSICAL;
 import static com.intrepiditee.GeneticMap.getChromosomeNumbers;
 import static com.intrepiditee.GeneticMap.numChromosomes;
-import static com.intrepiditee.Segment.getFounderArray;
-import static com.intrepiditee.Segment.segmentsToArray;
 import static com.intrepiditee.Segment.segmentsToString;
 import static com.intrepiditee.Utils.getBufferedGZipWriter;
 import static com.intrepiditee.Utils.getBufferedObjectOutputStream;
@@ -19,6 +17,8 @@ import static com.intrepiditee.Utils.getBufferedWriter;
 import static edu.rice.hj.Module0.launchHabaneroApp;
 
 public class Simulator {
+
+    static String prefix = "out/gen";
 
     public static void main(String[] args) {
         if (args.length < 5 || (!args[0].equals("--simulate"))) {
@@ -47,12 +47,10 @@ public class Simulator {
                     }
 
                     Generation toWrite = null;
-                    String prefix = null;
 
                     int generationIndex = i - (Configs.numGenerations - Configs.numGenerationsStore);
                     if (generationIndex >= 0) {
                         toWrite = next;
-                        prefix = "gen" + generationIndex;
                     }
 
                     if (toWrite != null) {
@@ -60,11 +58,13 @@ public class Simulator {
 
                         for (int c = 1; c <= numChromosomes; c++) {
                             StringBuilder sb = new StringBuilder(prefix);
+                            sb.append(generationIndex);
                             sb.append("_chr");
                             sb.append(c);
                             String filename = sb.toString();
+
                             ObjectOutputStream genomeOut = getBufferedObjectOutputStream(filename);
-                            BufferedWriter genomeWriter = getBufferedWriter(prefix + ".txt");
+                            BufferedWriter genomeWriter = getBufferedWriter(filename + ".txt");
 
                             for (Individual ind : toWrite.males) {
                                 Map<Byte, List<Segment>> chromosomesPair = ind.genome.get(c);
