@@ -16,6 +16,8 @@ public class VCFGenerator {
 
     static int[] variantSiteIndices;
 
+    static int chromosomeLength;
+
     public static void main(String[] args) {
         if (args.length < 6 || (!args[0].equals("--parse"))) {
             System.err.println(
@@ -25,7 +27,7 @@ public class VCFGenerator {
             System.exit(-1);
         }
 
-        Configs.chromosomeLength = Integer.parseInt(args[1]);
+        chromosomeLength = Integer.parseInt(args[1]);
         Configs.generationSize = Integer.parseInt(args[2]);
         Configs.numGenerationsStore = Integer.parseInt(args[3]);
         int lowerBound = Integer.parseInt(args[4]);
@@ -188,7 +190,7 @@ public class VCFGenerator {
     private static void getVariantSitesMoreThan(int lowerBound) throws SuspendableException {
         final int[][] chromosome = new int[1][];
 
-        int[] numChromosomesWithIndexInSegment = new int[Configs.chromosomeLength];
+        int[] numChromosomesWithIndexInSegment = new int[chromosomeLength];
         int[][] variantSiteIndicesLocal = new int[1][];
         List<Integer> variantSiteIndicesList = new ConcurrentArrayList<>();
 
@@ -269,9 +271,9 @@ public class VCFGenerator {
 
             // Determine variant site indices
             int numGenomes = Configs.numGenerationsStore * Configs.generationSize * 2;
-            int numBasesPerThread = Configs.chromosomeLength / Configs.numThreads;
+            int numBasesPerThread = chromosomeLength / Configs.numThreads;
             int start = i * numBasesPerThread;
-            int end = i == Configs.numThreads - 1 ? Configs.chromosomeLength : start + numBasesPerThread;
+            int end = i == Configs.numThreads - 1 ? chromosomeLength : start + numBasesPerThread;
             for (int j = start; j < end; j++) {
                 int num = numChromosomesWithIndexInSegment[j];
                 int minorityCount = num;

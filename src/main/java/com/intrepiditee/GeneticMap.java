@@ -6,6 +6,10 @@ import java.io.ObjectInputStream;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
+import static com.intrepiditee.Configs.BOTH;
+import static com.intrepiditee.Configs.FEMALE;
+import static com.intrepiditee.Configs.MALE;
+
 
 public class GeneticMap {
 
@@ -21,29 +25,27 @@ public class GeneticMap {
     TreeMap<Double, Integer> geneticToPhysicalDistance;
     TreeMap<Integer, Double> physicalToGeneticDistance;
 
-    static Map<Integer, Double> chromosomeNumberToGeneticLength;
     static Map<Integer, Integer> chromosomeNumberToPhysicalLength;
 
-    static Map<Integer, Map<Byte, GeneticMap>> chromosomeNumberToSexToMap;
+    static Map<Integer, GeneticMap> chromosomeNumberToGeneticMap;
 
-    static String prefix = "decode_map/";
-    static String summaryFilename = "male.gmap.summary";
-    static String malePrefix = "male.gmap.cumulative.chr";
-    static String femalePrefix = "female.gmap.cumulative.chr";
+    static String pathPrefix = "decode_maps_hg19_filtered/";
+    static String filenamePrefix = "decode_";
+    static String filenamePostfix = "_hg19.txt";
 
-    static byte MALE = 1;
-    static byte FEMALE = 0;
-    static byte BOTH = 2;
+    static String chromosomeLengthFilename = "hg19_chromosome_lengths.txt";
 
     static byte GENETIC_TO_PHYSICAL = 3;
     static byte PHYSICAL_TO_GENETIC = 4;
 
+    static int numChromosomes = 22;
 
+
+    // Generate genetic mapping files for rapid from indices of snps covered by ukb
     public static void main(String[] args) {
         System.out.println();
 
-        Map<Integer, Byte> chromosomeNumberToSex = getChromosomeNumberToSex();
-        makeFromMap(chromosomeNumberToSex);
+        makeFromChromosomeNumbers(getChromosomeNumbers());
 
         ObjectInputStream in = Utils.getBufferedObjectInputStream("variantSiteIndices");
 
@@ -58,9 +60,9 @@ public class GeneticMap {
         }
 
         try {
-            for (Map.Entry<Integer, Map<Byte, GeneticMap>> e : chromosomeNumberToSexToMap.entrySet()) {
+            for (Map.Entry<Integer, GeneticMap> e : chromosomeNumberToGeneticMap.entrySet()) {
                 for (byte sex : new byte[]{MALE, FEMALE}) {
-                    GeneticMap map = e.getValue().get(sex).parseDirection(PHYSICAL_TO_GENETIC);
+                    GeneticMap map = e.getValue().parseDirection(PHYSICAL_TO_GENETIC);
 
                     int chromosomeNumber = e.getKey();
                     StringBuilder sb = new StringBuilder();
@@ -119,65 +121,47 @@ public class GeneticMap {
     }
 
 
-    static Map<Integer, Byte> getChromosomeNumberToSex() {
-        Map<Integer, Byte> chromosomeNumberToSex = new HashMap<>();
-        for (int i = 1; i <= 22; i++) {
-            chromosomeNumberToSex.put(i, BOTH);
+    static int[] getChromosomeNumbers() {
+        int[] nums = new int[numChromosomes];
+        for (int i = 0; i < numChromosomes; i++) {
+            nums[i] = i + 1;
         }
-        return chromosomeNumberToSex;
+        return nums;
     }
 
-    static void parseSummary() {
-        if (chromosomeNumberToGeneticLength != null &&
-            chromosomeNumberToPhysicalLength != null) {
-            return;
-        }
 
-        chromosomeNumberToGeneticLength = new HashMap<>();
+    static void parseLengths() {
         chromosomeNumberToPhysicalLength = new HashMap<>();
 
-        Scanner sc = Utils.getScanner(prefix + summaryFilename);
-        sc.nextLine();
+        String filename = pathPrefix + chromosomeLengthFilename;
+        Scanner sc = Utils.getScanner(filename);
         while (sc.hasNext()) {
             String line = sc.nextLine();
             String[] split = line.split("\t");
             int chromosomeNumber = Integer.parseInt(split[0].substring("chr".length()));
-            chromosomeNumberToGeneticLength.put(
-                chromosomeNumber,
-                Double.parseDouble(split[2])
-            );
             chromosomeNumberToPhysicalLength.put(
                 chromosomeNumber,
-                Integer.parseInt(split[3])
+                Integer.parseInt(split[1])
             );
         }
+        sc.close();
     }
 
-    static void makeFromMap(Map<Integer, Byte> chromosomeNumberToSex) {
-        Map<Integer, Map<Byte, GeneticMap>> maps = new HashMap<>(chromosomeNumberToSex.size());
-        for (Map.Entry<Integer, Byte> e : chromosomeNumberToSex.entrySet()) {
-            int chromosomeNumber = e.getKey();
-            byte sex = e.getValue();
-            Map<Byte, GeneticMap> byteToMap = maps.getOrDefault(chromosomeNumber, new HashMap<>());
-            if (sex == BOTH) {
-                byteToMap.put(MALE, make(chromosomeNumber, MALE));
-                byteToMap.put(FEMALE, make(chromosomeNumber, FEMALE));
-            } else {
-                byteToMap.put(sex, make(chromosomeNumber, sex));
-            }
-            maps.put(chromosomeNumber, byteToMap);
-
+    static Map<Integer, GeneticMap> makeFromChromosomeNumbers(int... chromosomeNumbers) {
+        if (chromosomeNumberToGeneticMap != null) {
+            return chromosomeNumberToGeneticMap;
         }
 
-        chromosomeNumberToSexToMap = maps;
+        chromosomeNumberToGeneticMap = new HashMap<>();
+        for (int c : chromosomeNumbers) {
+            chromosomeNumberToGeneticMap.put(c, make(c));
+        }
+        return chromosomeNumberToGeneticMap;
+
     }
 
-    static GeneticMap make(int chromosomeNumber, byte sex) {
-        return new GeneticMap(
-            sex == MALE ?
-                malePrefix + chromosomeNumber :
-                femalePrefix + chromosomeNumber
-        );
+    static GeneticMap make(int chromosomeNumber) {
+        return makeFromFilename(filenamePrefix + chromosomeNumber + filenamePostfix);
     }
 
     static GeneticMap makeFromFilename(String filename) {
@@ -185,15 +169,30 @@ public class GeneticMap {
     }
 
     private GeneticMap(String filename) {
-        sc = Utils.getScanner(prefix + filename);
+        sc = Utils.getScanner(pathPrefix + filename);
     }
 
-    GeneticMap parseBothDirections() {
-        return parseDirection(BOTH);
+
+    static void parseAllMaps(byte direction) {
+        for (GeneticMap m : chromosomeNumberToGeneticMap.values()) {
+            m.parseDirection(direction);
+        }
     }
+
+
 
     @SuppressWarnings("unchecked")
     GeneticMap parseDirection(byte direction) {
+        if (direction == GENETIC_TO_PHYSICAL && geneticToPhysicalDistance != null) {
+            return this;
+        }
+        if (direction == PHYSICAL_TO_GENETIC && physicalToGeneticDistance != null) {
+            return this;
+        }
+        if (direction == BOTH && geneticToPhysicalDistance != null && physicalToGeneticDistance != null) {
+            return this;
+        }
+
         TreeMap mapGeneticToPhysical = new TreeMap<>();
         TreeMap mapPhysicalToGenetic = new TreeMap<>();
 
@@ -201,10 +200,11 @@ public class GeneticMap {
         int physicalDistance = 0;
         boolean isFirst = true;
 
-        sc.nextLine();
-        while (sc.hasNext()) {
-            geneticDistance = sc.nextDouble();
-            physicalDistance = sc.nextInt();
+        while (sc.hasNextLine()) {
+            String[] fields = sc.nextLine().split("\t");
+            physicalDistance = Integer.parseInt(fields[1]);
+            geneticDistance = Double.parseDouble(fields[4]);
+
             if (direction == BOTH || direction == GENETIC_TO_PHYSICAL) {
                 mapGeneticToPhysical.put(geneticDistance, physicalDistance);
             }
@@ -217,8 +217,6 @@ public class GeneticMap {
                 minPhysicalDistance = physicalDistance;
                 isFirst = false;
             }
-
-            sc.next();
         }
         sc.close();
 
@@ -234,8 +232,17 @@ public class GeneticMap {
         return this;
     }
 
+    /**
+     *
+     * @return a List of inclusive indices where recombinations should begin
+     */
     List<Integer> getRecombinationIndices(int chromosomeNumber) {
-        int numIndices = getPoisson(chromosomeNumberToGeneticLength.get(chromosomeNumber) / 50);
+        int chromosomeLength = chromosomeNumberToPhysicalLength.get(chromosomeNumber);
+        int numIndices = getPoisson(
+            // 1 cM = 1 Mbp
+            // 50 cM = 1 recombination
+            chromosomeLength / 50000000.0
+        );
         List<Integer> indices = new ArrayList<>(numIndices);
         if (numIndices == 0) {
             return indices;
@@ -256,21 +263,15 @@ public class GeneticMap {
         Collections.sort(indices);
 
 
-        if (indices.get(indices.size() - 1) < Configs.chromosomeLength - 1) {
+
+        if (indices.get(indices.size() - 1) < chromosomeLength - 1) {
             // Add end of chromosome as a recombination index to allow all segments be added
-            indices.add(Configs.chromosomeLength - 1);
+            indices.add(chromosomeLength - 1);
         }
 
         return indices;
     }
 
-    /**
-     *
-     * @return a List of inclusive indices where recombinations should begin
-     */
-    List<Integer> getRecombinationIndices() {
-        return getRecombinationIndices(22);
-    }
 
     // https://stackoverflow.com/questions/1241555/algorithm-to-generate-poisson-and-binomial-random-numbers
     static int getPoisson(double lambda) {

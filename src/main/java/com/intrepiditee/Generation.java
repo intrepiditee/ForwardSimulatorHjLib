@@ -1,12 +1,15 @@
 package com.intrepiditee;
 
-import edu.rice.hj.Module1;
 import edu.rice.hj.api.HjSuspendable;
 import edu.rice.hj.api.SuspendableException;
 
 import java.util.*;
 
+import static com.intrepiditee.Configs.FEMALE;
+import static com.intrepiditee.Configs.MALE;
 import static com.intrepiditee.Configs.numThreads;
+import static edu.rice.hj.Module0.finish;
+import static edu.rice.hj.Module1.async;
 
 
 public class Generation {
@@ -27,10 +30,10 @@ public class Generation {
         for (int i = 0; i < Configs.generationSize; i++) {
             Individual ind = Individual.make();
             if (numMales < desiredNumMales) {
-                ind.sex = Individual.MALE;
+                ind.sex = MALE;
                 numMales++;
             } else {
-                ind.sex = Individual.FEMALE;
+                ind.sex = FEMALE;
             }
             gen.add(ind);
         }
@@ -78,7 +81,7 @@ public class Generation {
         int numMales = numCouples;
         int numCouplesPerThread = numCouples / numThreads;
 
-        Module1.finish(() -> {
+        finish(() -> {
             for (int n = 0; n < numThreads; n++) {
                 Random rand = new Random();
 
@@ -116,9 +119,9 @@ public class Generation {
 
                             Individual child = Individual.makeFromParents(father, mother);
                             if (numberOfMales == numMalesPerThreadFinal) {
-                                child.setSex(Individual.FEMALE);
+                                child.setSex(FEMALE);
                             } else {
-                                child.setSex(Individual.MALE);
+                                child.setSex(MALE);
                                 numberOfMales++;
                             }
                             next.add(child);
@@ -135,9 +138,9 @@ public class Generation {
                                 }
                                 child = Individual.makeFromParents(father, mother);
                                 if (numberOfMales == numMalesPerThreadFinal) {
-                                    child.setSex(Individual.FEMALE);
+                                    child.setSex(FEMALE);
                                 } else {
-                                    child.setSex(Individual.MALE);
+                                    child.setSex(MALE);
                                     numberOfMales++;
                                 }
                                 next.add(child);
@@ -149,7 +152,7 @@ public class Generation {
                     }
                 };
 
-                Module1.async(r);
+                async(r);
             }
         });
 

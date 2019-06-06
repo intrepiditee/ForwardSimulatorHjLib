@@ -2,11 +2,20 @@ package com.intrepiditee;
 
 import java.io.BufferedWriter;
 import java.io.ObjectOutputStream;
+import java.util.List;
+import java.util.Map;
 
+import static com.intrepiditee.Configs.FEMALE;
+import static com.intrepiditee.Configs.MALE;
 import static com.intrepiditee.GeneticMap.GENETIC_TO_PHYSICAL;
+import static com.intrepiditee.GeneticMap.getChromosomeNumbers;
+import static com.intrepiditee.GeneticMap.numChromosomes;
 import static com.intrepiditee.Segment.getFounderArray;
 import static com.intrepiditee.Segment.segmentsToArray;
 import static com.intrepiditee.Segment.segmentsToString;
+import static com.intrepiditee.Utils.getBufferedGZipWriter;
+import static com.intrepiditee.Utils.getBufferedObjectOutputStream;
+import static com.intrepiditee.Utils.getBufferedWriter;
 import static edu.rice.hj.Module0.launchHabaneroApp;
 
 public class Simulator {
@@ -24,8 +33,8 @@ public class Simulator {
 
         launchHabaneroApp(() -> {
             try {
-                GeneticMap m = GeneticMap.makeFromFilename(Configs.geneticMapName);
-                m.parseDirection(GENETIC_TO_PHYSICAL);
+                GeneticMap.makeFromChromosomeNumbers(getChromosomeNumbers());
+                GeneticMap.parseAllMaps(GENETIC_TO_PHYSICAL);
 
                 Generation next = null;
 
@@ -37,56 +46,72 @@ public class Simulator {
                     }
 
                     Generation toWrite = null;
-                    String filename = null;
+                    String prefix = null;
 
                     int generationIndex = i - (Configs.numGenerations - Configs.numGenerationsStore);
                     if (generationIndex >= 0) {
                         toWrite = next;
-                        filename = "Generation" + generationIndex;
+                        prefix = "gen" + generationIndex;
                     }
 
                     if (toWrite != null) {
-                        BufferedWriter w2 = Utils.getBufferedWriter(filename + ".txt");
-                        BufferedWriter w = Utils.getBufferedGZipWriter(filename + "Pedigree.txt.gz");
-                        ObjectOutputStream o = Utils.getBufferedObjectOutputStream(filename);
+                        BufferedWriter pedigreeWriter = getBufferedGZipWriter(prefix + "_pedigree.txt.gz");
 
-                        for (Individual ind : toWrite.males) {
-                            o.writeInt(ind.id);
-                            o.writeUnshared(segmentsToArray(ind.paternalChromosome));
-                            o.writeUnshared(getFounderArray(ind.paternalChromosome));
-                            o.writeUnshared(segmentsToArray(ind.maternalChromosome));
-                            o.writeUnshared(getFounderArray(ind.maternalChromosome));
-                            w2.write(ind.id);
-                            w2.write("\n");
-                            w2.write(segmentsToString(ind.paternalChromosome));
-                            w2.write("\n");
-                            w2.write(segmentsToString(ind.maternalChromosome));
-                            w2.write("\n");
-                            w.write(String.format("%s %s %s\n", ind.id, ind.fatherID, ind.motherID));
-                        }
+                        for (int c = 1; c <= numChromosomes; c++) {
+                            StringBuilder sb = new StringBuilder(prefix);
+                            sb.append("_chr");
+                            sb.append(c);
+                            String filename = sb.toString();
+                            ObjectOutputStream genomeOut = getBufferedObjectOutputStream(filename);
+                            BufferedWriter genomeWriter = getBufferedWriter(prefix + ".txt");
 
-                        for (Individual ind : toWrite.females) {
-                            o.writeInt(ind.id);
-                            o.writeUnshared(segmentsToArray(ind.paternalChromosome));
-                            o.writeUnshared(getFounderArray(ind.paternalChromosome));
-                            o.writeUnshared(segmentsToArray(ind.maternalChromosome));
-                            o.writeUnshared(getFounderArray(ind.maternalChromosome));
-                            w2.write(ind.id);
-                            w2.write("\n");
-                            w2.write(segmentsToString(ind.paternalChromosome));
-                            w2.write("\n");
-                            w2.write(segmentsToString(ind.maternalChromosome));
-                            w2.write("\n");
-                            w.write(String.format("%s %s %s\n", ind.id, ind.fatherID, ind.motherID));
-                        }
+                            for (Individual ind : toWrite.males) {
+                                Map<Byte, List<Segment>> chromosomesPair = ind.genome.get(c);
+                                genomeOut.writeInt(ind.id);
+                                genomeOut.writeUnshared(chromosomesPair);
 
-                        o.close();
-                        w.close();
-                        w2.close();
-                    }
+                                genomeWriter.write(ind.id);
+                                genomeWriter.write("\n");
+                                genomeWriter.write(segmentsToString(chromosomesPair.get(MALE)));
+                                genomeWriter.write("\n");
+                                genomeWriter.write(segmentsToString(chromosomesPair.get(FEMALE)));
+                                genomeWriter.write("\n");
+
+                                if (c == 1) {
+                                    pedigreeWriter.write(
+                                        String.format("%s %s %s\n", ind.id, ind.fatherID, ind.motherID)
+                                    );
+                                }
+                            }
+
+                            for (Individual ind : toWrite.females) {
+                                Map<Byte, List<Segment>> chromosomesPair = ind.genome.get(c);
+                                genomeOut.writeInt(ind.id);
+                                genomeOut.writeUnshared(chromosomesPair);
+
+                                genomeWriter.write(ind.id);
+                                genomeWriter.write("\n");
+                                genomeWriter.write(segmentsToString(chromosomesPair.get(MALE)));
+                                genomeWriter.write("\n");
+                                genomeWriter.write(segmentsToString(chromosomesPair.get(FEMALE)));
+                                genomeWriter.write("\n");
+
+                                if (c == 1) {
+                                    pedigreeWriter.write(
+                                        String.format("%s %s %s\n", ind.id, ind.fatherID, ind.motherID)
+                                    );
+                                }
+                            }
+
+                            genomeOut.close();
+                            genomeWriter.close();
+                        } // end of all chromosomes
+
+                        pedigreeWriter.close();
+                    } // end of writing for this generation
 
                     System.out.print("\nGeneration " + i + " finished");
-                }
+                } // end of all generations
 
             } catch (Exception e) {
                 e.printStackTrace();
