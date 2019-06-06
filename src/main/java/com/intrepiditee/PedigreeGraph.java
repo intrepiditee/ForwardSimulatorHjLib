@@ -13,12 +13,12 @@ import static edu.rice.hj.Module1.forall;
 import static edu.rice.hj.Module1.forallChunked;
 
 public class PedigreeGraph {
-    static int minID = Integer.MAX_VALUE;
-    static int maxID = Integer.MIN_VALUE;
+    private static int minID = Integer.MAX_VALUE;
+    private static int maxID = Integer.MIN_VALUE;
 
-    static Map<Integer, Set<Integer>> adjacencyList = new HashMap<>();
+    private static final Map<Integer, Set<Integer>> adjacencyList = new HashMap<>();
 
-    static Map<Integer, Integer> individualToGeneration = new HashMap<>();
+    private static final Map<Integer, Integer> individualToGeneration = new HashMap<>();
 
     public static void main(String[] args) {
         Configs.numGenerationsStore = Integer.parseInt(args[1]);
@@ -50,7 +50,7 @@ public class PedigreeGraph {
 
     }
 
-    public static void addGenerationToGraph(int generation) {
+    private static void addGenerationToGraph(int generation) {
         String filename = "Generation" + generation + "Pedigree.txt.gz";
         Scanner sc = Utils.getScannerFromGZip(filename);
 
@@ -78,7 +78,7 @@ public class PedigreeGraph {
     }
 
 
-    public static void connectSiblings() throws SuspendableException {
+    private static void connectSiblings() throws SuspendableException {
         forallChunked(1, Configs.numGenerationsStore - 1, (i) -> {
             int generationStartID = minID + Configs.generationSize * i;
             int generationEndID = generationStartID + Configs.generationSize;
@@ -99,7 +99,7 @@ public class PedigreeGraph {
     }
 
 
-    public static void computePairwiseDegreeLessThanAndWrite(int upperBound) throws SuspendableException {
+    private static void computePairwiseDegreeLessThanAndWrite(int upperBound) throws SuspendableException {
         BufferedWriter w = Utils.getBufferedGZipWriter("degrees.txt");
 
         AtomicInteger pairCount = new AtomicInteger(0);
@@ -124,13 +124,12 @@ public class PedigreeGraph {
                 int c = pairCount.incrementAndGet();
                 if (i == 0) {
                     if (c % 1000 == 0) {
-                        StringBuilder s = new StringBuilder();
-                        s.append(c / 1000);
-                        s.append("k of out ");
-                        s.append(4 * Configs.generationSize * 4 * Configs.generationSize / 2 / 1000);
-                        s.append("k pairs finished");
-
-                        System.out.println(s.toString());
+                        String s =
+                            String.valueOf(c / 1000) +
+                            "k of out " +
+                            4 * Configs.generationSize * 4 * Configs.generationSize / 2 / 1000 +
+                            "k pairs finished";
+                        System.out.println(s);
                     }
                 }
             }
@@ -145,7 +144,7 @@ public class PedigreeGraph {
 
     }
 
-    public static int BFSLessThan(Integer start, Integer end, int upperBound) {
+    private static int BFSLessThan(Integer start, Integer end, int upperBound) {
 
         // If can go up, can go down as well. If cannot go up, can go down.
         Map<Integer, Boolean> individualToCanGoUp = new HashMap<>();

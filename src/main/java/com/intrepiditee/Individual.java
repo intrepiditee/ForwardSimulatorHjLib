@@ -1,7 +1,5 @@
 package com.intrepiditee;
 
-import edu.rice.hj.api.SuspendableException;
-
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -14,27 +12,26 @@ import static com.intrepiditee.Utils.singletonRand;
 
 
 public class Individual {
-    int id;
+    final int id;
     byte sex;
 
     int fatherID;
     int motherID;
 
-    Map<Integer, Map<Byte, List<Segment>>> genome;
-    Map<Integer, Map<Byte, List<Integer>>> mutationIndices;
+    final Map<Integer, Map<Byte, List<Segment>>> genome;
+    private final Map<Integer, Map<Byte, List<Integer>>> mutationIndices;
 
-    static AtomicInteger nextID = new AtomicInteger(0);
+    private static final AtomicInteger nextID = new AtomicInteger(0);
 
-    static double mutationRate = 1.1 * 10e-8;
+    private static final double mutationRate = 1.1 * 10e-8;
 
 
     static Individual make() {
-        Individual ind = new Individual();
-        return ind;
+        return new Individual();
     }
 
 
-    static Individual makeFromParents(Individual father, Individual mother) throws SuspendableException {
+    static Individual makeFromParents(Individual father, Individual mother) {
         Individual ind = make();
         ind.fatherID = father.id;
         ind.motherID = mother.id;
@@ -55,9 +52,9 @@ public class Individual {
             List<Segment> maternalChromosome = new ArrayList<>();
 
             int chromosomeLen = chromosomeNumberToPhysicalLength.get(c);
-            Segment seg = Segment.make(0, chromosomeLen - 1, id);
+            Segment seg = Segment.make(0, chromosomeLen - 1, id, MALE);
             paternalChromosome.add(seg);
-            seg = Segment.make(0, chromosomeLen - 1, id);
+            seg = Segment.make(0, chromosomeLen - 1, id, FEMALE);
             maternalChromosome.add(seg);
             chromosomesPair.put(MALE, paternalChromosome);
             chromosomesPair.put(FEMALE, maternalChromosome);
@@ -171,7 +168,12 @@ public class Individual {
             while (oneSegment.end <= recombinationIndex) {
                 if (oneSegment.end > prevRecombinationIndex) {
                     int start = Math.max(prevRecombinationIndex, oneSegment.start);
-                    combinedChromosome.add(Segment.make(start, oneSegment.end, oneSegment.founderID));
+                    combinedChromosome.add(
+                        Segment.make(
+                            start, oneSegment.end,
+                            oneSegment.founderID, oneSegment.whichChromosome
+                        )
+                    );
                 }
                 // All segments have been added
                 if (oneIndex == oneSegmentList.size() - 1) {
@@ -187,7 +189,12 @@ public class Individual {
                     int start = Math.max(prevRecombinationIndex, oneSegment.start);
                     // End is the earlier of recombinationIndex and oneSegment.end
                     int end = Math.min(recombinationIndex, oneSegment.end);
-                    combinedChromosome.add(Segment.make(start, end, oneSegment.founderID));
+                    combinedChromosome.add(
+                        Segment.make(
+                            start, end,
+                            oneSegment.founderID, oneSegment.whichChromosome
+                        )
+                    );
                 }
             }
 
@@ -259,11 +266,9 @@ public class Individual {
         }
     }
 
-    private Individual meiosis(Individual father, Individual mother) {
+    private void meiosis(Individual father, Individual mother) {
         meiosisOneParent(father);
         meiosisOneParent(mother);
-
-        return this;
     }
 
     static List<Integer> recombineMutationIndices(

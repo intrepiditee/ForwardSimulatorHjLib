@@ -15,14 +15,14 @@ import static edu.rice.hj.Module0.next;
 
 public class VCFParser {
 
-    static String prefix = "ukb/";
+    private static final String prefix = "ukb/";
 
-    static String vcfPrefix = "ukb_hap_GP_removed/ukb_hap_chr";
-    static String vcfPostfix = "_v2.vcf";
+    private static final String vcfPrefix = "ukb_hap_GP_removed/ukb_hap_chr";
+    private static final String vcfPostfix = "_v2.vcf";
 
-    static int[][] idIndicesArray = new int[1][];
+    private static final int[][] idIndicesArray = new int[1][];
 
-    static String[] useless = new String[]{
+    private static final String[] useless = new String[]{
         "#CHROM", "POS", "ID", "REF", "ALT",
         "QUAL", "FILTER", "INFO", "FORMAT"
     };
@@ -112,7 +112,7 @@ public class VCFParser {
     }
 
 
-    static void writeIDsAndIndices(String[] fields, int seed) {
+    private static void writeIDsAndIndices(String[] fields, int seed) {
         singletonRand.setSeed(seed);
 
         // Get Configs.generationSize number of random indices of ids
@@ -152,7 +152,7 @@ public class VCFParser {
     }
 
 
-    static byte getEncodingFromBases(String bases) {
+    private static byte getEncodingFromBases(String bases) {
         byte encoding = -1;
         switch (bases) {
             case "0|0":

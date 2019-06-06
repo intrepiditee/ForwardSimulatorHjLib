@@ -8,10 +8,10 @@ import java.util.*;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
-public class Utils {
+class Utils {
 
     // 100 MB
-    static int bufferSize = 100000000;
+    private static final int bufferSize = 100000000;
 
     static Random singletonRand = new Random();
 
@@ -39,7 +39,7 @@ public class Utils {
         return array;
     }
 
-    static String getPWD() {
+    private static String getPWD() {
         String pwd = null;
         try {
             URL jarPathURL = Main.class.getProtectionDomain().getCodeSource().getLocation();
@@ -62,7 +62,7 @@ public class Utils {
     }
 
 
-    static GZIPOutputStream getGZIPOutputStream(String filename) {
+    private static GZIPOutputStream getGZIPOutputStream(String filename) {
         File f = createEmptyFile(filename);
         GZIPOutputStream o = null;
         try {
@@ -76,7 +76,7 @@ public class Utils {
     }
 
 
-    public static GZIPInputStream getGZIPInputStream(String filename) {
+    private static GZIPInputStream getGZIPInputStream(String filename) {
         File f = getFile(filename);
         GZIPInputStream in = null;
         try {
@@ -90,7 +90,7 @@ public class Utils {
     }
 
 
-    public static BufferedInputStream getBufferedInputStream(String filename) {
+    private static BufferedInputStream getBufferedInputStream(String filename) {
         File f = getFile(filename);
         BufferedInputStream bi = null;
         try {
@@ -103,7 +103,7 @@ public class Utils {
     }
 
 
-    public static BufferedOutputStream getBufferedOutputStream(String filename) {
+    private static BufferedOutputStream getBufferedOutputStream(String filename) {
         File f = createEmptyFile(filename);
         BufferedOutputStream bo = null;
         try {
@@ -116,7 +116,7 @@ public class Utils {
     }
 
 
-    public static ObjectInputStream getBufferedObjectInputStream(String filename) {
+    static ObjectInputStream getBufferedObjectInputStream(String filename) {
         ObjectInputStream oi = null;
         try {
             oi = new ObjectInputStream(getBufferedInputStream(filename));
@@ -128,7 +128,7 @@ public class Utils {
         return oi;
     }
 
-    public static ObjectOutputStream getBufferedObjectOutputStream(String filename) {
+    static ObjectOutputStream getBufferedObjectOutputStream(String filename) {
         ObjectOutputStream oo = null;
         try {
             oo = new ObjectOutputStream(getBufferedOutputStream(filename));
@@ -141,7 +141,7 @@ public class Utils {
     }
 
 
-    public static File createEmptyFile(String filename) {
+    private static File createEmptyFile(String filename) {
         File f = getFile(filename);
         f.delete();
         try {
@@ -154,55 +154,51 @@ public class Utils {
         return f;
     }
 
-    public static Scanner getScannerFromGZip(String filename) {
+    static Scanner getScannerFromGZip(String filename) {
         BufferedReader r = getBufferedGZipReader(filename);
-        Scanner sc = new Scanner(r);
-        return sc;
+        return new Scanner(r);
     }
 
-    public static Scanner getScanner(String filename) {
+    static Scanner getScanner(String filename) {
         BufferedReader r = getBufferedReader(filename);
-        Scanner sc = new Scanner(r);
-        return sc;
+        return new Scanner(r);
     }
 
 
-    public static BufferedReader getBufferedGZipReader(String filename) {
+    private static BufferedReader getBufferedGZipReader(String filename) {
         return getBufferedGZipReader(filename, bufferSize);
     }
 
 
-    public static BufferedWriter getBufferedGZipWriter(String filename) {
+    static BufferedWriter getBufferedGZipWriter(String filename) {
         return getBufferedGZipWriter(filename, bufferSize);
     }
 
 
-    public static BufferedWriter getBufferedGZipWriter(String filename, int bufferSize) {
+    static BufferedWriter getBufferedGZipWriter(String filename, int bufferSize) {
         GZIPOutputStream zip = getGZIPOutputStream(filename);
-        BufferedWriter w = new BufferedWriter(new OutputStreamWriter(zip, StandardCharsets.UTF_8), bufferSize);
-        return w;
+        return new BufferedWriter(new OutputStreamWriter(zip, StandardCharsets.UTF_8), bufferSize);
     }
 
 
-    public static BufferedReader getBufferedGZipReader(String filename, int bufferSize) {
+    private static BufferedReader getBufferedGZipReader(String filename, int bufferSize) {
         GZIPInputStream zip = getGZIPInputStream(filename);
-        BufferedReader r = new BufferedReader(new InputStreamReader(zip, StandardCharsets.UTF_8), bufferSize);
-        return r;
+        return new BufferedReader(new InputStreamReader(zip, StandardCharsets.UTF_8), bufferSize);
     }
 
-    public static BufferedReader getBufferedReader(String filename, int bufferSize) {
+    static BufferedReader getBufferedReader(String filename, int bufferSize) {
         return new BufferedReader(new InputStreamReader(getBufferedInputStream(filename)), bufferSize);
     }
 
-    public static BufferedReader getBufferedReader(String filename) {
+    private static BufferedReader getBufferedReader(String filename) {
         return new BufferedReader(new InputStreamReader(getBufferedInputStream(filename)), bufferSize);
     }
 
-    public static BufferedWriter getBufferedWriter(String filename, int bufferSize) {
+    static BufferedWriter getBufferedWriter(String filename, int bufferSize) {
         return new BufferedWriter(new OutputStreamWriter(getBufferedOutputStream(filename)), bufferSize);
     }
 
-    public static BufferedWriter getBufferedWriter(String filename) {
+    static BufferedWriter getBufferedWriter(String filename) {
         return new BufferedWriter(new OutputStreamWriter(getBufferedOutputStream(filename)), bufferSize);
     }
 

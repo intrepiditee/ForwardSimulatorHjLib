@@ -18,7 +18,7 @@ import static edu.rice.hj.Module0.launchHabaneroApp;
 
 public class Simulator {
 
-    static String prefix = "out/gen";
+    private static String prefix = "out/gen";
 
     public static void main(String[] args) {
         if (args.length < 5 || (!args[0].equals("--simulate"))) {

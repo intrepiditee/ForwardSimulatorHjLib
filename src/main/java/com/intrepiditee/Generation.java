@@ -12,12 +12,12 @@ import static edu.rice.hj.Module0.finish;
 import static edu.rice.hj.Module1.async;
 
 
-public class Generation {
+class Generation {
 
     List<Individual> males;
     List<Individual> females;
 
-    static Generation makeEmpty() {
+    private static Generation makeEmpty() {
         return new Generation();
     }
 
@@ -46,23 +46,13 @@ public class Generation {
         females = new ConcurrentArrayList<>(Configs.generationSize / 2);
     }
 
-    public Generation add(Individual ind) {
+    private void add(Individual ind) {
         if (ind.isMale()) {
             males.add(ind);
         } else {
             females.add(ind);
         }
-        return this;
     }
-
-    public Generation evolve(int numGenerations) throws SuspendableException {
-        Generation next = this;
-        for (int i = 0; i < numGenerations; i++) {
-            next = next.evolveOneGeneration();
-        }
-        return next;
-    }
-
 
     /*
     There are generationSize / 2 couples. Starting from the first couple,
@@ -72,13 +62,12 @@ public class Generation {
     the chance of having the previous child. The chance of having the first child
     is 1.
     */
-    public Generation evolveOneGeneration() throws SuspendableException {
+    Generation evolveOneGeneration() throws SuspendableException {
         Generation next = makeEmpty();
 
         int numChildrenPerThread = Configs.generationSize / numThreads;
         int numMalesPerThread = numChildrenPerThread / 2;
         int numCouples = Configs.generationSize / 2;
-        int numMales = numCouples;
         int numCouplesPerThread = numCouples / numThreads;
 
         finish(() -> {
@@ -94,7 +83,7 @@ public class Generation {
                     Configs.generationSize - n * numChildrenPerThread :
                     numChildrenPerThread;
                 int numMalesPerThreadFinal = n == numThreads - 1 ?
-                    numMales - n * numMalesPerThread :
+                    numCouples - n * numMalesPerThread :
                     numMalesPerThread;
 
                 HjSuspendable r = () -> {
@@ -163,11 +152,6 @@ public class Generation {
         }
 
         return next;
-    }
-
-
-    public int size() {
-        return males.size() + females.size();
     }
 
 }

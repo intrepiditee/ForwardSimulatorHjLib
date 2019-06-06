@@ -14,31 +14,31 @@ import static com.intrepiditee.Configs.MALE;
 public class GeneticMap {
 
     // Both are inclusive
-    double minGeneticDistance;
-    double maxGeneticDistance;
+    private double minGeneticDistance;
+    private double maxGeneticDistance;
 
-    int minPhysicalDistance;
-    int maxPhysicalDistance;
+    private int minPhysicalDistance;
+    private int maxPhysicalDistance;
 
-    Scanner sc;
+    private final Scanner sc;
 
-    TreeMap<Double, Integer> geneticToPhysicalDistance;
-    TreeMap<Integer, Double> physicalToGeneticDistance;
+    private TreeMap<Double, Integer> geneticToPhysicalDistance;
+    private TreeMap<Integer, Double> physicalToGeneticDistance;
 
     static Map<Integer, Integer> chromosomeNumberToPhysicalLength;
 
     static Map<Integer, GeneticMap> chromosomeNumberToGeneticMap;
 
     static String pathPrefix = "decode_maps_hg19_filtered/";
-    static String filenamePrefix = "decode_";
-    static String filenamePostfix = "_hg19.txt";
+    private static final String filenamePrefix = "decode_";
+    private static final String filenamePostfix = "_hg19.txt";
 
-    static String chromosomeLengthFilename = "hg19_chromosome_lengths.txt";
+    private static final String chromosomeLengthFilename = "hg19_chromosome_lengths.txt";
 
-    static byte GENETIC_TO_PHYSICAL = 3;
-    static byte PHYSICAL_TO_GENETIC = 4;
+    static final byte GENETIC_TO_PHYSICAL = 3;
+    private static final byte PHYSICAL_TO_GENETIC = 4;
 
-    static int numChromosomes = 22;
+    static final int numChromosomes = 22;
 
 
     // Generate genetic mapping files for rapid from indices of snps covered by ukb
@@ -65,13 +65,12 @@ public class GeneticMap {
                     GeneticMap map = e.getValue().parseDirection(PHYSICAL_TO_GENETIC);
 
                     int chromosomeNumber = e.getKey();
-                    StringBuilder sb = new StringBuilder();
-                    sb.append("map/");
-                    sb.append(sex == MALE ? "male" : "female");
-                    sb.append(".chr");
-                    sb.append(chromosomeNumber);
-                    sb.append(".txt");
-                    String filename = sb.toString();
+                    String filename =
+                        "map/" +
+                        (sex == MALE ? "male" : "female") +
+                        ".chr" +
+                        chromosomeNumber +
+                        ".txt";
 
                     BufferedWriter w = Utils.getBufferedWriter(filename);
 
@@ -130,7 +129,7 @@ public class GeneticMap {
     }
 
 
-    static Map<Integer, Integer> parseLengths() {
+    static void parseLengths() {
         chromosomeNumberToPhysicalLength = new HashMap<>();
 
         String filename = pathPrefix + chromosomeLengthFilename;
@@ -145,11 +144,9 @@ public class GeneticMap {
             );
         }
         sc.close();
-
-        return chromosomeNumberToPhysicalLength;
     }
 
-    static Map<Integer, GeneticMap> makeFromChromosomeNumbers(int... chromosomeNumbers) {
+    static void makeFromChromosomeNumbers(int... chromosomeNumbers) {
         if (chromosomeNumberToGeneticMap == null) {
             chromosomeNumberToGeneticMap = new HashMap<>();
         }
@@ -157,15 +154,13 @@ public class GeneticMap {
         for (int c : chromosomeNumbers) {
             chromosomeNumberToGeneticMap.putIfAbsent(c, make(c));
         }
-        return chromosomeNumberToGeneticMap;
-
     }
 
-    static GeneticMap make(int chromosomeNumber) {
+    private static GeneticMap make(int chromosomeNumber) {
         return makeFromFilename(filenamePrefix + chromosomeNumber + filenamePostfix);
     }
 
-    static GeneticMap makeFromFilename(String filename) {
+    private static GeneticMap makeFromFilename(String filename) {
         return new GeneticMap(filename);
     }
 
@@ -181,7 +176,7 @@ public class GeneticMap {
     }
 
     @SuppressWarnings("unchecked")
-    GeneticMap parseDirection(byte direction) {
+    private GeneticMap parseDirection(byte direction) {
         if (direction == GENETIC_TO_PHYSICAL && geneticToPhysicalDistance != null) {
             return this;
         }
@@ -285,7 +280,7 @@ public class GeneticMap {
         return k - 1;
     }
 
-    static double interpolate(double x1, double y1, double x2, double y2, double x) {
+    private static double interpolate(double x1, double y1, double x2, double y2, double x) {
         double intercept = (y1 * x2 - x1 * y2) / (x2 - x1);
         double slope = (y1 - intercept) / x1;
         return slope * x + intercept;

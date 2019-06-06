@@ -6,6 +6,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import static com.intrepiditee.Configs.FEMALE;
+import static com.intrepiditee.Configs.MALE;
 import static com.intrepiditee.Individual.mergeOneChromosome;
 import static com.intrepiditee.Individual.recombineMutationIndices;
 import static com.intrepiditee.Individual.recombineOneChromosome;
@@ -17,70 +19,70 @@ public class IndividualTest {
     @Test
     public void testMergeOneChromosome() {
         List<Segment> segments = Arrays.asList(
-            make(0, 1, 1)
+            make(0, 1, 1, MALE)
         );
         segments = mergeOneChromosome(segments);
         List<Segment> expected = Arrays.asList(
-            make(0, 1, 1)
+            make(0, 1, 1, MALE)
         );
         assertEquals(expected, segments);
 
         segments = Arrays.asList(
-            make(0, 1, 2),
-            make(1, 2, 2),
-            make(2, 4, 2));
+            make(0, 1, 2, MALE),
+            make(1, 2, 2, MALE),
+            make(2, 4, 2, MALE));
         segments = mergeOneChromosome(segments);
-        expected = Arrays.asList(make(0, 4, 2));
+        expected = Arrays.asList(make(0, 4, 2, MALE));
         assertEquals(expected, segments);
 
         segments = Arrays.asList(
-            make(0, 5, 3),
-            make(4, 10, 3)
-        );
-        segments = mergeOneChromosome(segments);
-        expected = Arrays.asList(make(0, 10, 3));
-        assertEquals(expected, segments);
-
-        segments = Arrays.asList(
-            make(0, 1, -1),
-            make(1, 2, -1),
-            make(2, 5, -1),
-            make(4, 10, -1)
+            make(0, 5, 3, FEMALE),
+            make(4, 10, 3, FEMALE)
         );
         segments = mergeOneChromosome(segments);
-        expected = Arrays.asList(make(0, 10, -1));
+        expected = Arrays.asList(make(0, 10, 3, FEMALE));
         assertEquals(expected, segments);
 
         segments = Arrays.asList(
-            make(0, 1, 7),
-            make(2, 5, 7),
-            make(4, 10, 7),
-            make(8, 14, 7),
-            make(15, 16, 7)
+            make(0, 1, -1, MALE),
+            make(1, 2, -1, MALE),
+            make(2, 5, -1, MALE),
+            make(4, 10, -1, MALE)
         );
         segments = mergeOneChromosome(segments);
-        expected = Arrays.asList(
-            make(0, 1, 7),
-            make(2, 14, 7),
-            make(15, 16, 7)
-        );
+        expected = Arrays.asList(make(0, 10, -1, MALE));
         assertEquals(expected, segments);
 
         segments = Arrays.asList(
-            make(0, 1, 8),
-            make(2, 5, 8),
-            make(4, 10, 8),
-            make(8, 14, 8),
-            make(13, 16, 9),
-            make(15, 20, 0),
-            make(18, 21, 0)
+            make(0, 1, 7, MALE),
+            make(2, 5, 7, MALE),
+            make(4, 10, 7, MALE),
+            make(8, 14, 7, MALE),
+            make(14, 16, 7, FEMALE)
         );
         segments = mergeOneChromosome(segments);
         expected = Arrays.asList(
-            make(0, 1, 8),
-            make(2, 14, 8),
-            make(13, 16, 9),
-            make(15, 21, 0)
+            make(0, 1, 7, MALE),
+            make(2, 14, 7, MALE),
+            make(14, 16, 7, FEMALE)
+        );
+        assertEquals(expected, segments);
+
+        segments = Arrays.asList(
+            make(0, 1, 8, FEMALE),
+            make(2, 5, 8, FEMALE),
+            make(4, 10, 8, FEMALE),
+            make(8, 14, 8, FEMALE),
+            make(13, 16, 9, FEMALE),
+            make(15, 20, 0, FEMALE),
+            make(18, 21, 0, FEMALE)
+        );
+        segments = mergeOneChromosome(segments);
+        expected = Arrays.asList(
+            make(0, 1, 8, FEMALE),
+            make(2, 14, 8, FEMALE),
+            make(13, 16, 9, FEMALE),
+            make(15, 21, 0, FEMALE)
         );
         assertEquals(expected, segments);
     }
@@ -88,52 +90,52 @@ public class IndividualTest {
     @Test
     void testRecombineOneChromosome() {
         List<Segment> segs1 = Arrays.asList(
-            make(0, 5, 0),
-            make(10, 15, 1)
+            make(0, 5, 0, MALE),
+            make(10, 15, 1, FEMALE)
         );
         List<Segment> segs2 = Arrays.asList(
-            make(3, 4, 2),
-            make(12, 14, 3)
+            make(3, 4, 2, MALE),
+            make(12, 14, 3, FEMALE)
         );
         List<Integer> indices = new ArrayList<>(Arrays.asList(2, 6, 10, Integer.MAX_VALUE));
         List<Segment> expected = Arrays.asList(
-            make(0, 2, 0),
-            make(3, 4, 2),
-            make(12, 14, 3)
+            make(0, 2, 0, MALE),
+            make(3, 4, 2, MALE),
+            make(12, 14, 3, FEMALE)
         );
         List<Segment> recombined = recombineOneChromosome(segs1, segs2, indices);
         assertEquals(expected, recombined);
 
-        segs1 = Arrays.asList(make(0, 10, 0));
-        segs2 = Arrays.asList(make(0, 10, 0));
+        segs1 = Arrays.asList(make(0, 10, 0, FEMALE));
+        segs2 = Arrays.asList(make(0, 10, 0, MALE));
         indices = new ArrayList<>(Arrays.asList(0, 4, 6, 9, 10, Integer.MAX_VALUE));
         expected = Arrays.asList(
-            make(0, 4, 0),
-            make(4, 6, 0),
-            make(6, 9, 0),
-            make(9, 10, 0)
+            make(0, 4, 0, MALE),
+            make(4, 6, 0, FEMALE),
+            make(6, 9, 0, MALE),
+            make(9, 10, 0, FEMALE)
         );
         recombined = recombineOneChromosome(segs1, segs2, indices);
         assertEquals(expected, recombined);
 
         segs1 = Arrays.asList(
-            make(4, 5, 5),
-            make(20, 40, 6),
-            make(43, 60, 7),
-            make(61, 70, 7)
+            make(4, 5, 5, MALE),
+            make(20, 40, 6, MALE),
+            make(43, 60, 7, FEMALE),
+            make(61, 70, 7, FEMALE)
         );
         segs2 = Arrays.asList(
-            make(1, 3, 3),
-            make(10, 20, 1),
-            make(30, 33, 0),
-            make(80, 90, 4)
+            make(1, 3, 3, FEMALE),
+            make(10, 20, 1, MALE),
+            make(30, 33, 0, FEMALE),
+            make(80, 90, 4, MALE)
         );
         indices = new ArrayList<>(Arrays.asList(0, 4, 20, 44, 68, 91, 102, Integer.MAX_VALUE));
         expected = Arrays.asList(
-            make(10, 20, 1),
-            make(20, 40, 6),
-            make(43, 44, 7),
-            make(68, 70, 7)
+            make(10, 20, 1, MALE),
+            make(20, 40, 6, MALE),
+            make(43, 44, 7, FEMALE),
+            make(68, 70, 7, FEMALE)
         );
         recombined = recombineOneChromosome(segs2, segs1, indices);
         assertEquals(expected, recombined);

@@ -4,17 +4,17 @@ import java.util.ArrayList;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-public class ConcurrentArrayList<E> extends ArrayList<E> {
+class ConcurrentArrayList<E> extends ArrayList<E> {
 
-    private ReadWriteLock lock;
+    private final ReadWriteLock lock;
 
 
-    public ConcurrentArrayList() {
+    ConcurrentArrayList() {
         super();
         lock = new ReentrantReadWriteLock();
     }
 
-    public ConcurrentArrayList(int capacity) {
+    ConcurrentArrayList(int capacity) {
         super(capacity);
         lock = new ReentrantReadWriteLock();
     }

@@ -11,12 +11,12 @@ import static edu.rice.hj.Module0.*;
 
 public class VCFGenerator {
 
-    static int minID = Integer.MAX_VALUE;
-    static int maxID = Integer.MIN_VALUE;
+    private static int minID = Integer.MAX_VALUE;
+    private static int maxID = Integer.MIN_VALUE;
 
-    static int[] variantSiteIndices;
+    private static int[] variantSiteIndices;
 
-    static int chromosomeLength;
+    private static int chromosomeLength;
 
     public static void main(String[] args) {
         if (args.length < 6 || (!args[0].equals("--parse"))) {
@@ -64,6 +64,10 @@ public class VCFGenerator {
             writeVCF();
         });
 
+
+    }
+
+    private static void writeVCFOneChromosome(int chromosomeNumber) {
 
     }
 
@@ -160,13 +164,13 @@ public class VCFGenerator {
                         }
                         count++;
                         if (count % 1000 == 0) {
-                            StringBuilder s = new StringBuilder();
-                            s.append("Records: ");
-                            s.append(count / 1000);
-                            s.append("k out of ");
-                            s.append(numSites / 1000);
-                            s.append("k written");
-                            System.out.println(s.toString());
+                            String s =
+                                "Records: " +
+                                count / 1000 +
+                                "k out of " +
+                                numSites / 1000 +
+                                "k written";
+                            System.out.println(s);
                         }
                     }
                 }
@@ -348,11 +352,8 @@ public class VCFGenerator {
                     idToChromosomes[id - minID][0] = (int[]) in.readUnshared();
                     idToChromosomes[id - minID][1] = (int[]) in.readUnshared();
                 } catch (EOFException e) {
-                    StringBuilder s = new StringBuilder();
-                    s.append("Chromosomes: Generation");
-                    s.append(i);
-                    s.append(" read");
-                    System.out.println(s.toString());
+                    String s = "Chromosomes: Generation" + i + " read";
+                    System.out.println(s);
                     break;
                 } catch (IOException | ClassNotFoundException e) {
                     e.printStackTrace();
@@ -362,11 +363,8 @@ public class VCFGenerator {
 
             count += 2;
             if (count % 1000 == 0) {
-                StringBuilder s = new StringBuilder();
-                s.append("Chromosomes: ");
-                s.append(count / 1000);
-                s.append("k read");
-                System.out.println(s.toString());
+                String s = "Chromosomes: " + count / 1000 + "k read";
+                System.out.println(s);
             }
         }
 
@@ -377,24 +375,12 @@ public class VCFGenerator {
         boolean base;
         if (index > 0) {
             // index can be the start or end of a segment
-            if (index % 2 == 0) {
-                // index is start of a segment, so included in it
-                base = true;
-            } else {
-                // index is end of a segment, so not included in it
-                base = false;
-            }
+            // if it is the start, it is included in the segment
+            // if it is the end, it is not included in the segment
+            base = index % 2 == 0;
         } else {
             int insertionPoint = -(index + 1);
-            if (insertionPoint % 2 == 0) {
-                // start of a segment is larger than index
-                // index is not in any segment
-                base = false;
-            } else {
-                // end of a segment is larger than index
-                // index is in that segment
-                base = true;
-            }
+            base = insertionPoint % 2 != 0;
         }
         return base;
     }
@@ -446,8 +432,7 @@ public class VCFGenerator {
         boolean paternalIsInSegment = getIsInSegmentFromIndex(paternalIndex);
         boolean maternalIsInSegment = getIsInSegmentFromIndex(maternalIndex);
 
-        String bases = getBasesFromIsInSegment(paternalIsInSegment, maternalIsInSegment, baseIfInSegment);
-        return bases;
+        return getBasesFromIsInSegment(paternalIsInSegment, maternalIsInSegment, baseIfInSegment);
     }
 
 

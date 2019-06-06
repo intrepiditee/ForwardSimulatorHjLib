@@ -6,19 +6,21 @@ import java.util.List;
 
 public class Segment implements Serializable {
 
-    int start;
-    int end;
-    int founderID;
+    final int start;
+    final int end;
+    final int founderID;
+    final byte whichChromosome;
 
-    static Segment make(int start, int end, int founderID) {
+    static Segment make(int start, int end, int founderID, byte whichChromosome) {
         assert start < end;
-        return new Segment(start, end, founderID);
+        return new Segment(start, end, founderID, whichChromosome);
     }
 
-    private Segment(int start, int end, int founderID) {
+    private Segment(int start, int end, int founderID, byte whichChromosome) {
         this.start = start;
         this.end = end;
         this.founderID = founderID;
+        this.whichChromosome = whichChromosome;
     }
 
     boolean contains(int index) {
@@ -30,7 +32,8 @@ public class Segment implements Serializable {
         return make(
             seg1.start < seg2.start ? seg1.start : seg2.start,
             seg1.end > seg2.end ? seg1.end : seg2.end,
-            seg1.founderID
+            seg1.founderID,
+            seg1.whichChromosome
         );
     }
 
@@ -39,7 +42,7 @@ public class Segment implements Serializable {
     }
 
     static boolean canMerge(Segment seg1, Segment seg2) {
-        if (seg1.founderID != seg2.founderID) {
+        if (seg1.founderID != seg2.founderID || seg1.whichChromosome != seg2.whichChromosome) {
             return false;
         }
 
@@ -52,13 +55,13 @@ public class Segment implements Serializable {
         List<Segment> split = new ArrayList<>(excludingIndices.size() + 1);
         for (int i : excludingIndices) {
             if (prevEnd < i) {
-                split.add(make(prevEnd, i, founderID));
+                split.add(make(prevEnd, i, founderID, whichChromosome));
             }
             prevEnd = i + 1;
         }
         // If last i is end - 1, prevEnd is end
         if (prevEnd < end) {
-            split.add(make(prevEnd, end, founderID));
+            split.add(make(prevEnd, end, founderID, whichChromosome));
         }
 
         return split;
@@ -71,13 +74,16 @@ public class Segment implements Serializable {
         }
 
         Segment o = (Segment) other;
-        return o.start == start && o.end == end && o.founderID == founderID;
+        return o.start == start &&
+            o.end == end &&
+            o.founderID == founderID &&
+            o.whichChromosome == whichChromosome;
 
     }
 
     @Override
     public String toString() {
-        return "[" + start + ", " + end + ", " + founderID + "]";
+        return "[" + start + ", " + end + ", " + founderID + ", " + whichChromosome + "]";
     }
 
 
@@ -110,6 +116,8 @@ public class Segment implements Serializable {
             s.append(seg.end);
             s.append(",");
             s.append(seg.founderID);
+            s.append(",");
+            s.append(seg.whichChromosome);
             if (i != segs.size() - 1) {
                 s.append(" ");
             }
