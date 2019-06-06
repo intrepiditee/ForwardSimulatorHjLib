@@ -244,6 +244,7 @@ public class GeneticMap {
         );
         List<Integer> indices = new ArrayList<>(numIndices);
         if (numIndices == 0) {
+            indices.add(chromosomeLength - 1);
             return indices;
         }
 
