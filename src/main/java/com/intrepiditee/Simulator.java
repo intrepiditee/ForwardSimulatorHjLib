@@ -71,7 +71,7 @@ public class Simulator {
                                 genomeOut.writeInt(ind.id);
                                 genomeOut.writeUnshared(chromosomesPair);
 
-                                genomeWriter.write(ind.id);
+                                genomeWriter.write(String.valueOf(ind.id));
                                 genomeWriter.write("\n");
                                 genomeWriter.write(segmentsToString(chromosomesPair.get(MALE)));
                                 genomeWriter.write("\n");
@@ -92,7 +92,7 @@ public class Simulator {
                                 genomeOut.writeInt(ind.id);
                                 genomeOut.writeUnshared(chromosomesPair);
 
-                                genomeWriter.write(ind.id);
+                                genomeWriter.write(String.valueOf(ind.id));
                                 genomeWriter.write("\n");
                                 genomeWriter.write(segmentsToString(chromosomesPair.get(MALE)));
                                 genomeWriter.write("\n");
