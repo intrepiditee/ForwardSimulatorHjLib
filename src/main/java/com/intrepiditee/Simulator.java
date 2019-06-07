@@ -65,7 +65,7 @@ public class Simulator {
                             ObjectOutputStream chromosomeOut = getBufferedObjectOutputStream(chromosomeFilename);
                             ObjectOutputStream mutationOut = getBufferedObjectOutputStream(mutationFilename);
                             BufferedWriter chromosomeWriter = getBufferedWriter(chromosomeFilename + ".txt");
-                            BufferedWriter mutationWriter = getBufferedWriter(mutationFilename + ".txt");
+//                            BufferedWriter mutationWriter = getBufferedWriter(mutationFilename + ".txt");
 
                             for (Individual ind : toWrite.males) {
                                 Map<Byte, List<Segment>> chromosomesPair = ind.genome.get(c);
@@ -78,7 +78,7 @@ public class Simulator {
                                 mutationOut.writeInt(ind.id);
                                 mutationOut.writeUnshared(mutationIndicesPair);
 
-                                mutationWriter.write(mutationIndicesPair.get(MALE).toString());
+//                                mutationWriter.write(mutationIndicesPair.get(MALE).toString());
 
                                 chromosomeWriter.write(String.valueOf(ind.id));
                                 chromosomeWriter.write("\n");
@@ -122,7 +122,7 @@ public class Simulator {
                             chromosomeOut.close();
                             chromosomeWriter.close();
                             mutationOut.close();
-                            mutationWriter.close();
+//                            mutationWriter.close();
 
                         } // end of all chromosomes
 

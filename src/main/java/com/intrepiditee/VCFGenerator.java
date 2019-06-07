@@ -31,12 +31,13 @@ public class VCFGenerator {
         launchHabaneroApp(() -> {
             for (int c = 1; c <= numChromosomes; c++) {
                 Map<Integer, Map<Byte, List<Segment>>> idToChromosomesPair = readChromosomesFromChromosome(c);
+                Map<Integer, Map<Byte, Set<Integer>>> idToMutationIndices = readMutationIndicesFromChromosome(c);
                 if (c == 1) {
                     getMinMaxIDs(idToChromosomesPair);
                 }
 
                 try {
-                    writeVCFForChromosome(c, idToChromosomesPair);
+                    writeVCFForChromosome(c, idToChromosomesPair, idToMutationIndices);
                 } catch (IOException | ClassNotFoundException e) {
                     e.printStackTrace();
                     System.exit(-1);
@@ -65,13 +66,16 @@ public class VCFGenerator {
         return bases;
     }
 
-    private static String getBasesFromSiteAndChromosomesPair(
-        int site, Map<Byte, List<Segment>> chromosomePairs, byte[] founderBases) {
+    private static String getBasesAt(
+        int site, Map<Byte, List<Segment>> chromosomePairs,
+        Map<Byte, Set<Integer>> mutationIndicesPair, byte[] founderBases) {
+        int siteIndex = site - 1;
 
         List<Segment> paternalChromosome = chromosomePairs.get(MALE);
         List<Segment> maternalChromosome = chromosomePairs.get(FEMALE);
-        Segment target = Segment.make(site - 1, site, -1, (byte) -1);
+        Segment target = Segment.make(siteIndex, site, -1, (byte) -1);
 
+        // Determine founders of paternal and maternal chromosomes
         int paternalIndex = Collections.binarySearch(paternalChromosome, target);
         int maternalIndex = Collections.binarySearch(maternalChromosome, target);
         assert paternalIndex >= 0 && maternalIndex >= 0;
@@ -83,22 +87,33 @@ public class VCFGenerator {
         String paternalFounderBases = getBasesFromEncoding(founderBases[paternalSegment.founderID]);
         String maternalFounderBases = getBasesFromEncoding(founderBases[maternalSegment.founderID]);
 
+        Set<Integer> paternalMutationIndices = mutationIndicesPair.get(MALE);
+        Set<Integer> maternalMutationIndices = mutationIndicesPair.get(FEMALE);
+
         StringBuilder bases = new StringBuilder();
         if (paternalSegment.whichChromosome == MALE) {
-            bases.append(paternalFounderBases.charAt(0));
+            char base = paternalFounderBases.charAt(0);
+            bases.append(paternalMutationIndices.contains(siteIndex) ? revertBase(base) : base);
         } else {
-            bases.append(paternalFounderBases.charAt(2));
+            char base = paternalFounderBases.charAt(2);
+            bases.append(paternalMutationIndices.contains(siteIndex) ? revertBase(base) : base);
         }
         bases.append("|");
         if (maternalSegment.whichChromosome == MALE) {
-            bases.append(maternalFounderBases.charAt(0));
+            char base = maternalFounderBases.charAt(0);
+            bases.append(maternalMutationIndices.contains(siteIndex) ? revertBase(base) : base);
         } else {
-            bases.append(maternalFounderBases.charAt(2));
+            char base = maternalFounderBases.charAt(2);
+            bases.append(maternalMutationIndices.contains(siteIndex) ? revertBase(base) : base);
         }
 
         return bases.toString();
     }
 
+
+    private static char revertBase(char base) {
+        return base == '0' ? '1' : '0';
+    }
 
     private static int[] readSitesFromChromosome(int chromosomeNumber) {
         String filename = VCFParser.pathPrefix + "sites.chr" + chromosomeNumber;
@@ -106,6 +121,50 @@ public class VCFGenerator {
     }
 
 
+    private static Map<Integer, Map<Byte, Set<Integer>>>readMutationIndicesFromChromosome(
+        int chromosomeNumber) {
+
+        Map<Integer, Map<Byte, Set<Integer>>> idToMutationIndicesPair = new HashMap<>();
+        for (int i = 0; i < Configs.numGenerationsStore; i++) {
+            idToMutationIndicesPair.putAll(readMutationIndicesAt(i, chromosomeNumber));
+        }
+        return idToMutationIndicesPair;
+    }
+
+
+    @SuppressWarnings("unchecked")
+    private static Map<Integer, Map<Byte, Set<Integer>>> readMutationIndicesAt(
+        int generation, int chromosomeNumber
+    ) {
+        String filename = Simulator.prefix + generation + "_chr" + chromosomeNumber + "_mutations";
+        ObjectInputStream in = Utils.getBufferedObjectInputStream(filename);
+        Map<Integer, Map<Byte, Set<Integer>>> idToMutationIndicesPair = new HashMap<>();
+        while (true) {
+            try {
+                int id = in.readInt();
+                Map<Byte, List<Integer>> mutationIndexListsPair = (Map<Byte, List<Integer>>) in.readUnshared();
+                Map<Byte, Set<Integer>> mutationIndicesPair = new HashMap<>();
+                mutationIndicesPair.put(MALE, new HashSet<>(mutationIndexListsPair.get(MALE)));
+                mutationIndicesPair.put(FEMALE, new HashSet<>(mutationIndexListsPair.get(FEMALE)));
+                idToMutationIndicesPair.put(id, mutationIndicesPair);
+            } catch (EOFException e) {
+                break;
+            } catch (IOException | ClassNotFoundException e) {
+                e.printStackTrace();
+                System.exit(-1);
+            }
+        }
+
+        try {
+            in.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.exit(-1);
+        }
+
+        return idToMutationIndicesPair;
+
+    }
 
     private static Map<Integer, Map<Byte, List<Segment>>>readChromosomesFromChromosome(
         int chromosomeNumber) {
@@ -116,7 +175,6 @@ public class VCFGenerator {
         }
         return idToChromosomesPair;
     }
-
 
     @SuppressWarnings("unchecked")
     private static Map<Integer, Map<Byte, List<Segment>>> readChromosomesAt(
@@ -159,7 +217,8 @@ public class VCFGenerator {
 
     @SuppressWarnings("unchecked")
     private static void writeVCFForChromosome(
-        int chromosomeNumber, Map<Integer, Map<Byte, List<Segment>>> idToChromosomesPair)
+        int chromosomeNumber, Map<Integer, Map<Byte, List<Segment>>> idToChromosomesPair,
+        Map<Integer, Map<Byte, Set<Integer>>> idToMutationIndices)
         throws IOException, ClassNotFoundException {
 
         String filename = pathPrefix + "chr" + chromosomeNumber + ".vcf.gz";
@@ -195,7 +254,8 @@ public class VCFGenerator {
                 .append("\tA\tC\t.\tPASS\t.\tGT");
             for (int id = minID; id <= maxID; id++) {
                 Map<Byte, List<Segment>> chromosomesPair = idToChromosomesPair.get(id);
-                String bases = getBasesFromSiteAndChromosomesPair(site, chromosomesPair, founderBases);
+                Map<Byte, Set<Integer>> mutationIndicesPair = idToMutationIndices.get(id);
+                String bases = getBasesAt(site, chromosomesPair, mutationIndicesPair, founderBases);
                 record.append("\t");
                 record.append(bases);
             }
