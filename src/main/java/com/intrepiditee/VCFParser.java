@@ -15,7 +15,7 @@ import static edu.rice.hj.Module0.next;
 
 public class VCFParser {
 
-    private static final String prefix = "ukb/";
+    static final String pathPrefix = "ukb/";
 
     private static final String vcfPrefix = "ukb_hap_GP_removed/ukb_hap_chr";
     private static final String vcfPostfix = "_v2.vcf";
@@ -60,7 +60,7 @@ public class VCFParser {
                     int count = 0;
 
                     ArrayList<Integer> sites = new ArrayList<>();
-                    ObjectOutputStream o = getBufferedObjectOutputStream(prefix + "bases.chr"+ i);
+                    ObjectOutputStream o = getBufferedObjectOutputStream(pathPrefix + "bases.chr"+ i);
                     while (sc.hasNextLine()) {
                         String[] fields = sc.nextLine().split("\t");
                         sites.add(Integer.parseInt(fields[1]));
@@ -94,7 +94,7 @@ public class VCFParser {
                     }
 
                     int[] sitesArray = toIntArray(sites);
-                    o = getBufferedObjectOutputStream(prefix + "sites.chr"+ i);
+                    o = getBufferedObjectOutputStream(pathPrefix + "sites.chr"+ i);
                     try {
                         o.writeUnshared(sitesArray);
                         o.close();
@@ -137,11 +137,11 @@ public class VCFParser {
         }
 
         try {
-            ObjectOutputStream o = getBufferedObjectOutputStream(prefix + "idIndices");
+            ObjectOutputStream o = getBufferedObjectOutputStream(pathPrefix + "idIndices");
             o.writeUnshared(idIndicesArray[0]);
             o.close();
 
-            o = getBufferedObjectOutputStream(prefix + "ids");
+            o = getBufferedObjectOutputStream(pathPrefix + "ids");
             o.writeUnshared(ids);
             o.close();
         } catch (IOException e) {

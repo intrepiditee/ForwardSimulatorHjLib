@@ -7,9 +7,9 @@ import java.util.Map;
 
 import static com.intrepiditee.Configs.FEMALE;
 import static com.intrepiditee.Configs.MALE;
+import static com.intrepiditee.Configs.numChromosomes;
 import static com.intrepiditee.GeneticMap.GENETIC_TO_PHYSICAL;
 import static com.intrepiditee.GeneticMap.getChromosomeNumbers;
-import static com.intrepiditee.GeneticMap.numChromosomes;
 import static com.intrepiditee.Segment.segmentsToString;
 import static com.intrepiditee.Utils.getBufferedGZipWriter;
 import static com.intrepiditee.Utils.getBufferedObjectOutputStream;
@@ -18,7 +18,7 @@ import static edu.rice.hj.Module0.launchHabaneroApp;
 
 public class Simulator {
 
-    private static String prefix = "out/gen";
+    static String prefix = "out/gen";
 
     public static void main(String[] args) {
         if (args.length < 5 || (!args[0].equals("--simulate"))) {

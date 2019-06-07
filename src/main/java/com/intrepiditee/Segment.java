@@ -4,7 +4,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Segment implements Serializable {
+public class Segment implements Serializable, Comparable<Segment> {
 
     final int start;
     final int end;
@@ -124,4 +124,20 @@ public class Segment implements Serializable {
         }
         return s.toString();
     }
+
+    // Two segments are compareTo equal if they intersect.
+    // Because lists of segments are always sorted and non-intersecting,
+    // two compareTo equal segments must be that one contains the other.
+    @Override
+    public int compareTo(Segment other) {
+        if (Segment.intersect(this, other)) {
+            return 0;
+        } else if (this.end <= other.start) {
+            return -1;
+        } else {
+            return 1;
+        }
+    }
+
+
 }

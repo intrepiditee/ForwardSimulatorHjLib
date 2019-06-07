@@ -6,9 +6,7 @@ import java.io.ObjectInputStream;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
-import static com.intrepiditee.Configs.BOTH;
-import static com.intrepiditee.Configs.FEMALE;
-import static com.intrepiditee.Configs.MALE;
+import static com.intrepiditee.Configs.*;
 
 
 public class GeneticMap {
@@ -37,8 +35,6 @@ public class GeneticMap {
 
     static final byte GENETIC_TO_PHYSICAL = 3;
     private static final byte PHYSICAL_TO_GENETIC = 4;
-
-    static final int numChromosomes = 22;
 
 
     // Generate genetic mapping files for rapid from indices of snps covered by ukb
@@ -196,7 +192,7 @@ public class GeneticMap {
 
         while (sc.hasNextLine()) {
             String[] fields = sc.nextLine().split("\t");
-            physicalDistance = Integer.parseInt(fields[1]);
+            physicalDistance = Integer.parseInt(fields[2]);
             geneticDistance = Double.parseDouble(fields[4]);
 
             if (direction == BOTH || direction == GENETIC_TO_PHYSICAL) {

@@ -13,5 +13,4 @@ class Configs {
     static byte MALE = 1;
     static byte BOTH = 2;
 
-
 }

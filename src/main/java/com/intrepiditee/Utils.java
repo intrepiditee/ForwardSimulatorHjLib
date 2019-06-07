@@ -15,6 +15,33 @@ class Utils {
 
     static Random singletonRand = new Random();
 
+
+    static byte[] readByteArray(String filename) {
+        ObjectInputStream in = Utils.getBufferedObjectInputStream(filename);
+        byte[] array = null;
+        try {
+            array = (byte[]) in.readUnshared();
+            in.close();
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+            System.exit(-1);
+        }
+        return array;
+    }
+
+    static int[] readIntArray(String filename) {
+        ObjectInputStream in = Utils.getBufferedObjectInputStream(filename);
+        int[] array = null;
+        try {
+            array = (int[]) in.readUnshared();
+            in.close();
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+            System.exit(-1);
+        }
+        return array;
+    }
+
     static int[] toIntArray(List<Integer> list) {
         int[] array = new int[list.size()];
         for (int i = 0; i < list.size(); i++) {
