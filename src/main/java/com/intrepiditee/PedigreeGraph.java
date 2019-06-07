@@ -26,6 +26,11 @@ public class PedigreeGraph {
     private static final String pathPrefix = "out/";
 
     public static void main(String[] args) {
+        if (args.length < 4 || !args[0].equals("--pedigree")) {
+            Utils.printUsage();
+            System.exit(-1);
+        }
+
         numGenerationsStore = Integer.parseInt(args[1]);
         int upperBound = Integer.parseInt(args[2]);
         numThreads = Integer.parseInt(args[3]);
@@ -125,16 +130,16 @@ public class PedigreeGraph {
                             System.exit(-1);
                         }
                     }
-                }
 
-                int c = pairCount.incrementAndGet();
-                if (i == 0) {
-                    if (c % 1000000 == 0) {
-                        String s = String.valueOf(c / 1000000) +
-                            "M of out " +
-                            4 * generationSize * 4 * generationSize / 2 / 1000000 +
-                            "M pairs finished";
-                        System.out.println(s);
+                    int c = pairCount.incrementAndGet();
+                    if (i == 0) {
+                        if (c % 1000000 == 0) {
+                            String s = String.valueOf(c / 1000000) +
+                                "M of out " +
+                                4 * generationSize * 4 * generationSize / 2 / 1000000 +
+                                "M pairs finished";
+                            System.out.println(s);
+                        }
                     }
                 }
             }
