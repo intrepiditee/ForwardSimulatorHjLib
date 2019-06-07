@@ -119,7 +119,7 @@ public class PedigreeGraph {
         int numIndividualsPerThread = numIndividuals / numThreads;
         forall(0, numThreads - 1, (i) -> {
             int startID = minID + i * numIndividualsPerThread;
-            int endID = i == numThreads - 1 ? maxID + 1 : startID + numIndividualsPerThread;
+            int endID = i == numThreads - 1 ? maxID + 1 : (startID + numIndividualsPerThread);
 
             for (int id1 = startID; id1 < endID; id1++) {
                 for (int id2 = id1 + 1; id2 < maxID + 1; id2++) {
@@ -134,7 +134,6 @@ public class PedigreeGraph {
                     }
 
                     int c = pairCount.incrementAndGet();
-                    System.out.println(c);
                     if (c % 1000000 == 0) {
                         String s = String.valueOf(c / 1000000) +
                             "M out of " +
