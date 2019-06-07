@@ -20,7 +20,7 @@ public class Individual {
     int motherID;
 
     final Map<Integer, Map<Byte, List<Segment>>> genome;
-    private final Map<Integer, Map<Byte, List<Integer>>> mutationIndices;
+    final Map<Integer, Map<Byte, List<Integer>>> mutationIndices;
 
     private static final AtomicInteger nextID = new AtomicInteger(0);
 

@@ -236,7 +236,7 @@ class Utils {
                    "numberOfThreads\n" +
                 "2) Simulate: bash run.sh --simulate numberOfGenerations " +
                    "numberOfGenerationsToStore generationSize numberOfThreads\n" +
-                "3) Generate VCFs: bash run.sh --generate generationSize" +
+                "3) Generate VCFs: bash run.sh --generate generationSize " +
                    "numberOfGenerationsStored numberOfThreads\n" +
                 "4) Generate mapping files for RaPID: bash run.sh --map\n" +
                 "5) Compute pairwise pedigree: bash run.sh --pedigree " +

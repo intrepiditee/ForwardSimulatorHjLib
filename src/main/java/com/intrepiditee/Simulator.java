@@ -59,24 +59,33 @@ public class Simulator {
                         );
 
                         for (int c = 1; c <= numChromosomes; c++) {
-                            String filename = prefix + generationIndex + "_chr" + c;
+                            String chromosomeFilename = prefix + generationIndex + "_chr" + c;
+                            String mutationFilename = prefix + generationIndex + "_chr" + c + "_mutations";
 
-                            ObjectOutputStream genomeOut = getBufferedObjectOutputStream(filename);
-                            BufferedWriter genomeWriter = getBufferedWriter(filename + ".txt");
+                            ObjectOutputStream chromosomeOut = getBufferedObjectOutputStream(chromosomeFilename);
+                            ObjectOutputStream mutationOut = getBufferedObjectOutputStream(mutationFilename);
+                            BufferedWriter chromosomeWriter = getBufferedWriter(chromosomeFilename + ".txt");
+                            BufferedWriter mutationWriter = getBufferedWriter(mutationFilename + ".txt");
 
                             for (Individual ind : toWrite.males) {
                                 Map<Byte, List<Segment>> chromosomesPair = ind.genome.get(c);
                                 ind.mergeChromosomes();
 
-                                genomeOut.writeInt(ind.id);
-                                genomeOut.writeUnshared(chromosomesPair);
+                                chromosomeOut.writeInt(ind.id);
+                                chromosomeOut.writeUnshared(chromosomesPair);
 
-                                genomeWriter.write(String.valueOf(ind.id));
-                                genomeWriter.write("\n");
-                                genomeWriter.write(segmentsToString(chromosomesPair.get(MALE)));
-                                genomeWriter.write("\n");
-                                genomeWriter.write(segmentsToString(chromosomesPair.get(FEMALE)));
-                                genomeWriter.write("\n");
+                                Map<Byte, List<Integer>> mutationIndicesPair = ind.mutationIndices.get(c);
+                                mutationOut.writeInt(ind.id);
+                                mutationOut.writeUnshared(mutationIndicesPair);
+
+                                mutationWriter.write(mutationIndicesPair.get(MALE).toString());
+
+                                chromosomeWriter.write(String.valueOf(ind.id));
+                                chromosomeWriter.write("\n");
+                                chromosomeWriter.write(segmentsToString(chromosomesPair.get(MALE)));
+                                chromosomeWriter.write("\n");
+                                chromosomeWriter.write(segmentsToString(chromosomesPair.get(FEMALE)));
+                                chromosomeWriter.write("\n");
 
                                 if (c == 1) {
                                     pedigreeWriter.write(
@@ -89,15 +98,19 @@ public class Simulator {
                                 Map<Byte, List<Segment>> chromosomesPair = ind.genome.get(c);
                                 ind.mergeChromosomes();
 
-                                genomeOut.writeInt(ind.id);
-                                genomeOut.writeUnshared(chromosomesPair);
+                                chromosomeOut.writeInt(ind.id);
+                                chromosomeOut.writeUnshared(chromosomesPair);
 
-                                genomeWriter.write(String.valueOf(ind.id));
-                                genomeWriter.write("\n");
-                                genomeWriter.write(segmentsToString(chromosomesPair.get(MALE)));
-                                genomeWriter.write("\n");
-                                genomeWriter.write(segmentsToString(chromosomesPair.get(FEMALE)));
-                                genomeWriter.write("\n");
+                                Map<Byte, List<Integer>> mutationIndicesPair = ind.mutationIndices.get(c);
+                                mutationOut.writeInt(ind.id);
+                                mutationOut.writeUnshared(mutationIndicesPair);
+
+                                chromosomeWriter.write(String.valueOf(ind.id));
+                                chromosomeWriter.write("\n");
+                                chromosomeWriter.write(segmentsToString(chromosomesPair.get(MALE)));
+                                chromosomeWriter.write("\n");
+                                chromosomeWriter.write(segmentsToString(chromosomesPair.get(FEMALE)));
+                                chromosomeWriter.write("\n");
 
                                 if (c == 1) {
                                     pedigreeWriter.write(
@@ -106,8 +119,11 @@ public class Simulator {
                                 }
                             }
 
-                            genomeOut.close();
-                            genomeWriter.close();
+                            chromosomeOut.close();
+                            chromosomeWriter.close();
+                            mutationOut.close();
+                            mutationWriter.close();
+
                         } // end of all chromosomes
 
                         pedigreeWriter.close();

@@ -34,7 +34,13 @@ public class VCFGenerator {
                 if (c == 1) {
                     getMinMaxIDs(idToChromosomesPair);
                 }
-                writeVCFForChromosome(c, idToChromosomesPair);
+
+                try {
+                    writeVCFForChromosome(c, idToChromosomesPair);
+                } catch (IOException | ClassNotFoundException e) {
+                    e.printStackTrace();
+                    System.exit(-1);
+                }
             }
 
         });
@@ -59,7 +65,9 @@ public class VCFGenerator {
         return bases;
     }
 
-    private static String getBasesFromSiteAndChromosomesPair(int site, Map<Byte, List<Segment>> chromosomePairs, byte[] founderBases) {
+    private static String getBasesFromSiteAndChromosomesPair(
+        int site, Map<Byte, List<Segment>> chromosomePairs, byte[] founderBases) {
+
         List<Segment> paternalChromosome = chromosomePairs.get(MALE);
         List<Segment> maternalChromosome = chromosomePairs.get(FEMALE);
         Segment target = Segment.make(site - 1, site, -1, (byte) -1);
@@ -97,15 +105,11 @@ public class VCFGenerator {
         return readIntArray(filename);
     }
 
-//    private static Map<Integer, Map<Byte, List<Segment>>> readChromosomesFromGeneration(int generation) {
-//        Map<Integer, Map<Byte, List<Segment>>> idToChromosomesPair = new HashMap<>();
-//        for (int c = 1; c <= numChromosomes; c++) {
-//            idToChromosomesPair.putAll(readChromosomesAt(generation, c));
-//        }
-//        return idToChromosomesPair;
-//    }
 
-    private static Map<Integer, Map<Byte, List<Segment>>> readChromosomesFromChromosome(int chromosomeNumber) {
+
+    private static Map<Integer, Map<Byte, List<Segment>>>readChromosomesFromChromosome(
+        int chromosomeNumber) {
+
         Map<Integer, Map<Byte, List<Segment>>> idToChromosomesPair = new HashMap<>();
         for (int i = 0; i < Configs.numGenerationsStore; i++) {
             idToChromosomesPair.putAll(readChromosomesAt(i, chromosomeNumber));
@@ -115,7 +119,9 @@ public class VCFGenerator {
 
 
     @SuppressWarnings("unchecked")
-    private static Map<Integer, Map<Byte, List<Segment>>> readChromosomesAt(int generation, int chromosomeNumber) {
+    private static Map<Integer, Map<Byte, List<Segment>>> readChromosomesAt(
+        int generation, int chromosomeNumber) {
+
         String filename = Simulator.prefix + generation + "_chr" + chromosomeNumber;
         ObjectInputStream in = Utils.getBufferedObjectInputStream(filename);
         Map<Integer, Map<Byte, List<Segment>>> idToChromosomesPair = new HashMap<>();
@@ -153,64 +159,63 @@ public class VCFGenerator {
 
     @SuppressWarnings("unchecked")
     private static void writeVCFForChromosome(
-        int chromosomeNumber, Map<Integer, Map<Byte, List<Segment>>> idToChromosomesPair) {
+        int chromosomeNumber, Map<Integer, Map<Byte, List<Segment>>> idToChromosomesPair)
+        throws IOException, ClassNotFoundException {
 
         String filename = pathPrefix + "chr" + chromosomeNumber + ".vcf.gz";
         BufferedWriter w = getBufferedGZipWriter(filename);
         ObjectInputStream basesIn = getBufferedObjectInputStream(
             VCFParser.pathPrefix + "bases.chr" + chromosomeNumber
         );
+
         int[] sites = readSitesFromChromosome(chromosomeNumber);
 
-        try {
-            int count = 0;
+        int count = 0;
 
-            for (int site : sites) {
-                if (site == sites[0]) {
-                    // Write header line before writing the first site
-                    w.write("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT");
-                    for (int id = minID; id <= maxID; id++) {
-                        w.write("\t" + id);
-                    }
-                    w.write("\n");
-                }
-
-                // Should never encounter an EOFException because iterating over sites.
-                // Number of sites equals number of byte array bases.
-                byte[] founderBases = (byte[]) basesIn.readUnshared();
-
-                StringBuilder record = new StringBuilder();
-                record.append(chromosomeNumber)
-                    .append("\t")
-                    .append(site)
-                    .append("\trs")
-                    .append(site)
-                    .append("\tA\tC\t.\tPASS\t.\tGT");
+        for (int site : sites) {
+            if (site == sites[0]) {
+                // Write header line before writing the first site
+                w.write("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT");
                 for (int id = minID; id <= maxID; id++) {
-                    Map<Byte, List<Segment>> chromosomesPair = idToChromosomesPair.get(id);
-                    String bases = getBasesFromSiteAndChromosomesPair(site, chromosomesPair, founderBases);
-                    record.append("\t");
-                    record.append(bases);
+                    w.write("\t" + id);
                 }
-                record.append("\n");
-                w.write(record.toString());
-
-                count++;
-                if (count % 1000 == 0) {
-                    System.out.println(
-                        "Chromosome " + chromosomeNumber + " " +
-                            count / 1000 + "k out of " +
-                            sites.length / 1000 + "k written"
-                    );
-                }
+                w.write("\n");
             }
-            w.close();
-        } catch (IOException | ClassNotFoundException e) {
-            e.printStackTrace();
-            System.exit(-1);
+
+            // Should never encounter an EOFException because iterating over sites.
+            // Number of sites equals number of byte array bases.
+            byte[] founderBases = (byte[]) basesIn.readUnshared();
+
+            StringBuilder record = new StringBuilder();
+            record.append(chromosomeNumber)
+                .append("\t")
+                .append(site)
+                .append("\trs")
+                .append(site)
+                .append("\tA\tC\t.\tPASS\t.\tGT");
+            for (int id = minID; id <= maxID; id++) {
+                Map<Byte, List<Segment>> chromosomesPair = idToChromosomesPair.get(id);
+                String bases = getBasesFromSiteAndChromosomesPair(site, chromosomesPair, founderBases);
+                record.append("\t");
+                record.append(bases);
+            }
+            record.append("\n");
+            w.write(record.toString());
+
+            count++;
+            if (count % 1000 == 0) {
+                System.out.println(
+                    "Chromosome " + chromosomeNumber + ": " +
+                        count / 1000 + "k out of " +
+                        sites.length / 1000 + "k written"
+                );
+            }
         }
+        w.close();
+
 
         System.out.println(filename + " written");
+        System.out.println();
 
     }
 
