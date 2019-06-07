@@ -12,6 +12,7 @@ public class Main {
     */
     public static void main(String[] args) {
         if (args.length == 0 || args.length > 6 ||
+            (args[0].equals("--all") && args.length != 6) ||
             args[0].equals("-h") || args[0].equals("--help")) {
 
            Utils.printUsage();
@@ -20,16 +21,17 @@ public class Main {
 
         switch (args[0]) {
             case "--all":
+                VCFParser.main(new String[]{"--parse", args[3], args[5]});
                 Simulator.main(args);
                 VCFGenerator.main(args);
                 GeneticMap.main(args);
                 PedigreeGraph.main(args);
                 break;
-            case "--simulate":
-                Simulator.main(args);
-                break;
             case "--parse":
                 VCFParser.main(args);
+                break;
+            case "--simulate":
+                Simulator.main(args);
                 break;
             case "--generate":
                 VCFGenerator.main(args);

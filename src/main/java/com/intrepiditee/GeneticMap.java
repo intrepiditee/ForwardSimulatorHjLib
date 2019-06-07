@@ -102,8 +102,14 @@ class GeneticMap {
                 e.printStackTrace();
                 System.exit(-1);
             }
-        }
 
+            try {
+                in.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+                System.exit(-1);
+            }
+        } // end of all chromosomes
 
     }
 

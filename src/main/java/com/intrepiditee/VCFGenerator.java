@@ -20,9 +20,7 @@ public class VCFGenerator {
         System.out.println();
 
         if (args.length < 4 || (!args[0].equals("--generate"))) {
-            System.err.println(
-                "Usage: bash run.sh --generate 1 numberOfGenerationsStored numThreads"
-            );
+            Utils.printUsage();
             System.exit(-1);
         }
 

@@ -232,11 +232,18 @@ class Utils {
     static void printUsage() {
         System.err.println(
             "Usage:\n" +
-                "1) Simulation: bash run.sh --simulate numberOfGenerations " +
+                "1) Parse UK Biobank VCFs: bash run.sh --parse generationSize " +
+                   "numberOfThreads\n" +
+                "2) Simulate: bash run.sh --simulate numberOfGenerations " +
                    "numberOfGenerationsToStore generationSize numberOfThreads\n" +
-                "2) VCF: bash run.sh --parse genomeLength generationSize " +
-                   "numberOfGenerationsStored exclusiveLowerBound numberOfThreads\n" +
-                "3) Pedigree: bash run.sh --pedigree numberOfGenerationsStored " +
+                "3) Generate VCFs: bash run.sh --generate generationSize" +
+                   "numberOfGenerationsStored numberOfThreads\n" +
+                "4) Generate mapping files for RaPID: bash run.sh --map\n" +
+                "5) Compute pairwise pedigree: bash run.sh --pedigree " +
+                   "numberOfGenerationsStored exclusiveUpperBound numberOfThreads\n\n" +
+
+                "0) Do all of the above in order: bash run.sh --all " +
+                   "numberOfGenerations numberOfGenerationsToStore generationSize " +
                    "exclusiveUpperBound numberOfThreads\n"
         );
     }
