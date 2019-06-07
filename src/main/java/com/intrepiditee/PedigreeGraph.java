@@ -134,9 +134,10 @@ public class PedigreeGraph {
                     }
 
                     int c = pairCount.incrementAndGet();
+                    System.out.println(c);
                     if (c % 1000000 == 0) {
                         String s = String.valueOf(c / 1000000) +
-                            "M of out " +
+                            "M out of " +
                             numIndividuals * numIndividuals / 2 / 1000000 +
                             "M pairs finished";
                         System.out.println(s);
