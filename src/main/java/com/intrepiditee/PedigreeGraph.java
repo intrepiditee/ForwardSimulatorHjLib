@@ -122,7 +122,7 @@ public class PedigreeGraph {
             int endID = i == numThreads - 1 ? maxID + 1 : startID + numIndividualsPerThread;
 
             for (int id1 = startID; id1 < endID; id1++) {
-                for (int id2 = id1 + 1; id2 < endID; id2++) {
+                for (int id2 = id1 + 1; id2 < maxID + 1; id2++) {
                     int degree = BFSLessThan(id2, id1, upperBound);
                     if (degree != -1) {
                         try {
@@ -133,7 +133,6 @@ public class PedigreeGraph {
                         }
                     }
 
-                    System.out.println(id1 + " " + id2);
                     int c = pairCount.incrementAndGet();
                     if (c % 1000000 == 0) {
                         String s = String.valueOf(c / 1000000) +
