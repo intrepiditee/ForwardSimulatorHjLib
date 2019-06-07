@@ -80,7 +80,7 @@ public class Simulator {
 
                                 if (c == 1) {
                                     pedigreeWriter.write(
-                                        String.format("%s %s %s\n", ind.id, ind.fatherID, ind.motherID)
+                                        ind.id + "\t" + ind.fatherID + "\t" + ind.motherID + "\n"
                                     );
                                 }
                             }
@@ -101,7 +101,7 @@ public class Simulator {
 
                                 if (c == 1) {
                                     pedigreeWriter.write(
-                                        String.format("%s %s %s\n", ind.id, ind.fatherID, ind.motherID)
+                                        ind.id + "\t" + ind.fatherID + "\t" + ind.motherID + "\n"
                                     );
                                 }
                             }

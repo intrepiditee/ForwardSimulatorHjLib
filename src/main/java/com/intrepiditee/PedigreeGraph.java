@@ -23,7 +23,7 @@ public class PedigreeGraph {
 
     private static final Map<Integer, Integer> individualToGeneration = new HashMap<>();
 
-    private static final String pathPrefix = "out/";
+    static String pathPrefix = "out/";
 
     public static void main(String[] args) {
         if (args.length < 4 || !args[0].equals("--pedigree")) {
@@ -44,14 +44,9 @@ public class PedigreeGraph {
             System.out.println("Generation " + i + " added to graph");
         }
 
-        generationSize = (maxID - minID + 1) / numGenerationsStore;
-
 //        System.out.println(adjacencyList);
 
         launchHabaneroApp(() -> {
-            connectSiblings();
-            System.out.println("Siblings connected");
-
             computePairwiseDegreeLessThanAndWrite(upperBound);
             System.out.println("Degrees written");
         });
@@ -86,32 +81,44 @@ public class PedigreeGraph {
             adjacencyList.put(id, nbrs);
         }
 
+        if (generation != 0) {
+            connectSiblingsFromGeneration(generation);
+        } else {
+            generationSize = maxID - minID + 1;
+        }
     }
 
 
-    private static void connectSiblings() throws SuspendableException {
-        forallChunked(1, numGenerationsStore - 1, (i) -> {
-            int generationStartID = minID + generationSize * i;
-            int generationEndID = generationStartID + generationSize;
+    private static void connectSiblingsFromGeneration(int generation) {
+        int generationStartID = minID + generationSize * generation;
+        int generationEndID = generationStartID + generationSize;
 
-            for (int id1 = generationStartID; id1 < generationEndID; id1++) {
-                for (int id2 = id1 + 1; id2 < generationEndID; id2++) {
-                    Set<Integer> parents1 = adjacencyList.get(id1);
-                    Set<Integer> parents2 = adjacencyList.get(id2);
+        Map<Integer, Set<Integer>> update = new HashMap<>();
 
-                    if (parents1.equals(parents2)) {
-                        parents2.add(id1);
-                        parents1.add(id2);
-                    }
+        for (int id1 = generationStartID; id1 < generationEndID; id1++) {
+            for (int id2 = id1 + 1; id2 < generationEndID; id2++) {
+                Set<Integer> parents1 = adjacencyList.get(id1);
+                Set<Integer> parents2 = adjacencyList.get(id2);
+
+                if (parents1.equals(parents2)) {
+                    // Have to create new sets of neighbors. Otherwise, there will be
+                    // problems when there are more than two siblings.
+                    Set<Integer> newNeighbors1 = update.getOrDefault(id1, new HashSet<>(parents1));
+                    Set<Integer> newNeighbors2 = update.getOrDefault(id2, new HashSet<>(parents2));
+                    newNeighbors1.add(id2);
+                    newNeighbors2.add(id1);
+                    update.put(id1, newNeighbors1);
+                    update.put(id2, newNeighbors2);
                 }
             }
-        });
+        }
 
+        adjacencyList.putAll(update);
     }
 
 
     private static void computePairwiseDegreeLessThanAndWrite(int upperBound) throws SuspendableException {
-        BufferedWriter w = Utils.getBufferedGZipWriter(pathPrefix + "degrees.txt");
+        BufferedWriter w = Utils.getBufferedGZipWriter(pathPrefix + "degrees.txt.gz");
 
         AtomicInteger pairCount = new AtomicInteger(0);
 
@@ -121,15 +128,12 @@ public class PedigreeGraph {
             int startID = minID + i * numIndividualsPerThread;
             int endID = i == numThreads - 1 ? maxID + 1 : (startID + numIndividualsPerThread);
 
-            System.out.println(startID);
-            System.out.println(endID);
-
             for (int id1 = startID; id1 < endID; id1++) {
                 for (int id2 = id1 + 1; id2 < maxID + 1; id2++) {
                     int degree = BFSLessThan(id2, id1, upperBound);
                     if (degree != -1) {
                         try {
-                            w.write(String.format("%s %s %s\n", id1, id2, degree));
+                            w.write(id1 + "\t" + id2 + "\t" + degree + "\n");
                         } catch (IOException e) {
                             e.printStackTrace();
                             System.exit(-1);
@@ -137,11 +141,11 @@ public class PedigreeGraph {
                     }
 
                     int c = pairCount.incrementAndGet();
-                    if (c % 1000 == 0) {
-                        String s = String.valueOf(c / 1000) +
-                            "k out of " +
-                            numIndividuals * (numIndividuals - 1) / 2 / 1000 +
-                            "k pairs finished";
+                    if (c % 1000000 == 0) {
+                        String s = String.valueOf(c / 1000000) +
+                            "M out of " +
+                            numIndividuals * (numIndividuals - 1) / 2 / 1000000 +
+                            "M pairs finished";
                         System.out.println(s);
                     }
                 }
