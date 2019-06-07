@@ -5,6 +5,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.intrepiditee.Configs.FEMALE;
 import static com.intrepiditee.Configs.MALE;
+import static com.intrepiditee.Configs.numChromosomes;
 import static com.intrepiditee.GeneticMap.*;
 import static com.intrepiditee.Segment.canMerge;
 import static com.intrepiditee.Segment.merge;
