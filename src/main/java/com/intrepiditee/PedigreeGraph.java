@@ -20,7 +20,7 @@ public class PedigreeGraph {
 
     private static final Map<Integer, Integer> individualToGeneration = new HashMap<>();
 
-    private static final String pathPrefix = "out/gen";
+    private static final String pathPrefix = "out/";
 
     public static void main(String[] args) {
         Configs.numGenerationsStore = Integer.parseInt(args[1]);
@@ -52,7 +52,7 @@ public class PedigreeGraph {
     }
 
     private static void addGenerationToGraph(int generation) {
-        String filename = pathPrefix + generation + "_pedigree.txt.gz";
+        String filename = pathPrefix + "gen" + generation + "_pedigree.txt.gz";
         Scanner sc = Utils.getScannerFromGZip(filename);
 
         while (sc.hasNextInt()) {
@@ -101,7 +101,7 @@ public class PedigreeGraph {
 
 
     private static void computePairwiseDegreeLessThanAndWrite(int upperBound) throws SuspendableException {
-        BufferedWriter w = Utils.getBufferedGZipWriter("degrees.txt");
+        BufferedWriter w = Utils.getBufferedGZipWriter(pathPrefix + "degrees.txt");
 
         AtomicInteger pairCount = new AtomicInteger(0);
 
