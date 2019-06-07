@@ -17,7 +17,7 @@ public class VCFGenerator {
     public static void main(String[] args) {
         if (args.length < 4 || (!args[0].equals("--generate"))) {
             System.err.println(
-                "Usage: bash run.sh --generate generationSize numberOfGenerationsStored numThreads"
+                "Usage: bash run.sh --generate 1 numberOfGenerationsStored numThreads"
             );
             System.exit(-1);
         }
@@ -143,8 +143,6 @@ public class VCFGenerator {
 
     private static void getMinMaxIDs(Map<Integer, Map<Byte, List<Segment>>> idToChromosomesPair) {
         Set<Integer> ids = idToChromosomesPair.keySet();
-        int minID = Integer.MAX_VALUE;
-        int maxID = Integer.MIN_VALUE;
         for (int id : ids) {
             minID = Math.min(minID, id);
             maxID = Math.max(maxID, id);
