@@ -14,6 +14,8 @@ public class VCFGenerator {
     private static int minID = Integer.MAX_VALUE;
     private static int maxID = Integer.MIN_VALUE;
 
+    final private static String pathPrefix = "final/";
+
     public static void main(String[] args) {
         if (args.length < 4 || (!args[0].equals("--generate"))) {
             System.err.println(
@@ -153,7 +155,7 @@ public class VCFGenerator {
     private static void writeVCFForChromosome(
         int chromosomeNumber, Map<Integer, Map<Byte, List<Segment>>> idToChromosomesPair) {
 
-        String filename = "chr" + chromosomeNumber + ".vcf.gz";
+        String filename = pathPrefix + "chr" + chromosomeNumber + ".vcf.gz";
         BufferedWriter w = getBufferedGZipWriter(filename);
         ObjectInputStream basesIn = getBufferedObjectInputStream(
             VCFParser.pathPrefix + "bases.chr" + chromosomeNumber
