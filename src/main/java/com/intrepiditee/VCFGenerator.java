@@ -17,6 +17,8 @@ public class VCFGenerator {
     final private static String pathPrefix = "final/";
 
     public static void main(String[] args) {
+        System.out.println();
+
         if (args.length < 4 || (!args[0].equals("--generate"))) {
             System.err.println(
                 "Usage: bash run.sh --generate 1 numberOfGenerationsStored numThreads"
@@ -213,7 +215,8 @@ public class VCFGenerator {
         System.out.println(filename + " written");
 
     }
-//
+
+
 //    private static void writeVCF() throws SuspendableException {
 //        int[][][] idToChromosomes = readChromosomes();
 //

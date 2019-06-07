@@ -9,7 +9,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import static com.intrepiditee.Configs.*;
 
 
-public class GeneticMap {
+class GeneticMap {
 
     // Both are inclusive
     private double minGeneticDistance;
@@ -37,81 +37,73 @@ public class GeneticMap {
     private static final byte PHYSICAL_TO_GENETIC = 4;
 
 
-    // Generate genetic mapping files for rapid from indices of snps covered by ukb
+    // Generate genetic mapping files for rapid from sites covered by ukb
     public static void main(String[] args) {
         System.out.println();
 
         makeFromChromosomeNumbers(getChromosomeNumbers());
 
-        ObjectInputStream in = Utils.getBufferedObjectInputStream("variantSiteIndices");
+        for (int c = 1; c <= numChromosomes; c++) {
+            String sitesFilename = VCFParser.pathPrefix + "sites.chr" + c;
+            ObjectInputStream in = Utils.getBufferedObjectInputStream(sitesFilename);
 
-        int[] indices = null;
-        try {
-            in.readInt();
-            in.readInt();
-            indices = (int[]) in.readUnshared();
-        } catch (IOException | ClassNotFoundException e) {
-            e.printStackTrace();
-            System.exit(-1);
-        }
-
-        try {
-            for (Map.Entry<Integer, GeneticMap> e : chromosomeNumberToGeneticMap.entrySet()) {
-                for (byte sex : new byte[]{MALE, FEMALE}) {
-                    GeneticMap map = e.getValue().parseDirection(PHYSICAL_TO_GENETIC);
-
-                    int chromosomeNumber = e.getKey();
-                    String filename =
-                        "map/" +
-                        (sex == MALE ? "male" : "female") +
-                        ".chr" +
-                        chromosomeNumber +
-                        ".txt";
-
-                    BufferedWriter w = Utils.getBufferedWriter(filename);
-
-                    for (int i = 0; i < indices.length; i++) {
-                        StringBuilder s = new StringBuilder();
-                        s.append(i);
-                        s.append("\t");
-
-                        int index = indices[i];
-                        if (index < map.minPhysicalDistance) {
-                            s.append(map.minGeneticDistance);
-                        } else if (index > map.maxPhysicalDistance) {
-                            s.append(map.maxGeneticDistance);
-                        } else {
-                            // Both will not be null
-                            Map.Entry<Integer, Double> floorEntry = map.physicalToGeneticDistance.floorEntry(index);
-                            Map.Entry<Integer, Double> ceilEntry = map.physicalToGeneticDistance.ceilingEntry(index);
-
-                            if (ceilEntry.equals(floorEntry)) {
-                                s.append(floorEntry.getValue());
-                            } else {
-                                s.append(
-                                    interpolate(
-                                        floorEntry.getKey(), floorEntry.getValue(),
-                                        ceilEntry.getKey(), ceilEntry.getValue(),
-                                        index
-                                    )
-                                );
-                            }
-                        }
-
-                        s.append("\n");
-                        w.write(s.toString());
-                    }
-
-                    w.close();
-                    System.out.println(filename + " written");
-
-                } // End of male and female
+            int[] sites = null;
+            try {
+                sites = (int[]) in.readUnshared();
+            } catch (IOException | ClassNotFoundException e) {
+                e.printStackTrace();
+                System.exit(-1);
             }
 
-        } catch (IOException e) {
-            e.printStackTrace();
-            System.exit(-1);
+            try {
+                GeneticMap map = chromosomeNumberToGeneticMap.get(c);
+                map.parseDirection(PHYSICAL_TO_GENETIC);
+
+                String outFilename = "map/" + "chr" + c + ".txt";
+                BufferedWriter w = Utils.getBufferedWriter(outFilename);
+
+                for (int i = 0; i < sites.length; i++) {
+                    StringBuilder s = new StringBuilder();
+                    s.append(i);
+                    s.append("\t");
+
+                    int siteIndex = sites[i] - 1;
+                    if (siteIndex < map.minPhysicalDistance) {
+                        s.append(map.minGeneticDistance);
+                    } else if (siteIndex > map.maxPhysicalDistance) {
+                        s.append(map.maxGeneticDistance);
+                    } else {
+                        // Both floorEntry and ceilEntry will not be null because siteIndex is larger than
+                        // minPhysicalDistance and smaller than maxGeneticDistance.
+                        Map.Entry<Integer, Double> floorEntry = map.physicalToGeneticDistance.floorEntry(siteIndex);
+                        Map.Entry<Integer, Double> ceilEntry = map.physicalToGeneticDistance.ceilingEntry(siteIndex);
+
+                        if (ceilEntry.equals(floorEntry)) {
+                            s.append(floorEntry.getValue());
+                        } else {
+                            s.append(
+                                interpolate(
+                                    floorEntry.getKey(), floorEntry.getValue(),
+                                    ceilEntry.getKey(), ceilEntry.getValue(),
+                                    siteIndex
+                                )
+                            );
+                        }
+                    }
+
+                    s.append("\n");
+                    w.write(s.toString());
+                }
+
+                w.close();
+                System.out.println(outFilename + " written");
+
+            } catch (IOException e) {
+                e.printStackTrace();
+                System.exit(-1);
+            }
         }
+
 
     }
 
@@ -192,7 +184,8 @@ public class GeneticMap {
 
         while (sc.hasNextLine()) {
             String[] fields = sc.nextLine().split("\t");
-            physicalDistance = Integer.parseInt(fields[2]);
+            // Genetic map is 1 based
+            physicalDistance = Integer.parseInt(fields[1]) - 1;
             geneticDistance = Double.parseDouble(fields[4]);
 
             if (direction == BOTH || direction == GENETIC_TO_PHYSICAL) {
@@ -240,16 +233,17 @@ public class GeneticMap {
         }
 
         for (int i = 0; i < numIndices; i++) {
-            while (true) {
-                double prob = ThreadLocalRandom.current().nextDouble(minGeneticDistance, maxGeneticDistance);
-                Map.Entry<Double, Integer> entry = geneticToPhysicalDistance.ceilingEntry(prob);
-                if (entry == null) {
-                    continue;
-                }
-                indices.add(entry.getValue());
-                break;
-            }
-
+            double prob = ThreadLocalRandom.current().nextDouble(minGeneticDistance, maxGeneticDistance);
+            // ceilEntry can never be null because prob cannot be larger than maxGeneticDistance
+            Map.Entry<Double, Integer> ceilEntry = geneticToPhysicalDistance.ceilingEntry(prob);
+            // floorEntry can never be null because prob cannot be smaller than minGeneticDistance
+            Map.Entry<Double, Integer> floorEntry = geneticToPhysicalDistance.floorEntry(prob);
+            int index = (int) interpolate(
+                floorEntry.getKey(), floorEntry.getValue(),
+                ceilEntry.getKey(), ceilEntry.getValue(),
+                prob
+            );
+            indices.add(index);
         }
         Collections.sort(indices);
 
