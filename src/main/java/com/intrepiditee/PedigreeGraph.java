@@ -31,6 +31,8 @@ public class PedigreeGraph {
             System.exit(-1);
         }
 
+        System.out.println();
+
         numGenerationsStore = Integer.parseInt(args[1]);
         int upperBound = Integer.parseInt(args[2]);
         numThreads = Integer.parseInt(args[3]);
@@ -141,6 +143,7 @@ public class PedigreeGraph {
                             System.out.println(s);
                         }
                     }
+                    System.out.println(c);
                 }
             }
         });
