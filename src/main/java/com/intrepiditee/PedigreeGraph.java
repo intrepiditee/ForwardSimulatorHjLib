@@ -137,11 +137,11 @@ public class PedigreeGraph {
                     }
 
                     int c = pairCount.incrementAndGet();
-                    if (c % 1000000 == 0) {
-                        String s = String.valueOf(c / 1000000) +
-                            "M out of " +
-                            numIndividuals * numIndividuals / 2 / 1000000 +
-                            "M pairs finished";
+                    if (c % 1000 == 0) {
+                        String s = String.valueOf(c / 1000) +
+                            "k out of " +
+                            numIndividuals * (numIndividuals - 1) / 2 / 1000 +
+                            "k pairs finished";
                         System.out.println(s);
                     }
                 }
