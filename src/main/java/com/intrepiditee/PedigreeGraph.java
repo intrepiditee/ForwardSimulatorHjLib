@@ -20,6 +20,8 @@ public class PedigreeGraph {
 
     private static final Map<Integer, Integer> individualToGeneration = new HashMap<>();
 
+    private static final String pathPrefix = "out/gen";
+
     public static void main(String[] args) {
         Configs.numGenerationsStore = Integer.parseInt(args[1]);
         int upperBound = Integer.parseInt(args[2]);
@@ -47,11 +49,10 @@ public class PedigreeGraph {
 //        System.out.println(adjacencyList);
 //        System.out.println(individualToGeneration);
 
-
     }
 
     private static void addGenerationToGraph(int generation) {
-        String filename = "Generation" + generation + "Pedigree.txt.gz";
+        String filename = pathPrefix + generation + "_pedigree.txt.gz";
         Scanner sc = Utils.getScannerFromGZip(filename);
 
         while (sc.hasNextInt()) {
