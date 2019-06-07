@@ -121,6 +121,9 @@ public class PedigreeGraph {
             int startID = minID + i * numIndividualsPerThread;
             int endID = i == numThreads - 1 ? maxID + 1 : startID + numIndividualsPerThread;
 
+            System.out.println(startID);
+            System.out.println(endID);
+
             for (int id1 = startID; id1 < endID; id1++) {
                 for (int id2 = id1 + 1; id2 < endID; id2++) {
                     int degree = BFSLessThan(id2, id1, upperBound);
@@ -138,12 +141,11 @@ public class PedigreeGraph {
                         if (c % 1000000 == 0) {
                             String s = String.valueOf(c / 1000000) +
                                 "M of out " +
-                                4 * generationSize * 4 * generationSize / 2 / 1000000 +
+                                numIndividuals * numIndividuals / 2 / 1000000 +
                                 "M pairs finished";
                             System.out.println(s);
                         }
                     }
-                    System.out.println(c);
                 }
             }
         });
@@ -198,14 +200,12 @@ public class PedigreeGraph {
                         }
 
                         int distance = distances.get(current) + 1;
-                        if (distance <= upperBound) {
-                            distances.put(nbr, distance);
+                        distances.put(nbr, distance);
+                        if (distance < upperBound) {
                             if (nbr.equals(end)) {
                                 return distance;
                             }
-                            if (distance < upperBound) {
-                                q.addLast(nbr);
-                            }
+                            q.addLast(nbr);
                         }
                     }
                 }
