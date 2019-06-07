@@ -8,6 +8,9 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static com.intrepiditee.Configs.generationSize;
+import static com.intrepiditee.Configs.numGenerationsStore;
+import static com.intrepiditee.Configs.numThreads;
 import static edu.rice.hj.Module0.launchHabaneroApp;
 import static edu.rice.hj.Module1.forall;
 import static edu.rice.hj.Module1.forallChunked;
@@ -23,18 +26,18 @@ public class PedigreeGraph {
     private static final String pathPrefix = "out/";
 
     public static void main(String[] args) {
-        Configs.numGenerationsStore = Integer.parseInt(args[1]);
+        numGenerationsStore = Integer.parseInt(args[1]);
         int upperBound = Integer.parseInt(args[2]);
-        Configs.numThreads = Integer.parseInt(args[3]);
+        numThreads = Integer.parseInt(args[3]);
 
-        HjSystemProperty.setSystemProperty(HjSystemProperty.numWorkers, Configs.numThreads);
+        HjSystemProperty.setSystemProperty(HjSystemProperty.numWorkers, numThreads);
 
-        for (int i = 0; i < Configs.numGenerationsStore; i++) {
+        for (int i = 0; i < numGenerationsStore; i++) {
             addGenerationToGraph(i);
             System.out.println("Generation " + i + " added to graph");
         }
 
-        Configs.generationSize = (maxID - minID + 1) / Configs.numGenerationsStore;
+        generationSize = (maxID - minID + 1) / numGenerationsStore;
 
 //        System.out.println(adjacencyList);
 
@@ -80,9 +83,9 @@ public class PedigreeGraph {
 
 
     private static void connectSiblings() throws SuspendableException {
-        forallChunked(1, Configs.numGenerationsStore - 1, (i) -> {
-            int generationStartID = minID + Configs.generationSize * i;
-            int generationEndID = generationStartID + Configs.generationSize;
+        forallChunked(1, numGenerationsStore - 1, (i) -> {
+            int generationStartID = minID + generationSize * i;
+            int generationEndID = generationStartID + generationSize;
 
             for (int id1 = generationStartID; id1 < generationEndID; id1++) {
                 for (int id2 = id1 + 1; id2 < generationEndID; id2++) {
@@ -105,9 +108,11 @@ public class PedigreeGraph {
 
         AtomicInteger pairCount = new AtomicInteger(0);
 
-        forall(0, Configs.numThreads - 1, (i) -> {
-            int startID = minID + i * Configs.generationSize;
-            int endID = startID + Configs.generationSize;
+        int numIndividuals = generationSize * numGenerationsStore;
+        int numIndividualsPerThread = numIndividuals / numThreads;
+        forall(0, numThreads - 1, (i) -> {
+            int startID = minID + i * numIndividualsPerThread;
+            int endID = i == numThreads - 1 ? maxID + 1 : startID + numIndividualsPerThread;
 
             for (int id1 = startID; id1 < endID; id1++) {
                 for (int id2 = id1 + 1; id2 < endID; id2++) {
@@ -124,12 +129,11 @@ public class PedigreeGraph {
 
                 int c = pairCount.incrementAndGet();
                 if (i == 0) {
-                    if (c % 1000 == 0) {
-                        String s =
-                            String.valueOf(c / 1000) +
-                            "k of out " +
-                            4 * Configs.generationSize * 4 * Configs.generationSize / 2 / 1000 +
-                            "k pairs finished";
+                    if (c % 1000000 == 0) {
+                        String s = String.valueOf(c / 1000000) +
+                            "M of out " +
+                            4 * generationSize * 4 * generationSize / 2 / 1000000 +
+                            "M pairs finished";
                         System.out.println(s);
                     }
                 }
