@@ -133,6 +133,7 @@ public class PedigreeGraph {
                         }
                     }
 
+                    System.out.println(startID + " " + endID);
                     int c = pairCount.incrementAndGet();
                     if (c % 1000000 == 0) {
                         String s = String.valueOf(c / 1000000) +
