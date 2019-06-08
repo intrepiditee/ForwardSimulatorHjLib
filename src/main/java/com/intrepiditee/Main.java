@@ -1,5 +1,7 @@
 package com.intrepiditee;
 
+import java.io.IOException;
+
 public class Main {
 
     /*
@@ -10,7 +12,7 @@ public class Main {
        and their mother's id, separated by space.
     where _ is the index of the generation.
     */
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
         if (args.length == 0 || args.length > 6 ||
             (args[0].equals("--all") && args.length != 6) ||
             args[0].equals("-h") || args[0].equals("--help")) {
@@ -41,6 +43,8 @@ public class Main {
                 break;
             case "--pedigree":
                 PedigreeGraph.main(args);
+            case "--ibd":
+                Segment.main(args);
         }
     }
 
