@@ -1,13 +1,15 @@
 package com.intrepiditee;
 
+import edu.rice.hj.runtime.config.HjSystemProperty;
+
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.*;
 
-import static com.intrepiditee.Configs.FEMALE;
-import static com.intrepiditee.Configs.MALE;
-import static com.intrepiditee.Configs.numChromosomes;
+import static com.intrepiditee.Configs.*;
+import static edu.rice.hj.Module0.launchHabaneroApp;
+import static edu.rice.hj.Module1.forallChunked;
 
 public class Segment implements Serializable, Comparable<Segment> {
 
@@ -20,10 +22,24 @@ public class Segment implements Serializable, Comparable<Segment> {
 
     private static String pathPrefx = "ibd/";
 
-    public static void main(String[] args) throws IOException {
-        for (int c = 1; c <= numChromosomes; c++) {
-            writeIBDForChromosome(c);
-        }
+    public static void main(String[] args){
+        System.out.println();
+
+        numThreads = Integer.parseInt(args[1]);
+        HjSystemProperty.setSystemProperty(HjSystemProperty.numWorkers, numThreads);
+
+        launchHabaneroApp(() -> {
+            forallChunked(1, numChromosomes, c -> {
+                try {
+                    writeIBDForChromosome(c);
+                    System.out.println("Chromosome " + c + " IBDs written");
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    System.exit(-1);
+                }
+
+            });
+        });
     }
 
     private static void writeIBDForChromosome(int chromosomeNumber) throws IOException {
