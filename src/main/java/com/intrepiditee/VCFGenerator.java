@@ -166,7 +166,7 @@ public class VCFGenerator {
 
     }
 
-    private static Map<Integer, Map<Byte, List<Segment>>> readChromosomesFromChromosome(
+    static Map<Integer, Map<Byte, List<Segment>>> readChromosomesFromChromosome(
         int chromosomeNumber) {
 
         Map<Integer, Map<Byte, List<Segment>>> idToChromosomesPair = new HashMap<>();

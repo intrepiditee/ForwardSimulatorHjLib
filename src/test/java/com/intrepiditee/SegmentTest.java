@@ -12,6 +12,43 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class SegmentTest {
 
+
+    @Test
+    void testComputeIBD() {
+        List<Segment> oneSegmentList = Arrays.asList(make(0, 7, 0, (byte) -1));
+        List<Segment> anotherSegment = Arrays.asList(make(3, 5, 0, (byte) -1));
+        List<Segment> expected = Arrays.asList(make(3, 5, 0, (byte) - 1));
+        List<Segment> ibds = computeIBD(oneSegmentList, anotherSegment);
+        assertEquals(expected, ibds);
+
+        oneSegmentList = Arrays.asList(
+            make(0, 5, 1, (byte) -1),
+            make(5, 10, 2, (byte) - 1),
+            make(10, 11, 3, (byte) -1),
+            make(11, 19, 4, (byte) -1),
+            make(19, 21, 5, (byte) -1),
+            make(21, 23, 6, (byte) -1),
+            make(23, 25, 7, (byte) -1)
+        );
+        anotherSegment = Arrays.asList(
+            make(0, 3, 2, (byte) -1),
+            make(3, 7, 1, (byte) -1),
+            make(7, 11, 3, (byte) -1),
+            make(11, 17, 4, (byte) -1),
+            make(17, 21, 5, (byte) -1),
+            make(21, 25, 6, (byte) -1)
+        );
+        expected = Arrays.asList(
+            make(3, 5, 1, (byte) - 1),
+            make(10, 11, 3, (byte) -1),
+            make(11, 17, 4, (byte) -1),
+            make(19, 21, 5, (byte) -1),
+            make(21, 23, 6, (byte) -1)
+        );
+        ibds = computeIBD(oneSegmentList, anotherSegment);
+        assertEquals(expected, ibds);
+    }
+
     @Test
     void testContains() {
         Segment seg = make(0, 6, 0, MALE);

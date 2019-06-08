@@ -1,8 +1,12 @@
 package com.intrepiditee;
 
+import java.io.BufferedWriter;
+import java.io.IOException;
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
+
+import static com.intrepiditee.Configs.FEMALE;
+import static com.intrepiditee.Configs.MALE;
 
 public class Segment implements Serializable, Comparable<Segment> {
 
@@ -10,6 +14,96 @@ public class Segment implements Serializable, Comparable<Segment> {
     final int end;
     final int founderID;
     final byte whichChromosome;
+
+    public static void main(String[] args) throws IOException {
+        writeIBD();
+    }
+
+    private static void writeIBD() throws IOException {
+        BufferedWriter w = Utils.getBufferedGZipWriter("ibd_chr22.txt.gz");
+        Map<Integer, Map<Byte, List<Segment>>> idToChromosomesPair = VCFGenerator.readChromosomesFromChromosome(22);
+        Set<Integer> ids = idToChromosomesPair.keySet();
+        int minID = Integer.MAX_VALUE;
+        int maxID = Integer.MIN_VALUE;
+        for (int id : ids) {
+            minID = Math.min(minID, id);
+            maxID = Math.max(maxID, id);
+        }
+
+        byte[] sexes = new byte[]{FEMALE, MALE};
+
+        for (int id1 = minID; id1 <= maxID; id1++) {
+            for (int id2 = id1 + 1; id2 <= maxID; id2++) {
+                Map<Byte, List<Segment>> chromosomesPair1 = idToChromosomesPair.get(id1);
+                Map<Byte, List<Segment>> chromosomesPair2 = idToChromosomesPair.get(id2);
+
+                List<String> outs = new ArrayList<>();
+                for (byte sex1 : sexes) {
+                    for (byte sex2 : sexes) {
+                        List<Segment> ibds = computeIBDFromTwoChromosomes(chromosomesPair1.get(sex1), chromosomesPair2.get(sex2));
+                        outs.addAll(getIBDOutputStrings(id1, id2, sex1, sex2, ibds));
+                    }
+                }
+
+                for (String out : outs) {
+                    w.write(out);
+                }
+            }
+        }
+
+        w.close();
+    }
+
+    private static List<String> getIBDOutputStrings(
+        int id1, int id2, byte sex1, byte sex2, List<Segment> ibds) {
+
+        List<String> outs = new ArrayList<>();
+        for (Segment ibd : ibds) {
+            outs.add(
+                String.join(
+                    "\t", String.valueOf(id1),String.valueOf(id2),
+                    sexToString(sex1), sexToString(sex2),
+                    String.valueOf(ibd.start), String.valueOf(ibd.end)
+                ) + "\n"
+            );
+        }
+        return outs;
+    }
+
+    private static String sexToString(byte sex) {
+        return sex == FEMALE ? "0" : "1";
+    }
+
+
+    static List<Segment> computeIBDFromTwoChromosomes(
+        List<Segment> oneSegmentList, List<Segment> anotherSegmentList) {
+
+        List<Segment> ibds = new ArrayList<>();
+
+        int oneIndex = 0;
+        int anotherIndex = 0;
+        while (oneIndex < oneSegmentList.size()
+            && anotherIndex < anotherSegmentList.size()) {
+
+            Segment oneSegment = oneSegmentList.get(oneIndex);
+            Segment anotherSegment = anotherSegmentList.get(anotherIndex);
+            if (Segment.intersect(oneSegment, anotherSegment) &&
+                oneSegment.founderID == anotherSegment.founderID) {
+
+                ibds.add(intersection(oneSegment, anotherSegment));
+                oneIndex++;
+                anotherIndex++;
+            } else if (oneSegment.end > anotherSegment.end) {
+                anotherIndex++;
+            } else if (oneSegment.end < anotherSegment.end) {
+                oneIndex++;
+            } else {
+                oneIndex++;
+                anotherIndex++;
+            }
+        }
+        return ibds;
+    }
 
     static Segment make(int start, int end, int founderID, byte whichChromosome) {
         assert start < end;
@@ -39,6 +133,14 @@ public class Segment implements Serializable, Comparable<Segment> {
 
     static boolean intersect(Segment seg1, Segment seg2) {
         return Math.max(seg1.start, seg2.start) < Math.min(seg1.end, seg2.end);
+    }
+
+    static Segment intersection(Segment seg1, Segment seg2) {
+        return make(
+            Math.max(seg1.start, seg2.start), Math.min(seg1.end, seg2.end),
+            seg1.founderID,
+            (byte) -1
+        );
     }
 
     static boolean canMerge(Segment seg1, Segment seg2) {
