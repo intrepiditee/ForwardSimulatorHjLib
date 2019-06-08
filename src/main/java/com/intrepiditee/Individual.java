@@ -241,11 +241,11 @@ public class Individual {
             anotherMutationIndices = tempp;
         }
 
-        // Generate one chromosome for the child
         // Generate mutation indices on that chromosome for the child
         List<Integer> childMutationIndices = recombineMutationIndices(
             oneMutationIndices, anotherMutationIndices, recombinationIndices
         );
+        // Generate one chromosome for the child
         List<Segment> childChromosome = recombineOneChromosome(
             oneSegmentList, anotherSegmentList, recombinationIndices
         );

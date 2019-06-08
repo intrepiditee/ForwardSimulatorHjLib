@@ -166,7 +166,7 @@ public class VCFGenerator {
 
     }
 
-    private static Map<Integer, Map<Byte, List<Segment>>>readChromosomesFromChromosome(
+    private static Map<Integer, Map<Byte, List<Segment>>> readChromosomesFromChromosome(
         int chromosomeNumber) {
 
         Map<Integer, Map<Byte, List<Segment>>> idToChromosomesPair = new HashMap<>();
@@ -251,7 +251,7 @@ public class VCFGenerator {
                 .append(site)
                 .append("\trs")
                 .append(site)
-                .append("\tA\tC\t.\tPASS\t.\tGT");
+                .append("\tA\tC\t.\t.\t.\tGT");
             for (int id = minID; id <= maxID; id++) {
                 Map<Byte, List<Segment>> chromosomesPair = idToChromosomesPair.get(id);
                 Map<Byte, Set<Integer>> mutationIndicesPair = idToMutationIndices.get(id);
