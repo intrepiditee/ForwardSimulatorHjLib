@@ -7,6 +7,7 @@ import java.util.*;
 
 import static com.intrepiditee.Configs.FEMALE;
 import static com.intrepiditee.Configs.MALE;
+import static com.intrepiditee.Configs.numChromosomes;
 
 public class Segment implements Serializable, Comparable<Segment> {
 
@@ -15,13 +16,19 @@ public class Segment implements Serializable, Comparable<Segment> {
     final int founderID;
     final byte whichChromosome;
 
+    final static long serialVersionUID = 5320532892517112834L;
+
+    private static String pathPrefx = "ibd/";
+
     public static void main(String[] args) throws IOException {
-        writeIBD();
+        for (int c = 1; c <= numChromosomes; c++) {
+            writeIBDForChromosome(c);
+        }
     }
 
-    private static void writeIBD() throws IOException {
-        BufferedWriter w = Utils.getBufferedGZipWriter("ibd_chr22.txt.gz");
-        Map<Integer, Map<Byte, List<Segment>>> idToChromosomesPair = VCFGenerator.readChromosomesFromChromosome(22);
+    private static void writeIBDForChromosome(int chromosomeNumber) throws IOException {
+        BufferedWriter w = Utils.getBufferedGZipWriter(pathPrefx + "ibd_chr" + chromosomeNumber + ".txt.gz");
+        Map<Integer, Map<Byte, List<Segment>>> idToChromosomesPair = VCFGenerator.readChromosomesFromChromosome(chromosomeNumber);
         Set<Integer> ids = idToChromosomesPair.keySet();
         int minID = Integer.MAX_VALUE;
         int maxID = Integer.MIN_VALUE;
@@ -40,7 +47,7 @@ public class Segment implements Serializable, Comparable<Segment> {
                 List<String> outs = new ArrayList<>();
                 for (byte sex1 : sexes) {
                     for (byte sex2 : sexes) {
-                        List<Segment> ibds = computeIBDFromTwoChromosomes(chromosomesPair1.get(sex1), chromosomesPair2.get(sex2));
+                        List<Segment> ibds = computeIBDsFromTwoChromosomes(chromosomesPair1.get(sex1), chromosomesPair2.get(sex2));
                         outs.addAll(getIBDOutputStrings(id1, id2, sex1, sex2, ibds));
                     }
                 }
@@ -75,7 +82,7 @@ public class Segment implements Serializable, Comparable<Segment> {
     }
 
 
-    static List<Segment> computeIBDFromTwoChromosomes(
+    static List<Segment> computeIBDsFromTwoChromosomes(
         List<Segment> oneSegmentList, List<Segment> anotherSegmentList) {
 
         List<Segment> ibds = new ArrayList<>();

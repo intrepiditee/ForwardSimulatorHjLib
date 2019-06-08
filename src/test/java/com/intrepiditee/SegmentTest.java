@@ -18,7 +18,7 @@ public class SegmentTest {
         List<Segment> oneSegmentList = Arrays.asList(make(0, 7, 0, (byte) -1));
         List<Segment> anotherSegment = Arrays.asList(make(3, 5, 0, (byte) -1));
         List<Segment> expected = Arrays.asList(make(3, 5, 0, (byte) - 1));
-        List<Segment> ibds = computeIBDFromTwoChromosomes(oneSegmentList, anotherSegment);
+        List<Segment> ibds = computeIBDsFromTwoChromosomes(oneSegmentList, anotherSegment);
         assertEquals(expected, ibds);
 
         oneSegmentList = Arrays.asList(
@@ -45,7 +45,7 @@ public class SegmentTest {
             make(19, 21, 5, (byte) -1),
             make(21, 23, 6, (byte) -1)
         );
-        ibds = computeIBDFromTwoChromosomes(oneSegmentList, anotherSegment);
+        ibds = computeIBDsFromTwoChromosomes(oneSegmentList, anotherSegment);
         assertEquals(expected, ibds);
     }
 
