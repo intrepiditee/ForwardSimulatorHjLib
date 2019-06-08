@@ -32,7 +32,7 @@ public class Segment implements Serializable, Comparable<Segment> {
             forallChunked(1, numChromosomes, c -> {
                 try {
                     writeIBDForChromosome(c);
-                    System.out.println("Chromosome " + c + " IBDs written");
+                    System.out.println("Chromosome " + c + ": IBDs written");
                 } catch (IOException e) {
                     e.printStackTrace();
                     System.exit(-1);

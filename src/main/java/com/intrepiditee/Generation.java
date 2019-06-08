@@ -5,9 +5,7 @@ import edu.rice.hj.api.SuspendableException;
 
 import java.util.*;
 
-import static com.intrepiditee.Configs.FEMALE;
-import static com.intrepiditee.Configs.MALE;
-import static com.intrepiditee.Configs.numThreads;
+import static com.intrepiditee.Configs.*;
 import static edu.rice.hj.Module0.finish;
 import static edu.rice.hj.Module1.async;
 
@@ -117,7 +115,7 @@ class Generation {
                             numChildren++;
 
                             double prob = 0.5;
-                            while (prob > Math.random()) {
+                            while (prob >rand.nextDouble()) {
                                 if (numChildren == numChildrenPerThreadFinal) {
                                     break;
                                 }
@@ -134,8 +132,6 @@ class Generation {
                                 }
                                 next.add(child);
                                 numChildren++;
-
-                                prob *= 0.5;
                             }
                         }
                     }
@@ -152,6 +148,26 @@ class Generation {
         }
 
         return next;
+    }
+
+
+    private static int getNumChildren(Random rand) {
+        double r = rand.nextDouble();
+        for (int n = 0; n <= maxNumChildren; n++) {
+            if (n == maxNumChildren) {
+                return n;
+            }
+
+            double cumulativeProb = numChildrenProbabilitiesCumulative[n];
+            double nextCumulativeProb = numChildrenProbabilitiesCumulative[n + 1];
+            if (cumulativeProb <= r &&
+                r < nextCumulativeProb) {
+                return n;
+            }
+        }
+
+        // Unreachable
+        return -1;
     }
 
 }
