@@ -11,6 +11,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static com.intrepiditee.Configs.generationSize;
 import static com.intrepiditee.Configs.numGenerationsStore;
 import static com.intrepiditee.Configs.numThreads;
+import static com.intrepiditee.Utils.getBufferedGZipWriter;
 import static edu.rice.hj.Module0.launchHabaneroApp;
 import static edu.rice.hj.Module1.forall;
 import static edu.rice.hj.Module1.forallChunked;
@@ -118,7 +119,10 @@ public class PedigreeGraph {
 
 
     private static void computePairwiseDegreeLessThanAndWrite(int upperBound) throws SuspendableException {
-        BufferedWriter w = Utils.getBufferedGZipWriter(pathPrefix + "degrees.txt.gz");
+        BufferedWriter[] writers = new BufferedWriter[upperBound - 1];
+        for (int i = 1; i <= upperBound - 1; i++) {
+            writers[i - 1] = getBufferedGZipWriter(pathPrefix + "degree_" + i + ".txt.gz");
+        }
 
         AtomicInteger pairCount = new AtomicInteger(0);
 
@@ -133,7 +137,7 @@ public class PedigreeGraph {
                     int degree = BFSLessThan(id2, id1, upperBound);
                     if (degree != -1) {
                         try {
-                            w.write(id1 + "\t" + id2 + "\t" + degree + "\n");
+                            writers[degree - 1].write(id1 + "\t" + id2 + "\t" + degree + "\n");
                         } catch (IOException e) {
                             e.printStackTrace();
                             System.exit(-1);
@@ -153,7 +157,9 @@ public class PedigreeGraph {
         });
 
         try {
-            w.close();
+            for (BufferedWriter w : writers) {
+                w.close();
+            }
         } catch (IOException e) {
             e.printStackTrace();
             System.exit(-1);
