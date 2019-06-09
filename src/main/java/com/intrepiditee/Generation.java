@@ -97,33 +97,16 @@ class Generation {
                                 break;
                             }
 
-                            father = males.get(i);
                             mother = females.get(i);
 
-                            if (rand.nextDouble() > 0.8) {
-                                father = males.get(rand.nextInt(males.size()));
-                            }
-
-                            Individual child = Individual.makeFromParents(father, mother);
-                            if (numberOfMales == numMalesPerThreadFinal) {
-                                child.setSex(FEMALE);
-                            } else {
-                                child.setSex(MALE);
-                                numberOfMales++;
-                            }
-                            next.add(child);
-                            numChildren++;
-
-                            double prob = 0.5;
-                            while (prob >rand.nextDouble()) {
-                                if (numChildren == numChildrenPerThreadFinal) {
-                                    break;
-                                }
-
+                            int numChildrenToHave = getNumChildren(rand);
+                            for (int c = 1; c <= numChildrenToHave; c++) {
+                                father = males.get(i);
                                 if (rand.nextDouble() > 0.8) {
                                     father = males.get(rand.nextInt(males.size()));
                                 }
-                                child = Individual.makeFromParents(father, mother);
+
+                                Individual child = Individual.makeFromParents(father, mother);
                                 if (numberOfMales == numMalesPerThreadFinal) {
                                     child.setSex(FEMALE);
                                 } else {
@@ -133,6 +116,7 @@ class Generation {
                                 next.add(child);
                                 numChildren++;
                             }
+
                         }
                     }
                 };
