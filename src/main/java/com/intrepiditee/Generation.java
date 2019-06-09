@@ -101,6 +101,10 @@ class Generation {
 
                             int numChildrenToHave = getNumChildren(rand);
                             for (int c = 1; c <= numChildrenToHave; c++) {
+                                if (numChildren == numChildrenPerThreadFinal) {
+                                    break;
+                                }
+
                                 father = males.get(i);
                                 if (rand.nextDouble() > 0.8) {
                                     father = males.get(rand.nextInt(males.size()));
