@@ -1,13 +1,14 @@
 package com.intrepiditee;
 
+import edu.rice.hj.runtime.config.HjSystemProperty;
+
 import java.io.*;
 import java.util.*;
 
-import static com.intrepiditee.Configs.FEMALE;
-import static com.intrepiditee.Configs.MALE;
-import static com.intrepiditee.Configs.numChromosomes;
+import static com.intrepiditee.Configs.*;
 import static com.intrepiditee.Utils.*;
 import static edu.rice.hj.Module0.*;
+import static edu.rice.hj.Module1.forall;
 
 public class VCFGenerator {
 
@@ -24,12 +25,16 @@ public class VCFGenerator {
             System.exit(-1);
         }
 
-        Configs.generationSize = Integer.parseInt(args[1]);
-        Configs.numGenerationsStore = Integer.parseInt(args[2]);
-        Configs.numThreads = Integer.parseInt(args[3]);
+        generationSize = Integer.parseInt(args[1]);
+        String[] fromTo = args[2].split("-");
+        startGeneration = Integer.parseInt(fromTo[0]);
+        endGeneration = Integer.parseInt(fromTo[1]);
+        numThreads = Integer.parseInt(args[3]);
+
+        HjSystemProperty.setSystemProperty(HjSystemProperty.numWorkers, numThreads);
 
         launchHabaneroApp(() -> {
-            for (int c = 1; c <= numChromosomes; c++) {
+            forall(1, numChromosomes, c -> {
                 Map<Integer, Map<Byte, List<Segment>>> idToChromosomesPair = readChromosomesFromChromosome(c);
                 Map<Integer, Map<Byte, Set<Integer>>> idToMutationIndices = readMutationIndicesFromChromosome(c);
                 if (c == 1) {
@@ -42,7 +47,7 @@ public class VCFGenerator {
                     e.printStackTrace();
                     System.exit(-1);
                 }
-            }
+            });
 
         });
 
@@ -125,7 +130,7 @@ public class VCFGenerator {
         int chromosomeNumber) {
 
         Map<Integer, Map<Byte, Set<Integer>>> idToMutationIndicesPair = new HashMap<>();
-        for (int i = 0; i < Configs.numGenerationsStore; i++) {
+        for (int i = startGeneration; i <= endGeneration; i++) {
             idToMutationIndicesPair.putAll(readMutationIndicesAt(i, chromosomeNumber));
         }
         return idToMutationIndicesPair;
@@ -170,7 +175,7 @@ public class VCFGenerator {
         int chromosomeNumber) {
 
         Map<Integer, Map<Byte, List<Segment>>> idToChromosomesPair = new HashMap<>();
-        for (int i = 0; i < Configs.numGenerationsStore; i++) {
+        for (int i = startGeneration; i <= endGeneration; i++) {
             idToChromosomesPair.putAll(readChromosomesAt(i, chromosomeNumber));
         }
         return idToChromosomesPair;

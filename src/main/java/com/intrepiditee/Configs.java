@@ -5,6 +5,10 @@ class Configs {
 
     static int numThreads = 20;
     static int numGenerations = 10;
+
+    static int startGeneration = 0;
+    static int endGeneration = 3;
+
     static int numGenerationsStore = 4;
     static int generationSize = 1000;
 

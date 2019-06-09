@@ -43,6 +43,7 @@ public class Main {
                 break;
             case "--pedigree":
                 PedigreeGraph.main(args);
+                break;
             case "--ibd":
                 Segment.main(args);
         }
