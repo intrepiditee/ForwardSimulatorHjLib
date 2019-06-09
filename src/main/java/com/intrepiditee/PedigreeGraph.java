@@ -21,7 +21,7 @@ public class PedigreeGraph {
 
     private static final Map<Integer, Integer> individualToGeneration = new HashMap<>();
 
-    static String pathPrefix = "out/";
+    static String pathPrefix = "degree/";
 
     public static void main(String[] args) {
         if (args.length < 4 || !args[0].equals("--pedigree")) {

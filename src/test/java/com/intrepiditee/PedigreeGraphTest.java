@@ -15,7 +15,7 @@ public class PedigreeGraphTest {
     @Test
     void test() {
         PedigreeGraph.pathPrefix = "mualtor/ForwardSimulatorHjLib/target/out/";
-        PedigreeGraph.main(new String[]{"--pedigree", "4", "4", "3"});
+        PedigreeGraph.main(new String[]{"--pedigree", "0-3", "4", "3"});
 
         Map<Pair<Integer, Integer>, Integer> degrees = new HashMap<>();
         Scanner sc = Utils.getScannerFromGZip("mualtor/ForwardSimulatorHjLib/target/out/degrees.txt.gz");
