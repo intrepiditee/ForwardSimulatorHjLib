@@ -8,7 +8,6 @@ import java.util.*;
 import static com.intrepiditee.Configs.*;
 import static com.intrepiditee.Utils.*;
 import static edu.rice.hj.Module0.*;
-import static edu.rice.hj.Module1.forall;
 
 public class VCFGenerator {
 
@@ -34,12 +33,14 @@ public class VCFGenerator {
         HjSystemProperty.setSystemProperty(HjSystemProperty.numWorkers, numThreads);
 
         launchHabaneroApp(() -> {
-            forall(1, numChromosomes, c -> {
+            forallPhased(1, numChromosomes, c -> {
                 Map<Integer, Map<Byte, List<Segment>>> idToChromosomesPair = readChromosomesFromChromosome(c);
                 Map<Integer, Map<Byte, Set<Integer>>> idToMutationIndices = readMutationIndicesFromChromosome(c);
                 if (c == 1) {
                     getMinMaxIDs(idToChromosomesPair);
                 }
+
+                next();
 
                 try {
                     writeVCFForChromosome(c, idToChromosomesPair, idToMutationIndices);

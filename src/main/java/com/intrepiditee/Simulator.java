@@ -5,9 +5,7 @@ import java.io.ObjectOutputStream;
 import java.util.List;
 import java.util.Map;
 
-import static com.intrepiditee.Configs.FEMALE;
-import static com.intrepiditee.Configs.MALE;
-import static com.intrepiditee.Configs.numChromosomes;
+import static com.intrepiditee.Configs.*;
 import static com.intrepiditee.GeneticMap.GENETIC_TO_PHYSICAL;
 import static com.intrepiditee.GeneticMap.getChromosomeNumbers;
 import static com.intrepiditee.Segment.segmentsToString;
@@ -26,10 +24,12 @@ public class Simulator {
             return;
         }
 
-        Configs.numGenerations = Integer.parseInt(args[1]);
-        Configs.numGenerationsStore = Integer.parseInt(args[2]);
-        Configs.generationSize = Integer.parseInt(args[3]);
-        Configs.numThreads = Integer.parseInt(args[4]);
+        numGenerations = Integer.parseInt(args[1]);
+        String[] fromTo = args[2].split("-");
+        startGeneration = Integer.parseInt(fromTo[0]);
+        endGeneration = Integer.parseInt(fromTo[1]);
+        generationSize = Integer.parseInt(args[3]);
+        numThreads = Integer.parseInt(args[4]);
 
         launchHabaneroApp(() -> {
             try {
@@ -48,7 +48,7 @@ public class Simulator {
 
                     Generation toWrite = null;
 
-                    int generationIndex = i - (Configs.numGenerations - Configs.numGenerationsStore);
+                    int generationIndex = i - (Configs.numGenerations - (endGeneration - startGeneration + 1));
                     if (generationIndex >= 0) {
                         toWrite = next;
                     }

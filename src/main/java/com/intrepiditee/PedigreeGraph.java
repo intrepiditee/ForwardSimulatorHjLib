@@ -8,13 +8,10 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static com.intrepiditee.Configs.generationSize;
-import static com.intrepiditee.Configs.numGenerationsStore;
-import static com.intrepiditee.Configs.numThreads;
+import static com.intrepiditee.Configs.*;
 import static com.intrepiditee.Utils.getBufferedGZipWriter;
 import static edu.rice.hj.Module0.launchHabaneroApp;
 import static edu.rice.hj.Module1.forall;
-import static edu.rice.hj.Module1.forallChunked;
 
 public class PedigreeGraph {
     private static int minID = Integer.MAX_VALUE;
@@ -34,13 +31,16 @@ public class PedigreeGraph {
 
         System.out.println();
 
-        numGenerationsStore = Integer.parseInt(args[1]);
+        String[] fromTo = args[1].split("-");
+        startGeneration = Integer.parseInt(fromTo[0]);
+        endGeneration = Integer.parseInt(fromTo[1]);
+
         int upperBound = Integer.parseInt(args[2]);
         numThreads = Integer.parseInt(args[3]);
 
         HjSystemProperty.setSystemProperty(HjSystemProperty.numWorkers, numThreads);
 
-        for (int i = 0; i < numGenerationsStore; i++) {
+        for (int i = startGeneration; i <= endGeneration; i++) {
             addGenerationToGraph(i);
             System.out.println("Generation " + i + " added to graph");
         }
@@ -126,7 +126,7 @@ public class PedigreeGraph {
 
         AtomicInteger pairCount = new AtomicInteger(0);
 
-        int numIndividuals = generationSize * numGenerationsStore;
+        int numIndividuals = generationSize * (endGeneration - startGeneration + 1);
         int numIndividualsPerThread = numIndividuals / numThreads;
         forall(0, numThreads - 1, (i) -> {
             int startID = minID + i * numIndividualsPerThread;

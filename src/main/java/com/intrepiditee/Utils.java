@@ -235,15 +235,15 @@ class Utils {
                 "1) Parse UK Biobank VCFs: bash run.sh --parse generationSize " +
                    "numberOfThreads\n" +
                 "2) Simulate: bash run.sh --simulate numberOfGenerations " +
-                   "numberOfGenerationsToStore generationSize numberOfThreads\n" +
+                   "from-to generationSize numberOfThreads\n" +
                 "3) Generate VCFs: bash run.sh --generate generationSize " +
-                   "numberOfGenerationsStored numberOfThreads\n" +
+                   "from-to numberOfThreads\n" +
                 "4) Generate mapping files for RaPID: bash run.sh --map\n" +
                 "5) Compute pairwise pedigree: bash run.sh --pedigree " +
-                   "numberOfGenerationsStored exclusiveUpperBound numberOfThreads\n\n" +
+                   "from-to exclusiveUpperBound numberOfThreads\n\n" +
 
                 "0) Do all of the above in order: bash run.sh --all " +
-                   "numberOfGenerations numberOfGenerationsToStore generationSize " +
+                   "numberOfGenerations from-to generationSize " +
                    "exclusiveUpperBound numberOfThreads\n"
         );
     }

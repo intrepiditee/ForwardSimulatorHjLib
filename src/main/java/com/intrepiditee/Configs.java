@@ -9,7 +9,6 @@ class Configs {
     static int startGeneration = 0;
     static int endGeneration = 3;
 
-    static int numGenerationsStore = 4;
     static int generationSize = 1000;
 
     static int numChromosomes = 22;
