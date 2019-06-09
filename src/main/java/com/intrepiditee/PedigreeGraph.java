@@ -58,7 +58,7 @@ public class PedigreeGraph {
     }
 
     private static void addGenerationToGraph(int generation) {
-        String filename = pathPrefix + "gen" + generation + "_pedigree.txt.gz";
+        String filename = "out/gen" + generation + "_pedigree.txt.gz";
         Scanner sc = Utils.getScannerFromGZip(filename);
 
         while (sc.hasNextInt()) {
