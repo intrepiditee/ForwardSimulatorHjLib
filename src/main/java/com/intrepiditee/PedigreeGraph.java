@@ -21,8 +21,6 @@ public class PedigreeGraph {
 
     private static final Map<Integer, Integer> individualToGeneration = new HashMap<>();
 
-    static String pathPrefix = "degree/";
-
     public static void main(String[] args) {
         if (args.length < 4 || !args[0].equals("--pedigree")) {
             Utils.printUsage();
@@ -31,24 +29,26 @@ public class PedigreeGraph {
 
         System.out.println();
 
-        String[] fromTo = args[1].split("-");
+        byte degree_or_meiosis = Byte.parseByte(args[1]);
+
+        String[] fromTo = args[2].split("-");
         startGeneration = Integer.parseInt(fromTo[0]);
         endGeneration = Integer.parseInt(fromTo[1]);
 
-        int upperBound = Integer.parseInt(args[2]);
-        numThreads = Integer.parseInt(args[3]);
+        int upperBound = Integer.parseInt(args[3]);
+        numThreads = Integer.parseInt(args[4]);
 
         HjSystemProperty.setSystemProperty(HjSystemProperty.numWorkers, numThreads);
 
         for (int i = startGeneration; i <= endGeneration; i++) {
-            addGenerationToGraph(i);
+            addGenerationToGraph(i, degree_or_meiosis);
             System.out.println("Generation " + i + " added to graph");
         }
 
 //        System.out.println(adjacencyList);
 
         launchHabaneroApp(() -> {
-            computePairwiseDegreeLessThanAndWrite(upperBound);
+            computePairwiseLessThanAndWrite(upperBound, degree_or_meiosis);
             System.out.println("Degrees written");
         });
 
@@ -57,7 +57,7 @@ public class PedigreeGraph {
 
     }
 
-    private static void addGenerationToGraph(int generation) {
+    private static void addGenerationToGraph(int generation, byte degree_or_meiosis) {
         String filename = "out/gen" + generation + "_pedigree.txt.gz";
         Scanner sc = Utils.getScannerFromGZip(filename);
 
@@ -83,7 +83,9 @@ public class PedigreeGraph {
         }
 
         if (generation != 0) {
-            connectSiblingsFromGeneration(generation);
+            if (degree_or_meiosis == DEGREE) {
+                connectSiblingsFromGeneration(generation);
+            }
         } else {
             generationSize = maxID - minID + 1;
         }
@@ -118,10 +120,12 @@ public class PedigreeGraph {
     }
 
 
-    private static void computePairwiseDegreeLessThanAndWrite(int upperBound) throws SuspendableException {
+    private static void computePairwiseLessThanAndWrite(int upperBound, byte degree_or_meiosis) throws SuspendableException {
         BufferedWriter[] writers = new BufferedWriter[upperBound - 1];
+        String pathPrefix = degree_or_meiosis == DEGREE ? "degree/" : "meiosis/";
+        String filenamePrefix = degree_or_meiosis == DEGREE ? "degree_" : "meiosis_";
         for (int i = 1; i <= upperBound - 1; i++) {
-            writers[i - 1] = getBufferedGZipWriter(pathPrefix + "degree_" + i + ".txt.gz");
+            writers[i - 1] = getBufferedGZipWriter(pathPrefix + filenamePrefix + i + ".txt.gz");
         }
 
         AtomicInteger pairCount = new AtomicInteger(0);

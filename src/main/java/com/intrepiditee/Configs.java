@@ -17,6 +17,9 @@ class Configs {
     static byte MALE = 1;
     static byte BOTH = 2;
 
+    static byte DEGREE = 3;
+    static byte MEIOSIS = 4;
+
     static double[] numChildrenProbabilities = new double[]{0.22, 0.20, 0.26, 0.16, 0.08, 0.05, 0.02};
     static double[] numChildrenProbabilitiesCumulative = prefixSum(numChildrenProbabilities);
     static int maxNumChildren = numChildrenProbabilities.length - 1;
