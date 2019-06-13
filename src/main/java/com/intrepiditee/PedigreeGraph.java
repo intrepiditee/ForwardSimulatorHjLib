@@ -82,7 +82,7 @@ public class PedigreeGraph {
             adjacencyList.put(id, nbrs);
         }
 
-        if (generation != 0) {
+        if (generation != startGeneration) {
             if (degree_or_meiosis == DEGREE) {
                 connectSiblingsFromGeneration(generation);
             }
