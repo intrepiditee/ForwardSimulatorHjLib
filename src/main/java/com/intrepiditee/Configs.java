@@ -7,7 +7,7 @@ class Configs {
     static int numGenerations = 10;
 
     static int startGeneration = 0;
-    static int endGeneration = 3;
+    static int endGeneration = 9;
 
     static int generationSize = 1000;
 

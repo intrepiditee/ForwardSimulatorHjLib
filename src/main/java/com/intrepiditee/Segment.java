@@ -25,7 +25,11 @@ public class Segment implements Serializable, Comparable<Segment> {
     public static void main(String[] args){
         System.out.println();
 
-        numThreads = Integer.parseInt(args[1]);
+        String[] fromTo = args[1].split("-");
+        startGeneration = Integer.parseInt(fromTo[0]);
+        endGeneration = Integer.parseInt(fromTo[1]);
+        numThreads = Integer.parseInt(args[2]);
+
         HjSystemProperty.setSystemProperty(HjSystemProperty.numWorkers, numThreads);
 
         launchHabaneroApp(() -> {

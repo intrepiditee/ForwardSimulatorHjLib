@@ -10,8 +10,8 @@ import java.util.zip.GZIPOutputStream;
 
 class Utils {
 
-    // 100 MB
-    private static final int bufferSize = 100000000;
+    // 10 MB
+    private static final int bufferSize = 10000000;
 
     static Random singletonRand = new Random();
 
@@ -241,6 +241,7 @@ class Utils {
                 "4) Generate mapping files for RaPID: bash run.sh --map\n" +
                 "5) Compute pairwise pedigree: bash run.sh --pedigree " +
                    "from-to exclusiveUpperBound numberOfThreads\n\n" +
+                "6) Compute pairwise ibds: bash run.sh --ibd from-to numberOfThreads" +
 
                 "0) Do all of the above in order: bash run.sh --all " +
                    "numberOfGenerations from-to generationSize " +

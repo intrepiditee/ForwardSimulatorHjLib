@@ -6,21 +6,18 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.*;
 
+import static com.intrepiditee.Configs.generationSize;
 import static com.intrepiditee.Utils.getBufferedObjectOutputStream;
-import static com.intrepiditee.Utils.singletonRand;
 import static com.intrepiditee.Utils.toIntArray;
 import static edu.rice.hj.Module0.forallPhased;
 import static edu.rice.hj.Module0.launchHabaneroApp;
-import static edu.rice.hj.Module0.next;
 
 public class VCFParser {
 
     static final String pathPrefix = "ukb/";
 
-    private static final String vcfPrefix = "ukb_hap_GP_removed/ukb_hap_chr";
-    private static final String vcfPostfix = "_v2.vcf";
-
-    private static final int[][] idIndicesArray = new int[1][];
+    private static final String vcfPrefix = "subset/chr";
+    private static final String vcfPostfix = ".recode.vcf";
 
     private static final String[] useless = new String[]{
         "#CHROM", "POS", "ID", "REF", "ALT",
@@ -30,7 +27,7 @@ public class VCFParser {
     public static void main(String[] args) {
         System.out.println();
 
-        Configs.generationSize = Integer.parseInt(args[1]);
+        generationSize = Integer.parseInt(args[1]);
         Configs.numThreads = Integer.parseInt(args[2]);
 
         int numFilesPerThread = Configs.numChromosomes / Configs.numThreads;
@@ -43,19 +40,10 @@ public class VCFParser {
                 for (int i = start + 1; i < end + 1; i++) {
                     String filename = vcfPrefix + i + vcfPostfix;
                     Scanner sc = Utils.getScanner(filename);
-                    sc.nextLine();
-                    sc.nextLine();
-                    sc.nextLine();
-
-                    if (i == 1) {
-                        String[] fields = sc.nextLine().split("\t");
-                        int seed = 0;
-                        writeIDsAndIndices(fields, seed);
-                    } else {
-                        sc.nextLine();
+                    String line = sc.nextLine();
+                    while (line.startsWith("##")) {
+                        line = sc.nextLine();
                     }
-
-                    next();
 
                     int count = 0;
 
@@ -65,10 +53,9 @@ public class VCFParser {
                         String[] fields = sc.nextLine().split("\t");
                         sites.add(Integer.parseInt(fields[1]));
 
-                        byte[] basesArray = new byte[idIndicesArray[0].length];
-                        for (int j = 0; j < idIndicesArray[0].length; j++) {
-                            int index = idIndicesArray[0][j];
-                            String bases = fields[index];
+                        byte[] basesArray = new byte[generationSize];
+                        for (int j = useless.length; j < useless.length + generationSize; j++) {
+                            String bases = fields[j];
                             basesArray[j] = getEncodingFromBases(bases);
                         }
 
@@ -108,46 +95,6 @@ public class VCFParser {
                 } // End of all files
             });
         });
-
-    }
-
-
-    private static void writeIDsAndIndices(String[] fields, int seed) {
-        singletonRand.setSeed(seed);
-
-        // Get Configs.generationSize number of random indices of ids
-        Set<Integer> idIndices = new HashSet<>();
-        while (idIndices.size() != Configs.generationSize) {
-            int index = useless.length + singletonRand.nextInt(fields.length - useless.length);
-            idIndices.add(index);
-        }
-
-        idIndicesArray[0] = new int[idIndices.size()];
-        int j = 0;
-        for (int index : idIndices.toArray(new Integer[0])) {
-            idIndicesArray[0][j++] = index;
-        }
-        Arrays.sort(idIndicesArray[0]);
-
-        // Get the actual ids from the indices
-        int[] ids = new int[idIndices.size()];
-        int k = 0;
-        for (int index : idIndicesArray[0]) {
-            ids[k++] = Integer.parseInt(fields[index]);
-        }
-
-        try {
-            ObjectOutputStream o = getBufferedObjectOutputStream(pathPrefix + "idIndices");
-            o.writeUnshared(idIndicesArray[0]);
-            o.close();
-
-            o = getBufferedObjectOutputStream(pathPrefix + "ids");
-            o.writeUnshared(ids);
-            o.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-            System.exit(-1);
-        }
 
     }
 
