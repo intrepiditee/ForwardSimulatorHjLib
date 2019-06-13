@@ -34,6 +34,7 @@ public class PedigreeGraph {
         String[] fromTo = args[2].split("-");
         startGeneration = Integer.parseInt(fromTo[0]);
         endGeneration = Integer.parseInt(fromTo[1]);
+        numGenerations = endGeneration - startGeneration + 1;
 
         int upperBound = Integer.parseInt(args[3]);
         numThreads = Integer.parseInt(args[4]);
@@ -93,7 +94,7 @@ public class PedigreeGraph {
 
 
     private static void connectSiblingsFromGeneration(int generation) {
-        int generationStartID = minID + generationSize * generation;
+        int generationStartID = minID + generationSize * (generation - startGeneration);
         int generationEndID = generationStartID + generationSize;
 
         Map<Integer, Set<Integer>> update = new HashMap<>();
