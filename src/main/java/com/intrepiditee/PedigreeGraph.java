@@ -138,6 +138,9 @@ public class PedigreeGraph {
             int endID = i == numThreads - 1 ? maxID + 1 : (startID + numIndividualsPerThread);
 
             for (int id1 = startID; id1 < endID; id1++) {
+                if (id1 < 6000) {
+                    continue;
+                }
                 for (int id2 = id1 + 1; id2 < maxID + 1; id2++) {
                     int degree = BFSLessThan(id2, id1, upperBound);
                     if (degree != -1) {
