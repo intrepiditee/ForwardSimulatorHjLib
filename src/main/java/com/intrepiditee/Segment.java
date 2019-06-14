@@ -88,7 +88,7 @@ public class Segment implements Serializable, Comparable<Segment> {
         for (Segment ibd : ibds) {
             outs.add(
                 String.join(
-                    "\t", String.valueOf(id1),String.valueOf(id2),
+                    "\t", String.valueOf(id1), String.valueOf(id2),
                     sexToString(sex1), sexToString(sex2),
                     String.valueOf(ibd.start), String.valueOf(ibd.end)
                 ) + "\n"

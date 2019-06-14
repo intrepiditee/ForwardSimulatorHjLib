@@ -16,7 +16,7 @@ public class VCFParser {
 
     static final String pathPrefix = "ukb/";
 
-    private static final String vcfPrefix = "subset/chr";
+    private static final String vcfPrefix = "subsets/chr";
     private static final String vcfPostfix = ".recode.vcf";
 
     private static final String[] useless = new String[]{
