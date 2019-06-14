@@ -239,8 +239,8 @@ class Utils {
                 "3) Generate VCFs: bash run.sh --generate generationSize " +
                    "from-to numberOfThreads\n" +
                 "4) Generate mapping files for RaPID: bash run.sh --map\n" +
-                "5) Compute pairwise relationship: bash run.sh --pedigree " +
-                   "degree=3/meiosis=4 from-to exclusiveUpperBound numberOfThreads\n" +
+                "5) Compute pairwise relationship: bash run.sh --pedigree generationSize " +
+                   "from-toToRead from-toToCompute degree=3/meiosis=4 maxDegree numberOfThreads\n" +
                 "6) Compute pairwise ibds: bash run.sh --ibd from-to numberOfThreads\n\n" +
 
                 "0) Do all of the above in order: bash run.sh " +

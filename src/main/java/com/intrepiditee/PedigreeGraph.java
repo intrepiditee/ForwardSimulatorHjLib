@@ -14,42 +14,54 @@ import static edu.rice.hj.Module0.launchHabaneroApp;
 import static edu.rice.hj.Module1.forall;
 
 public class PedigreeGraph {
-    private static int minID = Integer.MAX_VALUE;
-    private static int maxID = Integer.MIN_VALUE;
+    private static int minID;
+    private static int maxID;
 
     private static final Map<Integer, Set<Integer>> adjacencyList = new HashMap<>();
 
     private static final Map<Integer, Integer> individualToGeneration = new HashMap<>();
 
+    static private byte[][] distances;
+
     public static void main(String[] args) {
-        if (args.length < 4 || !args[0].equals("--pedigree")) {
+        if (args.length < 7 || !args[0].equals("--pedigree")) {
             Utils.printUsage();
             System.exit(-1);
         }
 
         System.out.println();
 
-        byte degree_or_meiosis = Byte.parseByte(args[1]);
+        generationSize = Integer.parseInt(args[1]);
 
-        String[] fromTo = args[2].split("-");
-        startGeneration = Integer.parseInt(fromTo[0]);
-        endGeneration = Integer.parseInt(fromTo[1]);
+        String[] fromToFilesToRead = args[2].split("-");
+        int fromToRead = Integer.parseInt(fromToFilesToRead[0]);
+        int toToRead = Integer.parseInt(fromToFilesToRead[1]);
+
+        String[] fromToToCompute = args[3].split("-");
+        startGeneration = Integer.parseInt(fromToToCompute[0]);
+        endGeneration = Integer.parseInt(fromToToCompute[1]);
         numGenerations = endGeneration - startGeneration + 1;
+        minID = startGeneration * generationSize;
+        maxID = (endGeneration + 1) * generationSize - 1;
 
-        int upperBound = Integer.parseInt(args[3]);
-        numThreads = Integer.parseInt(args[4]);
+        byte degree_or_meiosis = Byte.parseByte(args[4]);
+
+        int maxDegree = Integer.parseInt(args[5]);
+        numThreads = Integer.parseInt(args[6]);
 
         HjSystemProperty.setSystemProperty(HjSystemProperty.numWorkers, numThreads);
 
-        for (int i = startGeneration; i <= endGeneration; i++) {
-            addGenerationToGraph(i, degree_or_meiosis);
+        distances = new byte[numGenerations * generationSize][numGenerations * generationSize];
+
+        for (int i = fromToRead; i <= toToRead; i++) {
+            addGenerationToGraph(i, i != fromToRead && degree_or_meiosis != MEIOSIS);
             System.out.println("Generation " + i + " added to graph");
         }
 
 //        System.out.println(adjacencyList);
 
         launchHabaneroApp(() -> {
-            computePairwiseLessThanAndWrite(upperBound, degree_or_meiosis);
+            computePairwiseLessThanOrEqualToAndWrite(maxDegree, degree_or_meiosis);
             System.out.println("Degrees written");
         });
 
@@ -58,14 +70,13 @@ public class PedigreeGraph {
 
     }
 
-    private static void addGenerationToGraph(int generation, byte degree_or_meiosis) {
+    private static void addGenerationToGraph(int generation, boolean connectSibilings) {
+
         String filename = "out/gen" + generation + "_pedigree.txt.gz";
         Scanner sc = Utils.getScannerFromGZip(filename);
 
         while (sc.hasNextInt()) {
             int id = sc.nextInt();
-            minID = Math.min(minID, id);
-            maxID = Math.max(maxID, id);
             individualToGeneration.put(id, generation);
 
             int fatherID = sc.nextInt();
@@ -83,18 +94,15 @@ public class PedigreeGraph {
             adjacencyList.put(id, nbrs);
         }
 
-        if (generation != startGeneration) {
-            if (degree_or_meiosis == DEGREE) {
-                connectSiblingsFromGeneration(generation);
-            }
-        } else {
-            generationSize = maxID - minID + 1;
+        if (connectSibilings) {
+            connectSiblingsFromGeneration(generation);
         }
+
     }
 
 
     private static void connectSiblingsFromGeneration(int generation) {
-        int generationStartID = minID + generationSize * (generation - startGeneration);
+        int generationStartID = generation * generationSize;
         int generationEndID = generationStartID + generationSize;
 
         Map<Integer, Set<Integer>> update = new HashMap<>();
@@ -121,31 +129,28 @@ public class PedigreeGraph {
     }
 
 
-    private static void computePairwiseLessThanAndWrite(int upperBound, byte degree_or_meiosis) throws SuspendableException {
-        BufferedWriter[] writers = new BufferedWriter[upperBound - 1];
+    private static void computePairwiseLessThanOrEqualToAndWrite(int maxDegree, byte degree_or_meiosis) throws SuspendableException {
+        BufferedWriter[] writers = new BufferedWriter[maxDegree];
         String pathPrefix = degree_or_meiosis == DEGREE ? "degree/" : "meiosis/";
         String filenamePrefix = degree_or_meiosis == DEGREE ? "degree_" : "meiosis_";
-        for (int i = 1; i <= upperBound - 1; i++) {
+        for (int i = 1; i <= maxDegree; i++) {
             writers[i - 1] = getBufferedGZipWriter(pathPrefix + filenamePrefix + i + ".txt.gz");
         }
 
         AtomicInteger pairCount = new AtomicInteger(0);
 
-        int numIndividuals = generationSize * (endGeneration - startGeneration + 1);
+        int numIndividuals = generationSize * numGenerations;
         int numIndividualsPerThread = numIndividuals / numThreads;
         forall(0, numThreads - 1, (i) -> {
-            int startID = minID + i * numIndividualsPerThread;
-            int endID = i == numThreads - 1 ? maxID + 1 : (startID + numIndividualsPerThread);
+            int startID = startGeneration * generationSize + i * numIndividualsPerThread;
+            int endID = i == numThreads - 1 ? (endGeneration + 1) * generationSize : (startID + numIndividualsPerThread);
 
-            for (int id1 = startID; id1 < endID; id1++) {
-                if (id1 < 6000) {
-                    continue;
-                }
-                for (int id2 = id1 + 1; id2 < maxID + 1; id2++) {
-                    int degree = BFSLessThan(id2, id1, upperBound);
+            for (int end = startID; end < endID; end++) {
+                for (int start = maxID; start > end; start--) {
+                    int degree = BFSLessThanOrEqualTo(start, end, maxDegree);
                     if (degree != -1) {
                         try {
-                            writers[degree - 1].write(id1 + "\t" + id2 + "\t" + degree + "\n");
+                            writers[degree - 1].write(end + "\t" + start + "\t" + degree + "\n");
                         } catch (IOException e) {
                             e.printStackTrace();
                             System.exit(-1);
@@ -175,17 +180,20 @@ public class PedigreeGraph {
 
     }
 
-    private static int BFSLessThan(Integer start, Integer end, int upperBound) {
+    private static int BFSLessThanOrEqualTo(Integer start, Integer end, int maxDegree) {
+        if (distances[start][end] != 0) {
+            return distances[start][end];
+        }
 
         // If can go up, can go down as well. If cannot go up, can go down.
         Map<Integer, Boolean> individualToCanGoUp = new HashMap<>();
         individualToCanGoUp.put(start, true);
 
         Deque<Integer> q = new ArrayDeque<>();
-        Map<Integer, Integer> distances = new HashMap<>();
+        Map<Integer, Integer> localDistances = new HashMap<>();
 
         q.addLast(start);
-        distances.put(start, 0);
+        localDistances.put(start, 0);
 
         while (!q.isEmpty()) {
             Integer current = q.removeFirst();
@@ -194,7 +202,7 @@ public class PedigreeGraph {
 
             if (nbrs != null) {
                 for (Integer nbr : nbrs) {
-                    if (!distances.containsKey(nbr)) {
+                    if (!localDistances.containsKey(nbr)) {
 
                         boolean canGoUp = individualToCanGoUp.get(current);
                         int nbrGeneration = individualToGeneration.get(nbr);
@@ -215,9 +223,12 @@ public class PedigreeGraph {
                             individualToCanGoUp.put(nbr, false);
                         }
 
-                        int distance = distances.get(current) + 1;
-                        distances.put(nbr, distance);
-                        if (distance < upperBound) {
+                        int distance = localDistances.get(current) + 1;
+                        localDistances.put(nbr, distance);
+                        if (distance <= maxDegree) {
+                            if (distances[start][nbr] == 0) {
+                                distances[start][nbr] = (byte) distance;
+                            }
                             if (nbr.equals(end)) {
                                 return distance;
                             }
