@@ -22,7 +22,7 @@ public class PedigreeGraph {
 
     private static final Map<Integer, Integer> individualToGeneration = new HashMap<>();
 
-    static private byte[][] distances;
+    static private int[][] distances;
 
     public static void main(String[] args) {
         if (args.length < 7 || !args[0].equals("--pedigree")) {
@@ -52,7 +52,7 @@ public class PedigreeGraph {
 
         HjSystemProperty.setSystemProperty(HjSystemProperty.numWorkers, numThreads);
 
-        distances = new byte[numGenerations * generationSize][numGenerations * generationSize];
+        distances = new int[numGenerations * generationSize][numGenerations * generationSize];
 
         for (int i = fromToRead; i <= toToRead; i++) {
             addGenerationToGraph(i, i != fromToRead && degree_or_meiosis != MEIOSIS);
@@ -235,8 +235,8 @@ public class PedigreeGraph {
                         int distance = localDistances.get(current) + 1;
                         localDistances.put(nbr, distance);
                         if (distance <= maxDegree) {
-                            if (distances[start - minID][nbr - minID] == 0) {
-                                distances[start - minID][nbr - minID] = (byte) distance;
+                            if (nbr >= minID && distances[start - minID][nbr - minID] == 0) {
+                                distances[start - minID][nbr - minID] = distance;
                             }
                             if (nbr.equals(end)) {
                                 return distance;
