@@ -56,7 +56,7 @@ public class VCFParser {
                         byte[] basesArray = new byte[generationSize];
                         for (int j = useless.length; j < useless.length + generationSize; j++) {
                             String bases = fields[j];
-                            basesArray[j] = getEncodingFromBases(bases);
+                            basesArray[j - useless.length] = getEncodingFromBases(bases);
                         }
 
                         try {
