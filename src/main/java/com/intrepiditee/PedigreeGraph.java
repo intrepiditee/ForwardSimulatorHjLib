@@ -10,8 +10,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.intrepiditee.Configs.*;
 import static com.intrepiditee.Utils.getBufferedGZipWriter;
+import static edu.rice.hj.Module0.forallPhased;
 import static edu.rice.hj.Module0.launchHabaneroApp;
-import static edu.rice.hj.Module1.forall;
+import static edu.rice.hj.Module0.next;
 
 public class PedigreeGraph {
     private static int minID;
@@ -140,33 +141,41 @@ public class PedigreeGraph {
         AtomicInteger pairCount = new AtomicInteger(0);
 
         int numIndividuals = generationSize * numGenerations;
-        int numIndividualsPerThread = numIndividuals / numThreads;
-        forall(0, numThreads - 1, (i) -> {
-            int startID = startGeneration * generationSize + i * numIndividualsPerThread;
-            int endID = i == numThreads - 1 ? (endGeneration + 1) * generationSize : (startID + numIndividualsPerThread);
+        int numIndividualsPerThreadPerGeneration = generationSize / numThreads;
 
-            for (int end = startID; end < endID; end++) {
-                for (int start = maxID; start > end; start--) {
-                    int degree = BFSLessThanOrEqualTo(start, end, maxDegree);
-                    if (degree != -1) {
-                        try {
-                            writers[degree - 1].write(end + "\t" + start + "\t" + degree + "\n");
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                            System.exit(-1);
+        forallPhased(0, numThreads - 1, (i) -> {
+            for (int g = startGeneration; g <= endGeneration; g++) {
+                int startID = g * generationSize + numIndividualsPerThreadPerGeneration * i;
+                int endID = i == numThreads - 1 ?
+                    (g + 1) * generationSize :
+                    (startID + numIndividualsPerThreadPerGeneration);
+
+                for (int end = startID; end < endID; end++) {
+                    for (int start = maxID; start > end; start--) {
+                        int degree = BFSLessThanOrEqualTo(start, end, maxDegree);
+                        if (degree != -1) {
+                            try {
+                                writers[degree - 1].write(end + "\t" + start + "\t" + degree + "\n");
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                                System.exit(-1);
+                            }
+                        }
+
+                        int c = pairCount.incrementAndGet();
+                        if (c % 1000000 == 0) {
+                            String s = String.valueOf(c / 1000000) +
+                                "M out of " +
+                                numIndividuals * (numIndividuals - 1) / 2 / 1000000 +
+                                "M pairs finished";
+                            System.out.println(s);
                         }
                     }
-
-                    int c = pairCount.incrementAndGet();
-                    if (c % 1000000 == 0) {
-                        String s = String.valueOf(c / 1000000) +
-                            "M out of " +
-                            numIndividuals * (numIndividuals - 1) / 2 / 1000000 +
-                            "M pairs finished";
-                        System.out.println(s);
-                    }
                 }
+
+                next();
             }
+
         });
 
         try {
