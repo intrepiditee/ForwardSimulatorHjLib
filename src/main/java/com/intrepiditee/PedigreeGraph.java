@@ -181,8 +181,8 @@ public class PedigreeGraph {
     }
 
     private static int BFSLessThanOrEqualTo(Integer start, Integer end, int maxDegree) {
-        if (distances[start][end] != 0) {
-            return distances[start][end];
+        if (distances[start - minID][end - minID] != 0) {
+            return distances[start - minID][end - minID];
         }
 
         // If can go up, can go down as well. If cannot go up, can go down.
@@ -226,8 +226,8 @@ public class PedigreeGraph {
                         int distance = localDistances.get(current) + 1;
                         localDistances.put(nbr, distance);
                         if (distance <= maxDegree) {
-                            if (distances[start][nbr] == 0) {
-                                distances[start][nbr] = (byte) distance;
+                            if (distances[start - minID][nbr - minID] == 0) {
+                                distances[start - minID][nbr - minID] = (byte) distance;
                             }
                             if (nbr.equals(end)) {
                                 return distance;
