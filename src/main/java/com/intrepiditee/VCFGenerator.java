@@ -239,6 +239,10 @@ public class VCFGenerator {
 
         for (int site : sites) {
             if (site == sites[0]) {
+                // Write meta information
+                w.write("##fileformat=VCFv4.0");
+                w.write("\n");
+
                 // Write header line before writing the first site
                 w.write("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT");
                 for (int id = minID; id <= maxID; id++) {
