@@ -45,7 +45,7 @@ public class Simulator {
 
                 GeneticMap.parseLengths();
                 GeneticMap.makeFromChromosomeNumbers(getChromosomeNumbers());
-                GeneticMap.parseAllMaps(GENETIC_TO_PHYSICAL);
+                GeneticMap.parseAllMaps(BOTH);
 
                 Generation next = null;
 
@@ -149,11 +149,11 @@ public class Simulator {
                     mutationOut.close();
 //                            mutationWriter.close();
 
-                    System.out.println("Generation " + generationIndex + " written");
-
                 } // end of all chromosomes
 
                 pedigreeWriter.close();
+
+                System.out.println("Generation " + generationIndex + " written");
 
             } catch (IOException e) {
                 e.printStackTrace();

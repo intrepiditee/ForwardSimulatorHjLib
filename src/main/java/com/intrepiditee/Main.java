@@ -44,6 +44,10 @@ public class Main {
                 break;
             case "--ibd":
                 Segment.main(args);
+                break;
+            default:
+                Utils.printUsage();
+                return;
         }
     }
 
