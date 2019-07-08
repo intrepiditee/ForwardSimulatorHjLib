@@ -124,6 +124,8 @@ public class Segment implements Serializable, Comparable<Segment> {
                 e.printStackTrace();
                 System.exit(-1);
             }
+
+            System.out.println("Chromosome  " + c + " IBDs written");
         });
     }
 

@@ -23,7 +23,7 @@ public class SegmentTest {
 
         oneSegmentList = Arrays.asList(
             make(0, 5, 1, (byte) -1),
-            make(5, 10, 2, (byte) - 1),
+            make(5, 10, 2, (byte) -1),
             make(10, 11, 3, (byte) -1),
             make(11, 19, 4, (byte) -1),
             make(19, 21, 5, (byte) -1),
