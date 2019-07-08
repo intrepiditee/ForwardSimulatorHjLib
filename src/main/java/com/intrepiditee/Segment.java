@@ -106,7 +106,7 @@ public class Segment implements Serializable, Comparable<Segment> {
             "starting_site", "ending_site",
             "genetic_length",
             "physical_length",
-            "founder_id"
+            "founder_id\n"
             )
         );
     }
