@@ -103,7 +103,6 @@ public class Segment implements Serializable, Comparable<Segment> {
             "individual1", "individual2",
             "haplotype1", "haplotype2",
             "starting_position", "ending_position",
-            "starting_site", "ending_site",
             "genetic_length",
             "physical_length",
             "founder_id\n"
@@ -165,8 +164,6 @@ public class Segment implements Serializable, Comparable<Segment> {
                     String.valueOf(chromosomeNumber),
                     String.valueOf(id1), String.valueOf(id2),
                     sexToString(sex1), sexToString(sex2),
-                    String.format("%.7s", startGenetic),
-                    String.format("%.7s", endGenetic),
                     String.valueOf(ibd.start + 1), String.valueOf(ibd.end),
 
                     // Genetic Length

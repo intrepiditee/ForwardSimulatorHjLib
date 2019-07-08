@@ -34,6 +34,11 @@
 
 ## 2. Subsetting UK Biobank VCF Files
 
+  ___This must be done before generating VCF files from the simulation.___
+  
+  Alternatively, you can use VCFtools to do this.
+  Just make sure input files are in the correct positions.
+  
   #### 1.Usage
     
   __Example:__
