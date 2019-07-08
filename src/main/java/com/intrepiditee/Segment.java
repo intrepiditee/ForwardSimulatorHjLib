@@ -125,7 +125,7 @@ public class Segment implements Serializable, Comparable<Segment> {
                 System.exit(-1);
             }
 
-            System.out.println("Chromosome  " + c + " IBDs written");
+            System.out.println("Chromosome " + c + " IBDs written");
         });
     }
 
@@ -165,14 +165,14 @@ public class Segment implements Serializable, Comparable<Segment> {
                     String.valueOf(chromosomeNumber),
                     String.valueOf(id1), String.valueOf(id2),
                     sexToString(sex1), sexToString(sex2),
-                    String.format("%7f", startGenetic),
-                    String.format("%7f", endGenetic),
+                    String.valueOf(startGenetic).substring(0, 7),
+                    String.valueOf(endGenetic).substring(0, 7),
                     String.valueOf(ibd.start + 1), String.valueOf(ibd.end),
 
                     // Genetic Length
-                    String.format("%7f", endGenetic - startGenetic),
+                    String.valueOf(endGenetic - startGenetic).substring(0, 7),
                     // Physical Length in Mbp
-                    String.format("%7f", (ibd.end - ibd.start) / 1000000.0),
+                    String.valueOf((ibd.end - ibd.start) / 1000000.0).substring(0, 7),
 
                     String.valueOf(ibd.founderID)
                 ) + "\n"
