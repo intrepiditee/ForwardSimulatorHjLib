@@ -38,7 +38,7 @@ class GeneticMap {
 
 
     // Generate genetic mapping files for rapid from sites covered by ukb
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException, ClassNotFoundException {
         System.out.println();
 
         makeFromChromosomeNumbers(getChromosomeNumbers());
@@ -48,67 +48,53 @@ class GeneticMap {
             ObjectInputStream in = Utils.getBufferedObjectInputStream(sitesFilename);
 
             int[] sites = null;
-            try {
-                sites = (int[]) in.readUnshared();
-            } catch (IOException | ClassNotFoundException e) {
-                e.printStackTrace();
-                System.exit(-1);
-            }
+            sites = (int[]) in.readUnshared();
 
-            try {
-                GeneticMap map = chromosomeNumberToGeneticMap.get(c);
-                map.parseDirection(PHYSICAL_TO_GENETIC);
+            GeneticMap map = chromosomeNumberToGeneticMap.get(c);
+            map.parseDirection(PHYSICAL_TO_GENETIC);
 
-                String outFilename = "map/" + "chr" + c + ".txt";
-                BufferedWriter w = Utils.getBufferedWriter(outFilename);
+            String outFilename = "map/" + "chr" + c + ".txt";
+            BufferedWriter w = Utils.getBufferedWriter(outFilename);
 
-                for (int i = 0; i < sites.length; i++) {
-                    StringBuilder s = new StringBuilder();
-                    s.append(i);
-                    s.append("\t");
+            for (int i = 0; i < sites.length; i++) {
+                StringBuilder s = new StringBuilder();
+                s.append(i);
+                s.append("\t");
 
-                    int siteIndex = sites[i] - 1;
-                    if (siteIndex < map.minPhysicalDistance) {
-                        s.append(map.minGeneticDistance);
-                    } else if (siteIndex > map.maxPhysicalDistance) {
-                        s.append(map.maxGeneticDistance);
+                int siteIndex = sites[i] - 1;
+                if (siteIndex < map.minPhysicalDistance) {
+                    s.append(map.minGeneticDistance);
+                } else if (siteIndex > map.maxPhysicalDistance) {
+                    s.append(map.maxGeneticDistance);
+                } else {
+                    // Both floorEntry and ceilEntry will not be null because siteIndex is larger than
+                    // minPhysicalDistance and smaller than maxGeneticDistance.
+                    Map.Entry<Integer, Double> floorEntry = map.physicalToGeneticDistance.floorEntry(siteIndex);
+                    Map.Entry<Integer, Double> ceilEntry = map.physicalToGeneticDistance.ceilingEntry(siteIndex);
+
+                    if (ceilEntry.equals(floorEntry)) {
+                        s.append(floorEntry.getValue());
                     } else {
-                        // Both floorEntry and ceilEntry will not be null because siteIndex is larger than
-                        // minPhysicalDistance and smaller than maxGeneticDistance.
-                        Map.Entry<Integer, Double> floorEntry = map.physicalToGeneticDistance.floorEntry(siteIndex);
-                        Map.Entry<Integer, Double> ceilEntry = map.physicalToGeneticDistance.ceilingEntry(siteIndex);
-
-                        if (ceilEntry.equals(floorEntry)) {
-                            s.append(floorEntry.getValue());
-                        } else {
-                            s.append(
-                                interpolate(
-                                    floorEntry.getKey(), floorEntry.getValue(),
-                                    ceilEntry.getKey(), ceilEntry.getValue(),
-                                    siteIndex
-                                )
-                            );
-                        }
+                        s.append(
+                            interpolate(
+                                floorEntry.getKey(), floorEntry.getValue(),
+                                ceilEntry.getKey(), ceilEntry.getValue(),
+                                siteIndex
+                            )
+                        );
                     }
-
-                    s.append("\n");
-                    w.write(s.toString());
                 }
 
-                w.close();
-                System.out.println(outFilename + " written");
-
-            } catch (IOException e) {
-                e.printStackTrace();
-                System.exit(-1);
+                s.append("\n");
+                w.write(s.toString());
             }
 
-            try {
-                in.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-                System.exit(-1);
-            }
+            w.close();
+            System.out.println(outFilename + " written");
+
+
+            in.close();
+
         } // end of all chromosomes
 
     }
@@ -280,6 +266,38 @@ class GeneticMap {
         double intercept = (y1 * x2 - x1 * y2) / (x2 - x1);
         double slope = (y1 - intercept) / x1;
         return slope * x + intercept;
+    }
+
+
+    double getGeneticLengthBetween(int start, int end) {
+        double startGenetic = physicalToGeneticPosition(start);
+        double endGenetic = physicalToGeneticPosition(end - 1);
+
+        return endGenetic - startGenetic;
+    }
+
+
+    double physicalToGeneticPosition(int physicalPosition) {
+        double geneticPosition;
+        if (physicalPosition < minPhysicalDistance) {
+            geneticPosition = minGeneticDistance;
+        } else if (physicalPosition > maxPhysicalDistance) {
+            geneticPosition = maxGeneticDistance;
+        } else {
+            Map.Entry<Integer, Double> floorEntry = physicalToGeneticDistance.floorEntry(physicalPosition);
+            Map.Entry<Integer, Double> ceilEntry = physicalToGeneticDistance.ceilingEntry(physicalPosition);
+
+            if (ceilEntry.equals(floorEntry)) {
+                geneticPosition = floorEntry.getValue();
+            } else {
+                geneticPosition = interpolate(
+                    floorEntry.getKey(), floorEntry.getValue(),
+                    ceilEntry.getKey(), ceilEntry.getValue(),
+                    physicalPosition
+                );
+            }
+        }
+        return geneticPosition;
     }
 
 }

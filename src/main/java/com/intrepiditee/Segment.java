@@ -1,10 +1,12 @@
 package com.intrepiditee;
 
+import edu.rice.hj.api.SuspendableException;
 import edu.rice.hj.runtime.config.HjSystemProperty;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.Serializable;
+import java.io.Writer;
 import java.util.*;
 
 import static com.intrepiditee.Configs.*;
@@ -23,12 +25,16 @@ public class Segment implements Serializable, Comparable<Segment> {
     private static String pathPrefx = "ibd/";
 
     public static void main(String[] args){
+        if (args.length != 4) {
+            Utils.printUsage();
+            return;
+        }
+
         System.out.println();
 
-        String[] fromTo = args[1].split("-");
-        startGeneration = Integer.parseInt(fromTo[0]);
-        endGeneration = Integer.parseInt(fromTo[1]);
-        numThreads = Integer.parseInt(args[2]);
+        startGeneration = Integer.parseInt(args[1]);
+        endGeneration = Integer.parseInt(args[2]);
+        numThreads = Integer.parseInt(args[3]);
 
         HjSystemProperty.setSystemProperty(HjSystemProperty.numWorkers, numThreads);
 
@@ -47,8 +53,13 @@ public class Segment implements Serializable, Comparable<Segment> {
     }
 
     private static void writeIBDForChromosome(int chromosomeNumber) throws IOException {
-        BufferedWriter w = Utils.getBufferedGZipWriter(pathPrefx + "ibd_chr" + chromosomeNumber + ".txt.gz");
         Map<Integer, Map<Byte, List<Segment>>> idToChromosomesPair = VCFGenerator.readChromosomesFromChromosome(chromosomeNumber);
+        writeIBDForChromosome(idToChromosomesPair, chromosomeNumber);
+    }
+
+    private static void writeIBDForChromosome(
+        Map<Integer, Map<Byte, List<Segment>>> idToChromosomesPair, int chromosomeNumber) throws IOException {
+
         Set<Integer> ids = idToChromosomesPair.keySet();
         int minID = Integer.MAX_VALUE;
         int maxID = Integer.MIN_VALUE;
@@ -59,6 +70,9 @@ public class Segment implements Serializable, Comparable<Segment> {
 
         byte[] sexes = new byte[]{FEMALE, MALE};
 
+        BufferedWriter w = Utils.getBufferedGZipWriter(pathPrefx + "ibd_chr" + chromosomeNumber + ".txt.gz");
+        writeHeader(w);
+
         for (int id1 = minID; id1 <= maxID; id1++) {
             for (int id2 = id1 + 1; id2 <= maxID; id2++) {
                 Map<Byte, List<Segment>> chromosomesPair1 = idToChromosomesPair.get(id1);
@@ -68,7 +82,7 @@ public class Segment implements Serializable, Comparable<Segment> {
                 for (byte sex1 : sexes) {
                     for (byte sex2 : sexes) {
                         List<Segment> ibds = computeIBDsFromTwoChromosomes(chromosomesPair1.get(sex1), chromosomesPair2.get(sex2));
-                        outs.addAll(getIBDOutputStrings(id1, id2, sex1, sex2, ibds));
+                        outs.addAll(getIBDOutputStrings(chromosomeNumber, id1, id2, sex1, sex2, ibds));
                     }
                 }
 
@@ -81,16 +95,84 @@ public class Segment implements Serializable, Comparable<Segment> {
         w.close();
     }
 
+
+    private static void writeHeader(Writer w) throws IOException {
+        w.write(String.join(
+            "\t",
+            "Chromosome",
+            "individual1", "individual2",
+            "haplotype1", "haplotype2",
+            "starting_position", "ending_position",
+            "starting_site", "ending_site",
+            "genetic_length",
+            "physical_length",
+            "founder_id"
+            )
+        );
+    }
+
+    static void writeIBDForGenerations(
+        List<Generation> generations) throws SuspendableException {
+
+        forallChunked(1, numChromosomes, c -> {
+            Map<Integer, Map<Byte, List<Segment>>> idToChromosomePairs =
+                getIdToChromosomePairsFromGenerations(generations, c);
+
+            try {
+                writeIBDForChromosome(idToChromosomePairs, c);
+            } catch (IOException e) {
+                e.printStackTrace();
+                System.exit(-1);
+            }
+        });
+    }
+
+    private static Map<Integer, Map<Byte, List<Segment>>>
+    getIdToChromosomePairsFromGenerations(List<Generation> generations, int chromosomeNumber) {
+
+        Map<Integer, Map<Byte, List<Segment>>> idToChromosomePairs = new HashMap<>(
+            generations.size() * generations.get(0).males.size() * 2
+        );
+        for (Generation generation : generations) {
+            for (Individual male : generation.males) {
+                idToChromosomePairs.put(male.id, male.genome.get(chromosomeNumber));
+            }
+
+            for (Individual female : generation.females) {
+                idToChromosomePairs.put(female.id, female.genome.get(chromosomeNumber));
+            }
+        }
+        return idToChromosomePairs;
+    }
+
     private static List<String> getIBDOutputStrings(
-        int id1, int id2, byte sex1, byte sex2, List<Segment> ibds) {
+        int chromosomeNumber, int id1, int id2, byte sex1, byte sex2, List<Segment> ibds) {
 
         List<String> outs = new ArrayList<>();
         for (Segment ibd : ibds) {
+            double startGenetic = GeneticMap.chromosomeNumberToGeneticMap
+                .get(chromosomeNumber)
+                .physicalToGeneticPosition(ibd.start);
+            double endGenetic = GeneticMap.chromosomeNumberToGeneticMap
+                .get(chromosomeNumber)
+                .physicalToGeneticPosition(ibd.end - 1);
+
             outs.add(
                 String.join(
-                    "\t", String.valueOf(id1), String.valueOf(id2),
+                    "\t",
+                    String.valueOf(chromosomeNumber),
+                    String.valueOf(id1), String.valueOf(id2),
                     sexToString(sex1), sexToString(sex2),
-                    String.valueOf(ibd.start), String.valueOf(ibd.end)
+                    String.valueOf(startGenetic),
+                    String.valueOf(endGenetic),
+                    String.valueOf(ibd.start + 1), String.valueOf(ibd.end),
+
+                    // Genetic Length
+                    String.valueOf(endGenetic - startGenetic),
+                    // Physical Length in Mbp
+                    String.valueOf((ibd.end - ibd.start) / 1000000.0),
+
+                    String.valueOf(ibd.founderID)
                 ) + "\n"
             );
         }

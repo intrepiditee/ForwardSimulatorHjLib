@@ -19,16 +19,15 @@ public class VCFGenerator {
     public static void main(String[] args) {
         System.out.println();
 
-        if (args.length < 4 || (!args[0].equals("--generate"))) {
+        if (args.length != 5 || (!args[0].equals("--generate"))) {
             Utils.printUsage();
             System.exit(-1);
         }
 
         generationSize = Integer.parseInt(args[1]);
-        String[] fromTo = args[2].split("-");
-        startGeneration = Integer.parseInt(fromTo[0]);
-        endGeneration = Integer.parseInt(fromTo[1]);
-        numThreads = Integer.parseInt(args[3]);
+        startGeneration = Integer.parseInt(args[2]);
+        endGeneration = Integer.parseInt(args[3]);
+        numThreads = Integer.parseInt(args[4]);
 
         HjSystemProperty.setSystemProperty(HjSystemProperty.numWorkers, numThreads);
 

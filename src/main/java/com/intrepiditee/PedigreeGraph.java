@@ -25,7 +25,7 @@ public class PedigreeGraph {
     static private int[][] distances;
 
     public static void main(String[] args) {
-        if (args.length < 7 || !args[0].equals("--pedigree")) {
+        if (args.length != 9 || !args[0].equals("--distance")) {
             Utils.printUsage();
             System.exit(-1);
         }
@@ -34,21 +34,24 @@ public class PedigreeGraph {
 
         generationSize = Integer.parseInt(args[1]);
 
-        String[] fromToFilesToRead = args[2].split("-");
-        int fromToRead = Integer.parseInt(fromToFilesToRead[0]);
-        int toToRead = Integer.parseInt(fromToFilesToRead[1]);
+        int fromToRead = Integer.parseInt(args[2]);
+        int toToRead = Integer.parseInt(args[3]);
 
-        String[] fromToToCompute = args[3].split("-");
-        startGeneration = Integer.parseInt(fromToToCompute[0]);
-        endGeneration = Integer.parseInt(fromToToCompute[1]);
+        startGeneration = Integer.parseInt(args[4]);
+        endGeneration = Integer.parseInt(args[5]);
         numGenerations = endGeneration - startGeneration + 1;
         minID = startGeneration * generationSize;
         maxID = (endGeneration + 1) * generationSize - 1;
 
-        byte degree_or_meiosis = Byte.parseByte(args[4]);
+        byte degree_or_meiosis;
+        if (args[6].equals("meiosis")) {
+            degree_or_meiosis = MEIOSIS;
+        } else {
+            degree_or_meiosis = DEGREE;
+        }
 
-        int maxDegree = Integer.parseInt(args[5]);
-        numThreads = Integer.parseInt(args[6]);
+        int maxDegree = Integer.parseInt(args[7]);
+        numThreads = Integer.parseInt(args[8]);
 
         HjSystemProperty.setSystemProperty(HjSystemProperty.numWorkers, numThreads);
 
@@ -63,7 +66,7 @@ public class PedigreeGraph {
 
         launchHabaneroApp(() -> {
             computePairwiseLessThanOrEqualToAndWrite(maxDegree, degree_or_meiosis);
-            System.out.println("Degrees written");
+            System.out.println((degree_or_meiosis == DEGREE ? "Degrees" : "Meiosis") + " written");
         });
 
 //        System.out.println(adjacencyList);

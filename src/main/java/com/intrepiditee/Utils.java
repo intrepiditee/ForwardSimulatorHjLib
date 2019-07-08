@@ -234,22 +234,20 @@ class Utils {
             "Usage:\n" +
                 "1) Parse UK Biobank VCFs: bash run.sh --parse generationSize " +
                    "numberOfThreads\n" +
-                "2) Simulate: bash run.sh --simulate numberOfGenerations " +
-                   "from-to generationSize numberOfThreads\n" +
-                "3) Generate VCFs: bash run.sh --generate generationSize " +
-                   "from-to numberOfThreads\n" +
-                "4) Generate mapping files for RaPID: bash run.sh --map\n" +
-                "5) Compute pairwise relationship: bash run.sh --pedigree generationSize " +
-                   "from-toToRead from-toToCompute degree=3/meiosis=4 maxDegree numberOfThreads\n" +
-                "6) Compute pairwise ibds: bash run.sh --ibd from-to numberOfThreads\n\n" +
 
-                "0) Do all of the above in order: bash run.sh " +
-                   "--parse generationSize numberOfThreads " +
-                   "--simulate numberOfGenerations from-to generationSize numberOfThreads " +
-                   "--generate generationSize from-to numberOfThreads" +
-                   "--map " +
-                   "--pedigree degree=3/meiosis=5 from-to exclusiveUpperBound numberOfThreads " +
-                   "--ibd from-to numberOfThreads\n"
+                "2) Simulate: bash run.sh --simulate numberOfGenerations " +
+                   "firstGenerationToStore lastGenerationToStore generationSize numberOfThreads\n" +
+
+                "3) Generate VCFs: bash run.sh --generate generationSize " +
+                   "firstGenerationToStore lastGenerationToStore numberOfThreads\n" +
+
+                "4) Generate mapping files for RaPID: bash run.sh --map\n" +
+
+                "5) Compute pairwise distance: bash run.sh --distance generationSize " +
+                   "firstGenerationToRead lastGenerationToRead firstGenerationToCompute lastGenerationToCompute " +
+                   "degree/meiosis maxDegree numberOfThreads\n" +
+
+                "6) Compute pairwise ibds: bash run.sh --ibd firstGenerationToStore lastGenerationToStore numberOfThreads\n\n"
         );
     }
 

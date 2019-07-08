@@ -1,5 +1,7 @@
 package com.intrepiditee;
 
+import edu.rice.hj.runtime.config.HjSystemProperty;
+
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -7,6 +9,7 @@ import java.io.ObjectOutputStream;
 import java.util.*;
 
 import static com.intrepiditee.Configs.generationSize;
+import static com.intrepiditee.Configs.numThreads;
 import static com.intrepiditee.Utils.getBufferedObjectOutputStream;
 import static com.intrepiditee.Utils.toIntArray;
 import static edu.rice.hj.Module0.forallPhased;
@@ -28,14 +31,15 @@ public class VCFParser {
         System.out.println();
 
         generationSize = Integer.parseInt(args[1]);
-        Configs.numThreads = Integer.parseInt(args[2]);
+        numThreads = Integer.parseInt(args[2]);
+        HjSystemProperty.setSystemProperty(HjSystemProperty.numWorkers, numThreads);
 
-        int numFilesPerThread = Configs.numChromosomes / Configs.numThreads;
+        int numFilesPerThread = Configs.numChromosomes / numThreads;
 
         launchHabaneroApp(() -> {
-            forallPhased(0, Configs.numThreads - 1, (n) -> {
+            forallPhased(0, numThreads - 1, (n) -> {
                 int start = n * numFilesPerThread;
-                int end = n == Configs.numThreads - 1 ? Configs.numChromosomes : start + numFilesPerThread;
+                int end = n == numThreads - 1 ? Configs.numChromosomes : start + numFilesPerThread;
 
                 for (int i = start + 1; i < end + 1; i++) {
                     String filename = vcfPrefix + i + vcfPostfix;

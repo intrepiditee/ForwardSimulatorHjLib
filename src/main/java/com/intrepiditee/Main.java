@@ -12,10 +12,8 @@ public class Main {
        and their mother's id, separated by space.
     where _ is the index of the generation.
     */
-    public static void main(String[] args) throws IOException {
-        if (args.length == 0 || args.length > 7 ||
-            (args[0].equals("--all") && args.length != 6) ||
-            args[0].equals("-h") || args[0].equals("--help")) {
+    public static void main(String[] args) throws IOException, ClassNotFoundException {
+        if (args.length == 0 || args[0].equals("-h") || args[0].equals("--help")) {
 
            Utils.printUsage();
            return;
@@ -41,7 +39,7 @@ public class Main {
             case "--map":
                 GeneticMap.main(args);
                 break;
-            case "--pedigree":
+            case "--distance":
                 PedigreeGraph.main(args);
                 break;
             case "--ibd":
