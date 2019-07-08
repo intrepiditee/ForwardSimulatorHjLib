@@ -37,6 +37,8 @@ public class Simulator {
 
         HjSystemProperty.setSystemProperty(HjSystemProperty.numWorkers, numThreads);
 
+        System.out.println();
+
         launchHabaneroApp(() -> {
             List<Generation> toWrite = new ArrayList<>(endGeneration - startGeneration + 1);
             List<Integer> indices = new ArrayList<>(endGeneration - startGeneration + 1);
@@ -60,16 +62,17 @@ public class Simulator {
                         indices.add(i);
                     }
 
-                    System.out.print("\nGeneration " + i + " finished");
+                    System.out.println("Generation " + i + " finished");
                 } // end of all generations
-        });
 
+            writeGenerations(toWrite, indices);
+        });
     }
 
 
     private static void writeGenerations(
         List<Generation> generations, List<Integer> indices)
-        throws SuspendableException, IOException {
+        throws SuspendableException {
 
         forallChunked(0, generations.size() - 1, i -> {
             try {

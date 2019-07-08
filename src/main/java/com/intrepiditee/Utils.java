@@ -233,21 +233,21 @@ class Utils {
         System.err.println(
             "Usage:\n" +
                 "1) Parse UK Biobank VCFs: bash run.sh --parse generationSize " +
-                   "numberOfThreads\n" +
+                   "numberOfThreads\n\n" +
 
                 "2) Simulate: bash run.sh --simulate numberOfGenerations " +
-                   "firstGenerationToStore lastGenerationToStore generationSize numberOfThreads\n" +
+                   "firstGenerationToStore lastGenerationToStore generationSize numberOfThreads\n\n" +
 
                 "3) Generate VCFs: bash run.sh --generate generationSize " +
-                   "firstGenerationToStore lastGenerationToStore numberOfThreads\n" +
+                   "firstGenerationToStore lastGenerationToStore numberOfThreads\n\n" +
 
-                "4) Generate mapping files for RaPID: bash run.sh --map\n" +
+                "4) Generate mapping files for RaPID: bash run.sh --map\n\n" +
 
                 "5) Compute pairwise distance: bash run.sh --distance generationSize " +
                    "firstGenerationToRead lastGenerationToRead firstGenerationToCompute lastGenerationToCompute " +
-                   "degree/meiosis maxDegree numberOfThreads\n" +
+                   "degree/meiosis maxDegree numberOfThreads\n\n" +
 
-                "6) Compute pairwise ibds: bash run.sh --ibd firstGenerationToStore lastGenerationToStore numberOfThreads\n\n"
+                "6) Compute pairwise ibds: bash run.sh --ibd firstGenerationToStore lastGenerationToStore numberOfThreads\n"
         );
     }
 
