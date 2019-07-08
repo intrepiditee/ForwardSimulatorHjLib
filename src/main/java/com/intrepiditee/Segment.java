@@ -165,14 +165,14 @@ public class Segment implements Serializable, Comparable<Segment> {
                     String.valueOf(chromosomeNumber),
                     String.valueOf(id1), String.valueOf(id2),
                     sexToString(sex1), sexToString(sex2),
-                    String.valueOf(startGenetic).substring(0, 7),
-                    String.valueOf(endGenetic).substring(0, 7),
+                    String.format("%.7s", startGenetic),
+                    String.format("%.7s", endGenetic),
                     String.valueOf(ibd.start + 1), String.valueOf(ibd.end),
 
                     // Genetic Length
-                    String.valueOf(endGenetic - startGenetic).substring(0, 7),
+                    String.format("%.7s", endGenetic - startGenetic),
                     // Physical Length in Mbp
-                    String.valueOf((ibd.end - ibd.start) / 1000000.0).substring(0, 7),
+                    String.format("%.7s", (ibd.end - ibd.start) / 1000000.0),
 
                     String.valueOf(ibd.founderID)
                 ) + "\n"
