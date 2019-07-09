@@ -10,7 +10,7 @@
         
   This will simulate for "numOfGeneration" generations including the founder generation.
   Each generation has "generationSize" individuals, of which half are males and the other half are females.
-  It will store the genomes, mutated sites, and parent IDs of individuals
+  It will store the IBD segments, the genomes, mutated sites, and parent IDs of individuals
   from Generation "firstGenerationToStore" to Generation "lastGenerationToStore" (starting from zero).
   Genomes and mutated sites are stored in binary for further processing. 
   "numberOfThreads" is the maximum number of threads that will be spawned during the execution.
