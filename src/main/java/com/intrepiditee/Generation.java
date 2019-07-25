@@ -108,7 +108,6 @@ class Generation {
 
                                 double rr = rand.nextDouble();
                                 while (areSiblings(father, mother) || rr > 0.8) {
-                                    System.out.println(1);
                                     father = males.get(rand.nextInt(males.size()));
                                     rr = 0;
                                 }
