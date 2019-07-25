@@ -109,6 +109,7 @@ class Generation {
 
                                 double rr = rand.nextDouble();
                                 while (areSiblings(father, mother) || rr > 0.8) {
+                                    System.out.println(1);
                                     father = males.get(rand.nextInt(males.size()));
                                     rr = 0;
                                 }
@@ -141,9 +142,11 @@ class Generation {
         return next;
     }
 
+
     private static boolean areSiblings(Individual ind1, Individual ind2) {
         return ind1.fatherID == ind2.fatherID && ind1.motherID == ind2.motherID;
     }
+
 
     private static int getNumChildren(Random rand) {
         double r = rand.nextDouble();
