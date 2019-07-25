@@ -85,7 +85,6 @@ class Generation {
                     numMalesPerThread;
 
                 HjSuspendable r = () -> {
-
                     Individual father;
                     Individual mother;
                     int numberOfMales = 0;
