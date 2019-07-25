@@ -276,7 +276,7 @@ public class VCFGenerator {
                 System.out.println(
                     "Chromosome " + chromosomeNumber + ": " +
                         count / 1000 + "k out of " +
-                        sites.length / 1000 + "k written"
+                        sites.length / 1000 + "k sites written"
                 );
             }
         }

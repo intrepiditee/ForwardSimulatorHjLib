@@ -101,7 +101,8 @@
     
   #### 2. File Output
   
-  The output VCF files will be stored under ```ForwardSimulatorHjLib/target/final```
+  The output VCF files will be stored under ```ForwardSimulatorHjLib/target/final```.
+  They can be used as inputs to RaPID.
   
 ## 5. Generating Mapping Files for RaPID
 
