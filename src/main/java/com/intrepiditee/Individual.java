@@ -16,8 +16,8 @@ public class Individual {
     final int id;
     byte sex;
 
-    int fatherID;
-    int motherID;
+    int fatherID = -1;
+    int motherID = -1;
 
     final Map<Integer, Map<Byte, List<Segment>>> genome;
     final Map<Integer, Map<Byte, List<Integer>>> mutationIndices;

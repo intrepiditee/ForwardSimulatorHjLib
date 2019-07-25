@@ -143,7 +143,9 @@ class Generation {
 
 
     private static boolean areSiblings(Individual ind1, Individual ind2) {
-        return ind1.fatherID == ind2.fatherID && ind1.motherID == ind2.motherID;
+        return ind1.motherID != -1 && ind1.fatherID != -1 &&
+               ind2.motherID != -1 && ind2.fatherID != -1 &&
+               ind1.fatherID == ind2.fatherID && ind1.motherID == ind2.motherID;
     }
 
 
