@@ -245,7 +245,7 @@ class Utils {
 
                 "5) Compute pairwise distance: bash run.sh --distance generationSize " +
                    "firstGenerationToRead lastGenerationToRead firstGenerationToCompute lastGenerationToCompute " +
-                   "degree/meiosis maxDegree numberOfThreads\n\n" +
+                   "degree/meiosis maxDistance numberOfThreads\n\n" +
 
                 "6) Compute pairwise ibds: bash run.sh --ibd firstGenerationToStore lastGenerationToStore numberOfThreads\n"
         );

@@ -74,8 +74,9 @@ public class Segment implements Serializable, Comparable<Segment> {
         writeHeader(w);
 
         for (int id1 = minID; id1 <= maxID; id1++) {
+            Map<Byte, List<Segment>> chromosomesPair1 = idToChromosomesPair.get(id1);
+
             for (int id2 = id1 + 1; id2 <= maxID; id2++) {
-                Map<Byte, List<Segment>> chromosomesPair1 = idToChromosomesPair.get(id1);
                 Map<Byte, List<Segment>> chromosomesPair2 = idToChromosomesPair.get(id2);
 
                 List<String> outs = new ArrayList<>();

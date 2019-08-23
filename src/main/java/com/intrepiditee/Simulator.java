@@ -11,11 +11,9 @@ import java.util.List;
 import java.util.Map;
 
 import static com.intrepiditee.Configs.*;
-import static com.intrepiditee.GeneticMap.GENETIC_TO_PHYSICAL;
 import static com.intrepiditee.GeneticMap.getChromosomeNumbers;
 import static com.intrepiditee.Utils.getBufferedGZipWriter;
 import static com.intrepiditee.Utils.getBufferedObjectOutputStream;
-import static com.intrepiditee.Utils.getBufferedWriter;
 import static edu.rice.hj.Module0.launchHabaneroApp;
 import static edu.rice.hj.Module1.forallChunked;
 
@@ -89,8 +87,6 @@ public class Simulator {
 
                     ObjectOutputStream chromosomeOut = getBufferedObjectOutputStream(chromosomeFilename);
                     ObjectOutputStream mutationOut = getBufferedObjectOutputStream(mutationFilename);
-//                            BufferedWriter chromosomeWriter = getBufferedWriter(chromosomeFilename + ".txt");
-//                            BufferedWriter mutationWriter = getBufferedWriter(mutationFilename + ".txt");
 
                     for (Individual ind : toWrite.males) {
                         Map<Byte, List<Segment>> chromosomesPair = ind.genome.get(c);
@@ -103,14 +99,6 @@ public class Simulator {
                         mutationOut.writeInt(ind.id);
                         mutationOut.writeUnshared(mutationIndicesPair);
 
-//                                mutationWriter.write(mutationIndicesPair.get(MALE).toString());
-
-//                                chromosomeWriter.write(String.valueOf(ind.id));
-//                                chromosomeWriter.write("\n");
-//                                chromosomeWriter.write(segmentsToString(chromosomesPair.get(MALE)));
-//                                chromosomeWriter.write("\n");
-//                                chromosomeWriter.write(segmentsToString(chromosomesPair.get(FEMALE)));
-//                                chromosomeWriter.write("\n");
 
                         if (c == 1) {
                             pedigreeWriter.write(
@@ -130,13 +118,6 @@ public class Simulator {
                         mutationOut.writeInt(ind.id);
                         mutationOut.writeUnshared(mutationIndicesPair);
 
-//                                chromosomeWriter.write(String.valueOf(ind.id));
-//                                chromosomeWriter.write("\n");
-//                                chromosomeWriter.write(segmentsToString(chromosomesPair.get(MALE)));
-//                                chromosomeWriter.write("\n");
-//                                chromosomeWriter.write(segmentsToString(chromosomesPair.get(FEMALE)));
-//                                chromosomeWriter.write("\n");
-
                         if (c == 1) {
                             pedigreeWriter.write(
                                 ind.id + "\t" + ind.fatherID + "\t" + ind.motherID + "\n"
@@ -145,9 +126,7 @@ public class Simulator {
                     }
 
                     chromosomeOut.close();
-//                            chromosomeWriter.close();
                     mutationOut.close();
-//                            mutationWriter.close();
 
                 } // end of all chromosomes
 
@@ -161,10 +140,5 @@ public class Simulator {
             }
 
         }); // end of all generations
-
-
-        // Write IBDs
-        Segment.writeIBDForGenerations(generations);
-
     }
 }
