@@ -38,8 +38,8 @@ public class Simulator {
         System.out.println();
 
         launchHabaneroApp(() -> {
-            List<Generation> toWrite = new ArrayList<>(endGeneration - startGeneration + 1);
-            List<Integer> indices = new ArrayList<>(endGeneration - startGeneration + 1);
+            List<Generation> toWrite = new ArrayList<>();
+            List<Integer> indices = new ArrayList<>();
 
                 GeneticMap.parseLengths();
                 GeneticMap.makeFromChromosomeNumbers(getChromosomeNumbers());
