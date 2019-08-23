@@ -140,7 +140,7 @@ public class Individual {
         List<Integer> indicesToAdd = getMutationIndices(chromosomeNumber);
         for (Integer index : indicesToAdd) {
             int i = Collections.binarySearch(mutationIndices, index);
-            if (i > 0) {
+            if (i >= 0) {
                 // Two mutations cancel
                 mutationIndices.remove(index);
             } else {
