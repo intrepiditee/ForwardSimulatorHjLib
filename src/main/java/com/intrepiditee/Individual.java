@@ -1,44 +1,42 @@
 package com.intrepiditee;
 
-import edu.rice.hj.Module1;
-import edu.rice.hj.api.HjSuspendable;
-import edu.rice.hj.api.SuspendableException;
-
-import java.util.BitSet;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static com.intrepiditee.Configs.FEMALE;
+import static com.intrepiditee.Configs.MALE;
+import static com.intrepiditee.Configs.numChromosomes;
+import static com.intrepiditee.GeneticMap.*;
+import static com.intrepiditee.Segment.canMerge;
+import static com.intrepiditee.Segment.merge;
 import static com.intrepiditee.Utils.singletonRand;
 
 
 public class Individual {
-    int id;
+    final int id;
     byte sex;
 
-    int fatherID;
-    int motherID;
+    int fatherID = -1;
+    int motherID = -1;
 
-    BitSet paternalGenome;
-    BitSet maternalGenome;
+    final Map<Integer, Map<Byte, List<Segment>>> genome;
+    final Map<Integer, Map<Byte, List<Integer>>> mutationIndices;
 
-    static AtomicInteger nextID = new AtomicInteger(0);
+    private static final AtomicInteger nextID = new AtomicInteger(0);
 
-    static double mutationRate = 1.1 * 10e-8;
+    private static final double mutationRate = 1.1 * 10e-8;
 
-    static int randBound = (int) (45 * 1.2);
 
-    static byte MALE = 1;
-    static byte FEMALE = 0;
-
-    static Individual makeEmpty() {
-        Individual ind = new Individual();
-        return ind;
+    static Individual make() {
+        return new Individual();
     }
 
-    static Individual makeFromParents(Individual father, Individual mother) throws SuspendableException {
-        Individual ind = makeEmpty();
+
+    static Individual makeFromParents(Individual father, Individual mother) {
+        Individual ind = make();
         ind.fatherID = father.id;
         ind.motherID = mother.id;
-        ind.recombineGenomes(father, mother);
+        ind.meiosis(father, mother);
 
         return ind;
     }
@@ -46,126 +44,279 @@ public class Individual {
 
     private Individual() {
         id = nextID.getAndIncrement();
-        paternalGenome = new BitSet(Configs.genomeLength);
-        maternalGenome = new BitSet(Configs.genomeLength);
+        genome = new HashMap<>();
+        mutationIndices = new HashMap<>();
+
+        for (int c = 1; c <= numChromosomes; c++) {
+            Map<Byte, List<Segment>> chromosomesPair = new HashMap<>();
+            List<Segment> paternalChromosome = new ArrayList<>();
+            List<Segment> maternalChromosome = new ArrayList<>();
+
+            int chromosomeLen = chromosomeNumberToPhysicalLength.get(c);
+            Segment seg = Segment.make(0, chromosomeLen - 1, id, MALE);
+            paternalChromosome.add(seg);
+            seg = Segment.make(0, chromosomeLen - 1, id, FEMALE);
+            maternalChromosome.add(seg);
+            chromosomesPair.put(MALE, paternalChromosome);
+            chromosomesPair.put(FEMALE, maternalChromosome);
+            genome.put(c, chromosomesPair);
+
+            List<Integer> paternalMutationIndices = new ArrayList<>();
+            List<Integer> maternalMutationIndices = new ArrayList<>();
+            Map<Byte, List<Integer>> mutationIndicesPair = new HashMap<>();
+            mutationIndicesPair.put(MALE, paternalMutationIndices);
+            mutationIndicesPair.put(FEMALE, maternalMutationIndices);
+            mutationIndices.put(c, mutationIndicesPair);
+        }
     }
 
+    Individual mergeChromosomes() {
+        for (int c = 1; c <= numChromosomes; c++) {
+            Map<Byte, List<Segment>> chromosomePair = genome.get(c);
 
-    public Individual recombineGenomes(Individual father, Individual mother) throws SuspendableException {
-
-        HjSuspendable paternalRunnable = () -> {
-            boolean paternalIsRecombining = false;
-            double paternalProb = 0.0;
-            int paternalIndex = 0;
-            int paternalPosition = GeneticMap.indices.get(paternalIndex);
-            int paternalRand = singletonRand.nextInt(randBound);
-
-//            int c = 0;
-
-            for (int i = 0; i < Configs.genomeLength; i++) {
-                if (i == paternalPosition) {
-                    paternalProb += GeneticMap.probabilities.get(paternalIndex);
-                    paternalIndex++;
-
-                    if (paternalIndex < GeneticMap.indices.size()) {
-                        paternalPosition = GeneticMap.indices.get(paternalIndex);
-                    }
-
-                    if (paternalRand < paternalProb) {
-//                        c++;
-                        paternalIsRecombining = !paternalIsRecombining;
-                        if (paternalIndex < GeneticMap.indices.size()) {
-                            paternalProb = GeneticMap.probabilities.get(paternalIndex);
-                        }
-                        paternalRand = singletonRand.nextInt(randBound);
-                    }
-                }
-
-                if (paternalIsRecombining) {
-                    paternalGenome.set(i, father.maternalGenome.get(i));
-                } else {
-                    paternalGenome.set(i, father.paternalGenome.get(i));
-                }
-            }
-
-//            System.out.println(c);
-        };
-
-
-
-        HjSuspendable maternalRunnable = () -> {
-            boolean maternalIsRecombining = false;
-            double maternalProb = 0.0;
-            int maternalIndex = 0;
-            int maternalPosition = GeneticMap.indices.get(maternalIndex);
-            int maternalRand = singletonRand.nextInt(randBound);
-
-            for (int i = 0; i < Configs.genomeLength; i++) {
-                if (i == maternalPosition) {
-                    maternalProb += GeneticMap.probabilities.get(maternalIndex);
-
-                    maternalIndex++;
-                    if (maternalIndex < GeneticMap.indices.size()) {
-                        maternalPosition = GeneticMap.indices.get(maternalIndex);
-                    }
-
-                    if (maternalRand < maternalProb) {
-                        maternalIsRecombining = !maternalIsRecombining;
-                        if (maternalIndex < GeneticMap.indices.size()) {
-                            maternalProb = GeneticMap.probabilities.get(maternalIndex);
-                        }
-                        maternalRand = singletonRand.nextInt(randBound);
-                    }
-                }
-
-                if (maternalIsRecombining) {
-                    maternalGenome.set(i, mother.maternalGenome.get(i));
-                } else {
-                    maternalGenome.set(i, mother.paternalGenome.get(i));
-                }
-            }
-        };
-
-        Module1.finish(() -> {
-            Module1.async(paternalRunnable);
-            maternalRunnable.run();
-        });
-
-        double expectedNumMutations = Configs.genomeLength * mutationRate;
-
-        if (expectedNumMutations > 1) {
-            int numMutations = singletonRand.nextInt((int) (2 * expectedNumMutations));
-            for (int i = 0; i < numMutations; i++) {
-                int paternalMutatingPosition = singletonRand.nextInt(paternalGenome.size());
-                paternalGenome.flip(paternalMutatingPosition);
-            }
-
-            numMutations = singletonRand.nextInt((int) (2 * expectedNumMutations));
-            for (int i = 0; i < numMutations; i++) {
-                int maternalMutatingPosition = singletonRand.nextInt(maternalGenome.size());
-                maternalGenome.flip(maternalMutatingPosition);
-            }
-
-        } else {
-            if (singletonRand.nextDouble() < expectedNumMutations) {
-                int paternalMutatingPosition = singletonRand.nextInt(paternalGenome.size());
-                paternalGenome.flip(paternalMutatingPosition);
-            }
-
-            if (singletonRand.nextDouble() < expectedNumMutations) {
-                int maternalMutatingPosition = singletonRand.nextInt(maternalGenome.size());
-                maternalGenome.flip(maternalMutatingPosition);
-            }
+            List<Segment> paternalChromosome = chromosomePair.get(MALE);
+            List<Segment> maternalChromosome = chromosomePair.get(FEMALE);
+            chromosomePair.put(MALE, mergeOneChromosome(paternalChromosome));
+            chromosomePair.put(FEMALE, mergeOneChromosome(maternalChromosome));
         }
 
         return this;
     }
 
-    public boolean isMale() {
+    static List<Segment> mergeOneChromosome(List<Segment> segments) {
+        List<Segment> mergedSegments = new ArrayList<>(segments.size());
+
+        int i = 0;
+        int numSegments = segments.size();
+        while (i < numSegments) {
+            Segment mergedSegment = segments.get(i);
+            if (i != numSegments - 1) {
+                Segment nextSegment = segments.get(i + 1);
+                while (canMerge(mergedSegment, nextSegment)) {
+                    mergedSegment = merge(mergedSegment, nextSegment);
+                    i++;
+                    if (i == numSegments - 1) {
+                        break;
+                    } else {
+                        nextSegment = segments.get(i + 1);
+                    }
+                }
+            }
+            i++;
+            mergedSegments.add(mergedSegment);
+        }
+
+        return mergedSegments;
+    }
+
+
+    private static List<Integer> getMutationIndices(int chromosomeNumber) {
+        int chromosomeLength = chromosomeNumberToPhysicalLength.get(chromosomeNumber);
+        double expectedNumMutations = chromosomeLength * mutationRate;
+        int numMutations = 0;
+        if (expectedNumMutations > 1.0) {
+            numMutations = singletonRand.nextInt((int) (2 * expectedNumMutations));
+        } else {
+            if (singletonRand.nextDouble() < expectedNumMutations) {
+                numMutations = 1;
+            }
+        }
+
+        Set<Integer> mutationIndices = new HashSet<>(numMutations);
+        for (int i = 0; i < numMutations; i++) {
+            Integer index = singletonRand.nextInt(chromosomeLength);
+            while (mutationIndices.contains(index)) {
+                index = singletonRand.nextInt(chromosomeLength);
+            }
+            mutationIndices.add(index);
+        }
+        List<Integer> indices = new ArrayList<>(mutationIndices);
+        Collections.sort(indices);
+
+        return indices;
+    }
+
+    private static void addMutationIndices(List<Integer> mutationIndices, int chromosomeNumber) {
+        List<Integer> indicesToAdd = getMutationIndices(chromosomeNumber);
+        for (Integer index : indicesToAdd) {
+            int i = Collections.binarySearch(mutationIndices, index);
+            if (i >= 0) {
+                // Two mutations cancel
+                mutationIndices.remove(index);
+            } else {
+                int insertionPoint = -(i + 1);
+                mutationIndices.add(insertionPoint, index);
+            }
+        }
+    }
+
+
+    // Start from oneSegmentList
+    static List<Segment> recombineOneChromosome(
+        List<Segment> oneSegmentList, List<Segment> anotherSegmentList,
+        List<Integer> recombinationIndices) {
+
+        List<Segment> combinedChromosome = new ArrayList<>(oneSegmentList.size());
+
+        int prevRecombinationIndex = -1;
+        int oneIndex = 0;
+        int anotherIndex = 0;
+        Segment oneSegment;
+
+        for (int recombinationIndex : recombinationIndices) {
+            oneSegment = oneSegmentList.get(oneIndex);
+
+            while (oneSegment.end <= recombinationIndex) {
+                if (oneSegment.end > prevRecombinationIndex) {
+                    int start = Math.max(prevRecombinationIndex, oneSegment.start);
+                    combinedChromosome.add(
+                        Segment.make(
+                            start, oneSegment.end,
+                            oneSegment.founderID, oneSegment.whichChromosome
+                        )
+                    );
+                }
+                // All segments have been added
+                if (oneIndex == oneSegmentList.size() - 1) {
+                    break;
+                }
+                oneSegment = oneSegmentList.get(++oneIndex);
+            }
+
+            if (oneSegment.contains(recombinationIndex)) {
+                // Need to add the upper part if there is an upper part
+                if (oneSegment.start != recombinationIndex) {
+                    // Start is the later of prevRecombinationIndex and oneSegment.start
+                    int start = Math.max(prevRecombinationIndex, oneSegment.start);
+                    // End is the earlier of recombinationIndex and oneSegment.end
+                    int end = Math.min(recombinationIndex, oneSegment.end);
+                    combinedChromosome.add(
+                        Segment.make(
+                            start, end,
+                            oneSegment.founderID, oneSegment.whichChromosome
+                        )
+                    );
+                }
+            }
+
+            int tempIndex = oneIndex;
+            oneIndex = anotherIndex;
+            anotherIndex = tempIndex;
+
+            List<Segment> tempList = oneSegmentList;
+            oneSegmentList = anotherSegmentList;
+            anotherSegmentList = tempList;
+
+            prevRecombinationIndex = recombinationIndex;
+        }
+
+        return combinedChromosome;
+    }
+
+
+    private void meiosisOneChromosome(Individual parent, int chromosomeNumber) {
+        GeneticMap m = chromosomeNumberToGeneticMap.get(chromosomeNumber);
+        List<Integer> recombinationIndices = m.getRecombinationIndices(chromosomeNumber);
+
+        // They belong to the parent
+        Map<Byte, List<Segment>> chromosomesPair = parent.genome.get(chromosomeNumber);
+        List<Segment> paternalChromosome = chromosomesPair.get(MALE);
+        List<Segment> maternalChromosome = chromosomesPair.get(FEMALE);
+        Map<Byte, List<Integer>> mutationIndicesPair = parent.mutationIndices.get(chromosomeNumber);
+        List<Integer> paternalMutationIndices = mutationIndicesPair.get(MALE);
+        List<Integer> maternalMutationIndices = mutationIndicesPair.get(FEMALE);
+
+        // Decide if recombination starts from paternal or maternal chromosome of the parent
+        List<Segment> oneSegmentList = paternalChromosome;
+        List<Segment> anotherSegmentList = maternalChromosome;
+        List<Integer> oneMutationIndices = paternalMutationIndices;
+        List<Integer> anotherMutationIndices = maternalMutationIndices;
+        if (singletonRand.nextBoolean()) {
+            List<Segment> temp = oneSegmentList;
+            oneSegmentList = anotherSegmentList;
+            anotherSegmentList = temp;
+
+            List<Integer> tempp = oneMutationIndices;
+            oneMutationIndices = anotherMutationIndices;
+            anotherMutationIndices = tempp;
+        }
+
+        // Generate mutation indices on that chromosome for the child
+        List<Integer> childMutationIndices = recombineMutationIndices(
+            oneMutationIndices, anotherMutationIndices, recombinationIndices
+        );
+        // Generate one chromosome for the child
+        List<Segment> childChromosome = recombineOneChromosome(
+            oneSegmentList, anotherSegmentList, recombinationIndices
+        );
+        addMutationIndices(childMutationIndices, chromosomeNumber);
+
+        Map<Byte, List<Segment>> childChromosomesPair = genome.get(chromosomeNumber);
+        Map<Byte, List<Integer>> childMutationIndicesPair = mutationIndices.get(chromosomeNumber);
+        // Determine if the newly generated chromosome is paternal or maternal
+        byte sex = parent.id == fatherID ? MALE : FEMALE;
+
+        childChromosomesPair.put(sex, childChromosome);
+        childMutationIndicesPair.put(MALE, childMutationIndices);
+
+    }
+
+    private void meiosisOneParent(Individual parent) {
+        for (int c = 1; c <= numChromosomes; c++) {
+            meiosisOneChromosome(parent, c);
+        }
+    }
+
+    private void meiosis(Individual father, Individual mother) {
+        meiosisOneParent(father);
+        meiosisOneParent(mother);
+    }
+
+    static List<Integer> recombineMutationIndices(
+        List<Integer> oneMutationIndices, List<Integer> anotherMutationIndices,
+        List<Integer> recombinationIndices) {
+
+        List<Integer> recombinedIndices = new ArrayList<>();
+
+        int oneIndex = 0;
+        int anotherIndex = 0;
+        int prevRecombinationIndex = -1;
+
+        for (int recombinationIndex : recombinationIndices) {
+            if (oneIndex < oneMutationIndices.size()) {
+                int oneMutationIndex = oneMutationIndices.get(oneIndex);
+                while (oneMutationIndex < recombinationIndex) {
+                    if (oneMutationIndex >= prevRecombinationIndex) {
+                        recombinedIndices.add(oneMutationIndex);
+                    }
+                    oneIndex++;
+                    if (oneIndex == oneMutationIndices.size()) {
+                        break;
+                    }
+                    oneMutationIndex = oneMutationIndices.get(oneIndex);
+                }
+            }
+
+            int tempIndex = oneIndex;
+            oneIndex = anotherIndex;
+            anotherIndex = tempIndex;
+
+            List<Integer> tempList = oneMutationIndices;
+            oneMutationIndices = anotherMutationIndices;
+            anotherMutationIndices = tempList;
+
+            prevRecombinationIndex = recombinationIndex;
+        }
+
+        return recombinedIndices;
+
+    }
+
+    boolean isMale() {
         return sex == MALE;
     }
 
-    public Individual setSex(byte sex) {
+    Individual setSex(byte sex) {
         this.sex = sex;
         return this;
     }

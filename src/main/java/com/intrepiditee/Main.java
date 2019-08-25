@@ -1,8 +1,6 @@
 package com.intrepiditee;
 
-import java.io.*;
-
-import static edu.rice.hj.Module0.launchHabaneroApp;
+import java.io.IOException;
 
 public class Main {
 
@@ -14,98 +12,43 @@ public class Main {
        and their mother's id, separated by space.
     where _ is the index of the generation.
     */
-    public static void main(String[] args) {
-
-        if (args.length == 0 || args.length > 6 ||
-            args[0].equals("-h") || args[0].equals("--help")) {
+    public static void main(String[] args) throws IOException, ClassNotFoundException {
+        if (args.length == 0 || args[0].equals("-h") || args[0].equals("--help")) {
 
            Utils.printUsage();
            return;
         }
 
-        if (args[0].equals("--test")) {
-            Configs.genomeLength = 10000;
-            Individual.randBound = (int) (100 * 1.2);
-            Configs.numThreads = 4;
-            Configs.geneticMapName = "testGeneticMap.gz";
-            Configs.numGenerations = 50;
-
-        } else if (args[0].equals("--parse")) {
-            GenomeParser.main(args);
-            return;
-        } else if (args[0].equals("--pedigree")) {
-            PedigreeGraph.main(args);
-            return;
-
-        } else if (args.length == 4) {
-            Configs.numGenerations = Integer.parseInt(args[0]);
-            Configs.numGenerationsStore = Integer.parseInt(args[1]);
-            Configs.generationSize = Integer.parseInt(args[2]);
-            Configs.numThreads = Integer.parseInt(args[3]);
-
-        } else {
-            Utils.printUsage();
-            return;
+        switch (args[0]) {
+            case "--all":
+                VCFParser.main(new String[]{"--parse", args[3], args[5]});
+                Simulator.main(args);
+                VCFGenerator.main(args);
+                GeneticMap.main(args);
+                PedigreeGraph.main(args);
+                break;
+            case "--parse":
+                VCFParser.main(args);
+                break;
+            case "--simulate":
+                Simulator.main(args);
+                break;
+            case "--generate":
+                VCFGenerator.main(args);
+                break;
+            case "--map":
+                GeneticMap.main(args);
+                break;
+            case "--distance":
+                PedigreeGraph.main(args);
+                break;
+            case "--ibd":
+                Segment.main(args);
+                break;
+            default:
+                Utils.printUsage();
+                return;
         }
-
-
-        launchHabaneroApp(() -> {
-            try {
-                GeneticMap.initialize(Configs.geneticMapName);
-                GeneticMap.parse();
-
-                Generation next = null;
-
-                for (int i = 0; i < Configs.numGenerations; i++) {
-                    if (next == null) {
-                        next = Generation.makeRandomGeneration();
-                    } else {
-                        next = next.evolveOneGenerationThenDestroy();
-                    }
-
-                    Generation toWrite = null;
-                    String filename = null;
-
-                    int generationIndex = i - (Configs.numGenerations - Configs.numGenerationsStore);
-                    if (generationIndex >= 0) {
-                        toWrite = next;
-                        filename = "Generation" + generationIndex;
-                    }
-
-                    if (toWrite != null) {
-                        BufferedWriter w = Utils.getBufferedWriter(filename + "Pedigree.txt.gz");
-                        ObjectOutputStream o = Utils.getBufferedObjectOutputStream(filename);
-
-                        for (Individual ind : toWrite.males) {
-                            o.writeInt(ind.id);
-                            o.writeUnshared(ind.paternalGenome);
-                            o.writeUnshared(ind.maternalGenome);
-                            w.write(String.format("%s %s %s\n", ind.id, ind.fatherID, ind.motherID));
-                        }
-
-                        for (Individual ind : toWrite.females) {
-                            o.writeInt(ind.id);
-                            o.writeUnshared(ind.paternalGenome);
-                            o.writeUnshared(ind.maternalGenome);
-                            w.write(String.format("%s %s %s\n", ind.id, ind.fatherID, ind.motherID));
-                        }
-
-                        o.close();
-                        w.close();
-                    }
-
-                    System.out.print("\nGeneration " + i + " finished");
-                }
-
-            } catch (Exception e) {
-                e.printStackTrace();
-                System.exit(-1);
-            }
-        });
-
-
-
-
     }
 
 }

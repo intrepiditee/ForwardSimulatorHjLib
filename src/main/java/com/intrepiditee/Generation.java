@@ -1,52 +1,42 @@
 package com.intrepiditee;
 
-import edu.rice.hj.Module1;
 import edu.rice.hj.api.HjSuspendable;
 import edu.rice.hj.api.SuspendableException;
 
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
 
-import static com.intrepiditee.Configs.numThreads;
+import static com.intrepiditee.Configs.*;
+import static edu.rice.hj.Module0.finish;
+import static edu.rice.hj.Module1.async;
 
 
-public class Generation {
+class Generation {
 
     List<Individual> males;
     List<Individual> females;
 
-    static Generation makeEmpty() {
+    private static Generation makeEmpty() {
         return new Generation();
     }
 
-    static Generation makeRandomGeneration() throws SuspendableException {
-        Generation ancestors = makeEmpty();
-
-        BitSet sequence = Utils.generateRandomSequence(Configs.genomeLength);
+    static Generation makeAncestors() {
+        Generation gen = makeEmpty();
 
         int desiredNumMales = Configs.generationSize / 2;
+        int numMales = 0;
 
-        AtomicInteger numMales = new AtomicInteger(0);
-
-        Module1.forallChunked(1, Configs.generationSize, (i) -> {
-
-            BitSet paternalSequence = (BitSet) sequence.clone();
-            BitSet maternalSequence = (BitSet) sequence.clone();
-
-            Individual ind = Individual.makeEmpty();
-            ind.paternalGenome = paternalSequence;
-            ind.maternalGenome = maternalSequence;
-
-            if (numMales.getAndIncrement() < desiredNumMales) {
-                ind.sex = Individual.MALE;
+        for (int i = 0; i < Configs.generationSize; i++) {
+            Individual ind = Individual.make();
+            if (numMales < desiredNumMales) {
+                ind.sex = MALE;
+                numMales++;
             } else {
-                ind.sex = Individual.FEMALE;
+                ind.sex = FEMALE;
             }
+            gen.add(ind);
+        }
 
-            ancestors.add(ind);
-        });
-
-        return ancestors;
+        return gen;
     }
 
     private Generation() {
@@ -54,23 +44,13 @@ public class Generation {
         females = new ConcurrentArrayList<>(Configs.generationSize / 2);
     }
 
-    public Generation add(Individual ind) {
+    private void add(Individual ind) {
         if (ind.isMale()) {
             males.add(ind);
         } else {
             females.add(ind);
         }
-        return this;
     }
-
-    public Generation evolve(int numGenerations) throws SuspendableException {
-        Generation next = this;
-        for (int i = 0; i < numGenerations; i++) {
-            next = next.evolveOneGenerationThenDestroy();
-        }
-        return next;
-    }
-
 
     /*
     There are generationSize / 2 couples. Starting from the first couple,
@@ -80,16 +60,15 @@ public class Generation {
     the chance of having the previous child. The chance of having the first child
     is 1.
     */
-    public Generation evolveOneGeneration() throws SuspendableException {
+    Generation evolveOneGeneration() throws SuspendableException {
         Generation next = makeEmpty();
 
         int numChildrenPerThread = Configs.generationSize / numThreads;
         int numMalesPerThread = numChildrenPerThread / 2;
         int numCouples = Configs.generationSize / 2;
-        int numMales = numCouples;
         int numCouplesPerThread = numCouples / numThreads;
 
-        Module1.finish(() -> {
+        finish(() -> {
             for (int n = 0; n < numThreads; n++) {
                 Random rand = new Random();
 
@@ -102,11 +81,10 @@ public class Generation {
                     Configs.generationSize - n * numChildrenPerThread :
                     numChildrenPerThread;
                 int numMalesPerThreadFinal = n == numThreads - 1 ?
-                    numMales - n * numMalesPerThread :
+                    numCouples - n * numMalesPerThread :
                     numMalesPerThread;
 
                 HjSuspendable r = () -> {
-
                     Individual father;
                     Individual mother;
                     int numberOfMales = 0;
@@ -118,83 +96,75 @@ public class Generation {
                                 break;
                             }
 
-                            father = males.get(i);
                             mother = females.get(i);
 
-                            if (rand.nextDouble() > 0.8) {
-                                father = males.get(rand.nextInt(males.size()));
-                            }
-
-                            Individual child = Individual.makeFromParents(father, mother);
-                            if (numberOfMales == numMalesPerThreadFinal) {
-                                child.setSex(Individual.FEMALE);
-                            } else {
-                                child.setSex(Individual.MALE);
-                                numberOfMales++;
-                            }
-                            next.add(child);
-                            numChildren++;
-
-                            double prob = 0.5;
-                            while (prob > Math.random()) {
+                            int numChildrenToHave = getNumChildren(rand);
+                            for (int c = 1; c <= numChildrenToHave; c++) {
                                 if (numChildren == numChildrenPerThreadFinal) {
                                     break;
                                 }
 
-                                if (rand.nextDouble() > 0.8) {
+                                father = males.get(i);
+
+                                double rr = rand.nextDouble();
+                                while (areSiblings(father, mother) || rr > 0.8) {
                                     father = males.get(rand.nextInt(males.size()));
+                                    rr = 0;
                                 }
-                                child = Individual.makeFromParents(father, mother);
+
+                                Individual child = Individual.makeFromParents(father, mother);
                                 if (numberOfMales == numMalesPerThreadFinal) {
-                                    child.setSex(Individual.FEMALE);
+                                    child.setSex(FEMALE);
                                 } else {
-                                    child.setSex(Individual.MALE);
+                                    child.setSex(MALE);
                                     numberOfMales++;
                                 }
                                 next.add(child);
                                 numChildren++;
-
-                                prob *= 0.5;
                             }
+
                         }
                     }
                 };
 
-                Module1.async(r);
+                async(r);
             }
         });
 
-
+        if (Utils.singletonRand.nextBoolean()) {
+            Collections.shuffle(next.males);
+        } else {
+            Collections.shuffle(next.females);
+        }
 
         return next;
     }
 
 
-    public Generation evolveOneGenerationThenDestroy() throws SuspendableException {
-        Generation next = evolveOneGeneration();
-        destroy();
-        return next;
+    private static boolean areSiblings(Individual ind1, Individual ind2) {
+        return ind1.motherID != -1 && ind1.fatherID != -1 &&
+            ind2.motherID != -1 && ind2.fatherID != -1 &&
+            (ind1.fatherID == ind2.fatherID || ind1.motherID == ind2.motherID);
     }
 
 
-    public int size() {
-        return males.size() + females.size();
-    }
+    private static int getNumChildren(Random rand) {
+        double r = rand.nextDouble();
+        for (int n = 0; n <= maxNumChildren; n++) {
+            if (n == maxNumChildren) {
+                return n;
+            }
 
-
-    public void destroy() {
-        for (Individual ind : males) {
-            ind.paternalGenome = null;
-            ind.maternalGenome = null;
+            double cumulativeProb = numChildrenProbabilitiesCumulative[n];
+            double nextCumulativeProb = numChildrenProbabilitiesCumulative[n + 1];
+            if (cumulativeProb <= r &&
+                r < nextCumulativeProb) {
+                return n;
+            }
         }
-        males.clear();
-        males = null;
 
-        for (Individual ind : females) {
-            ind.paternalGenome = null;
-            ind.maternalGenome = null;
-        }
-        females.clear();
-        females = null;
+        // Unreachable
+        return -1;
     }
+
 }
