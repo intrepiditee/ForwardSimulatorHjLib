@@ -10,6 +10,7 @@ import java.io.Writer;
 import java.util.*;
 
 import static com.intrepiditee.Configs.*;
+import static com.intrepiditee.GeneticMap.getChromosomeNumbers;
 import static edu.rice.hj.Module0.launchHabaneroApp;
 import static edu.rice.hj.Module1.forallChunked;
 
@@ -40,6 +41,8 @@ public class Segment implements Serializable, Comparable<Segment> {
 
         launchHabaneroApp(() -> {
 
+            GeneticMap.parseLengths();
+            GeneticMap.makeFromChromosomeNumbers(getChromosomeNumbers());
             GeneticMap.parseAllMaps(BOTH);
             
             forallChunked(1, numChromosomes, c -> {
