@@ -39,6 +39,9 @@ public class Segment implements Serializable, Comparable<Segment> {
         HjSystemProperty.setSystemProperty(HjSystemProperty.numWorkers, numThreads);
 
         launchHabaneroApp(() -> {
+
+            GeneticMap.parseAllMaps(BOTH);
+            
             forallChunked(1, numChromosomes, c -> {
                 try {
                     writeIBDForChromosome(c);

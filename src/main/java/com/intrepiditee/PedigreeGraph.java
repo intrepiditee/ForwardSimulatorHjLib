@@ -161,7 +161,7 @@ public class PedigreeGraph {
                             }
                         }
 
-                        int c = pairCount.incrementAndGet();
+                        int c = count.incrementAndGet();
                         if (c % 1000000 == 0) {
                             String s = String.valueOf(c / 1000000) +
                                 "M out of " +
@@ -170,9 +170,6 @@ public class PedigreeGraph {
                             System.out.println(s);
                         }
                     }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    System.exit(-1);
                 }
 
                 next();
